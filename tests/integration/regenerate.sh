@@ -25,12 +25,14 @@ tasks=(
   "Write a shell script 'hello.sh' that prints 'hello'."
   "Use Jupyter IPython to write a text file containing 'hello world' to '/workspace/test.txt'."
   "Install and import pymsgbox==1.0.9 and print it's version in /workspace/test.txt."
+  "Run the code in test.py in IPython."
 )
 test_names=(
   "test_edits"
   "test_write_simple_script"
   "test_ipython"
   "test_ipython_module"
+  "test_ipython_auto_indentation"
 )
 
 num_of_tests=${#test_names[@]}
