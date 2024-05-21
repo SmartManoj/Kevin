@@ -21,6 +21,15 @@ from .browse import browse
 from .files import read_file, write_file
 
 
+def auto_fix_indentation(code, error_line_number):
+    lines = code.split('\n')
+    last_line_number = len(lines)
+    if error_line_number + 1 == last_line_number:
+        lines[error_line_number - 1] = '    ' + lines[error_line_number - 1].strip()
+
+    return '\n'.join(lines)
+
+
 class ServerRuntime(Runtime):
     async def run(self, action: CmdRunAction) -> Observation:
         return self._run_command(action.command, background=action.background)
@@ -35,24 +44,24 @@ class ServerRuntime(Runtime):
         )
 
     async def run_ipython(self, action: IPythonRunCellAction) -> Observation:
-        obs = self._run_command(
-            ('cat > /tmp/opendevin_jupyter_temp.py <<EOL\n' f'{action.code}\n' 'EOL'),
+        code = action.code
+        self._run_command(
+            ('cat > /tmp/opendevin_jupyter_temp.py <<EOL\n' f'{code}\n' 'EOL'),
             background=False,
         )
 
         # run the code
-        obs = self._run_command(
+        output = self._run_command(
             ('cat /tmp/opendevin_jupyter_temp.py | execute_cli'), background=False
-        )
-        output = obs.content
-        if 'pip install' in action.code and 'Successfully installed' in output:
+        ).content
+        if 'pip install' in code and 'Successfully installed' in output:
             print(output)
             restart_kernel = 'import IPython\nIPython.Application.instance().kernel.do_shutdown(True)'
             if (
                 'Note: you may need to restart the kernel to use updated packages.'
                 in output
             ):
-                obs = self._run_command(
+                self._run_command(
                     (
                         'cat > /tmp/opendevin_jupyter_temp.py <<EOL\n'
                         f'{restart_kernel}\n'
@@ -68,7 +77,21 @@ class ServerRuntime(Runtime):
                 if "{'status': 'ok', 'restart': True}" != obs.content.strip():
                     print(obs.content)
                     output += '\n But failed to restart the kernel'
-        return IPythonRunCellObservation(content=output, code=action.code)
+        if 'IndentationError' in output:
+            print('Indentation error detected')
+            error_line_number = int(output.split('\n')[-1].split(' ')[-1])
+            fixed_code = auto_fix_indentation(code, error_line_number)
+            if fixed_code != code:
+                code = fixed_code
+                self._run_command(
+                    ('cat > /tmp/opendevin_jupyter_temp.py <<EOL\n' f'{code}\n' 'EOL'),
+                    background=False,
+                )
+                output = self._run_command(
+                    ('cat /tmp/opendevin_jupyter_temp.py | execute_cli'),
+                    background=False,
+                ).content
+        return IPythonRunCellObservation(content=output, code=code)
 
     async def read(self, action: FileReadAction) -> Observation:
         working_dir = self.sandbox.get_working_directory()

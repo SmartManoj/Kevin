@@ -124,3 +124,29 @@ def test_ipython_module():
     assert (
         content.strip() == '1.0.9'
     ), f'Expected content "1.0.9", but got "{content.strip()}"'
+
+
+@pytest.mark.skipif(
+    os.getenv('AGENT') != 'CodeActAgent',
+    reason='currently only CodeActAgent defaults to have IPython (Jupyter) execution',
+)
+@pytest.mark.skipif(
+    os.getenv('SANDBOX_TYPE') != 'ssh',
+    reason='Currently, only ssh sandbox supports stateful tasks',
+)
+def test_ipython_auto_indentation():
+    source_dir = os.path.join(os.path.dirname(__file__), 'workspace/test_ipython/')
+    files = os.listdir(source_dir)
+    for file in files:
+        dest_file = os.path.join(workspace_base, file)
+        if os.path.exists(dest_file):
+            os.remove(dest_file)
+        shutil.copy(os.path.join(source_dir, file), dest_file)
+    # Execute the task
+    task = 'Run the code in test.py in IPython. Do not ask me for confirmation at any point.'
+    final_state: State = asyncio.run(main(task, exit_on_message=True))
+    assert final_state.agent_state == AgentState.STOPPED
+
+    with open(os.path.join(workspace_base, 'test.py'), 'r') as f:
+        content = f.read()
+    assert content.strip() == '1', f'Expected content "1", but got "{content.strip()}"'

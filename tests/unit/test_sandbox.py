@@ -296,3 +296,26 @@ def test_sandbox_jupyter_plugin(temp_dir):
                 'The output should be the same as the input for '
                 + box.__class__.__name__
             )
+
+
+def test_sandbox_jupyter_plugin_auto_indent(temp_dir):
+    # get a temporary directory
+    with patch.object(config, 'workspace_base', new=temp_dir), patch.object(
+        config, 'workspace_mount_path', new=temp_dir
+    ), patch.object(config, 'run_as_devin', new='true'), patch.object(
+        config, 'sandbox_type', new='ssh'
+    ):
+        for box in [DockerSSHBox()]:
+            box.init_plugins([JupyterRequirement])
+
+            # test the ssh box
+            code = """if 1:\nprint(1)\n"""
+            exit_code, output = box.execute(f'echo "{code}" | execute_cli')
+            print(output)
+            assert exit_code == 0, (
+                'The exit code should be 0 for ' + box.__class__.__name__
+            )
+            assert output == '1\r\n', (
+                'The output should be the same as the input for '
+                + box.__class__.__name__
+            )
