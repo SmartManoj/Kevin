@@ -249,7 +249,7 @@ class CodeActAgent(Agent):
             # remove the command from the action string to get thought
             thought = action_str.replace(bash_command.group(0), '').strip()
             # a command was found
-            command_group = bash_command.group(1).strip()
+            command_group = bash_command.group(1).split('<execute_bash>')[-1].strip()
 
             if command_group.strip() == 'exit':
                 return AgentFinishAction()
@@ -258,7 +258,7 @@ class CodeActAgent(Agent):
             r'<execute_ipython>(.*?)</execute_ipython>', action_str, re.DOTALL
         ):
             # a code block was found
-            code_group = python_code.group(1).strip()
+            code_group = python_code.group(1).split('<execute_ipython>')[-1].strip()
             thought = action_str.replace(python_code.group(0), '').strip()
             return IPythonRunCellAction(
                 code=code_group,
@@ -269,7 +269,9 @@ class CodeActAgent(Agent):
             r'<execute_browse>(.*)</execute_browse>', action_str, re.DOTALL
         ):
             # BrowserGym actions was found
-            browse_actions = browse_command.group(1).strip()
+            browse_actions = (
+                browse_command.group(1).split('<execute_browse>')[-1].strip()
+            )
             thought = action_str.replace(browse_command.group(0), '').strip()
             return BrowseInteractiveAction(
                 browser_actions=browse_actions, thought=thought
