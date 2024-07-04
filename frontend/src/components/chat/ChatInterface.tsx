@@ -1,12 +1,11 @@
-// frontend/src/components/chat/ChatInterface.tsx
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { IoMdChatbubbles } from "react-icons/io";
 import { RiArrowRightDoubleLine } from "react-icons/ri";
 import { useTranslation } from "react-i18next";
 import { VscArrowDown } from "react-icons/vsc";
 import { FaRegThumbsDown, FaRegThumbsUp } from "react-icons/fa";
-import { useDisclosure } from "@nextui-org/react";
+import { useDisclosure, Tooltip } from "@nextui-org/react";
 import ChatInput from "./ChatInput";
 import Chat from "./Chat";
 import TypingIndicator from "./TypingIndicator";
@@ -111,11 +110,35 @@ function ChatInterface() {
     }
   }, [curAgentState, dispatch, messages.length, t]);
 
+  const [autoMode, setAutoMode] = useState(false);
+
+  useEffect(() => {
+    if (autoMode) {
+      handleSendMessage(
+        "Please continue working on the task on whatever approach you think is suitable.\n" +
+          "If you think you have solved the task, you can give <finish> to end the interaction.\n" +
+          "IMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n"
+      );
+    }
+  }, [autoMode]);
+
   return (
     <div className="flex flex-col h-full bg-neutral-800">
       <div className="flex items-center gap-2 border-b border-neutral-600 text-sm px-4 py-2">
         <IoMdChatbubbles />
         Chat
+        <div className="ml-auto">
+          <Tooltip content="⚠️ Use with caution! The agent will automatically continue task execution without requesting user inputs.">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={autoMode}
+                onChange={(e) => setAutoMode(e.target.checked)}
+              />
+              <span>Auto Mode</span>
+            </label>
+          </Tooltip>
+        </div>
       </div>
       <div className="flex-1 flex flex-col relative min-h-0">
         <div

@@ -123,4 +123,50 @@ describe("ChatInterface", () => {
 
     expect(submitButton).toBeDisabled();
   });
+
+  it("should render the Auto mode checkbox", () => {
+    renderWithProviders(<ChatInterface />);
+    expect(screen.getByLabelText("Auto mode")).toBeInTheDocument();
+  });
+
+  it("should send automatic messages when Auto mode is selected", () => {
+    renderWithProviders(<ChatInterface />, {
+      preloadedState: {
+        agent: {
+          curAgentState: AgentState.INIT,
+        },
+      },
+    });
+
+    const autoModeCheckbox = screen.getByLabelText("Auto mode");
+    fireEvent.click(autoModeCheckbox);
+
+    expect(sessionSpy).toHaveBeenCalledWith(
+      JSON.stringify({
+        action: ActionType.MESSAGE,
+        args: {
+          content:
+            "Please continue working on the task on whatever approach you think is suitable.\n" +
+            "If you think you have solved the task, you can give <finish> to end the interaction.\n" +
+            "IMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n",
+        },
+      }),
+    );
+  });
+
+  it("should stop sending automatic messages when Auto mode is deselected", () => {
+    renderWithProviders(<ChatInterface />, {
+      preloadedState: {
+        agent: {
+          curAgentState: AgentState.INIT,
+        },
+      },
+    });
+
+    const autoModeCheckbox = screen.getByLabelText("Auto mode");
+    fireEvent.click(autoModeCheckbox);
+    fireEvent.click(autoModeCheckbox);
+
+    expect(sessionSpy).toHaveBeenCalledTimes(1);
+  });
 });
