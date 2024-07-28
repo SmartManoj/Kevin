@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
+from patch import patched_temp_dir
 from opendevin.core.config import AppConfig, SandboxConfig, load_from_env
 from opendevin.core.logger import opendevin_logger as logger
 from opendevin.events import EventStream
@@ -335,7 +336,7 @@ async def test_simple_browse(temp_dir, box_class):
 
 
 @pytest.mark.asyncio
-async def test_multiline_commands(temp_dir, box_class):
+async def test_multiline_commands(patched_temp_dir, box_class):
     cmds = [
         'ls -l',
         'echo -e "hello\nworld"',

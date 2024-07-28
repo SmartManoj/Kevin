@@ -1,7 +1,11 @@
+import importlib.util
 import os
+import pathlib
 import shutil
 import tempfile
 from types import MethodType
+
+import pytest
 
 
 def _rmtree(cls, name, ignore_errors=False):
@@ -42,5 +46,20 @@ def _rmtree(cls, name, ignore_errors=False):
     shutil.rmtree(name, onerror=onerror)
 
 
+# duplicate tempfile
+SPEC = importlib.util.find_spec('tempfile')
+patched_tempfile = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(patched_tempfile)
+
 # Monkey patch the class method tempfile.TemporaryDirectory._rmtree
-tempfile.TemporaryDirectory._rmtree = MethodType(_rmtree, tempfile.TemporaryDirectory)
+patched_tempfile.TemporaryDirectory._rmtree = MethodType(
+    _rmtree, tempfile.TemporaryDirectory
+)
+
+
+@pytest.fixture
+def patched_temp_dir(monkeypatch):
+    # get a temporary directory
+    with patched_tempfile.TemporaryDirectory() as temp_dir:
+        pathlib.Path().mkdir(parents=True, exist_ok=True)
+        yield temp_dir
