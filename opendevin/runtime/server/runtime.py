@@ -174,13 +174,13 @@ class ServerRuntime(Runtime):
         return output
 
     async def run_ipython(self, action: IPythonRunCellAction) -> Observation:
+        action.code = action.code.replace('!pip', '%pip')
         self._run_command(
             f"cat > /tmp/opendevin_jupyter_temp.py <<'EOL'\n{action.code}\nEOL"
         )
         obs = self._run_command('cat /tmp/opendevin_jupyter_temp.py | execute_cli')
         output = obs.content
         if 'pip install' in action.code:
-            action.code = action.code.replace('!pip', '%pip')
             output = self.parse_pip_output(action.code, output)
         return IPythonRunCellObservation(content=output, code=action.code)
 
