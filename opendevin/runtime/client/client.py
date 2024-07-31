@@ -15,6 +15,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -332,15 +333,16 @@ class RuntimeClient:
                     file.truncate()
 
                 # Handle file permissions
-                if file_exists:
-                    assert file_stat is not None
-                    # restore the original file permissions if the file already exists
-                    os.chmod(filepath, file_stat.st_mode)
-                    os.chown(filepath, file_stat.st_uid, file_stat.st_gid)
-                else:
-                    # set the new file permissions if the file is new
-                    os.chmod(filepath, 0o644)
-                    os.chown(filepath, self.user_id, self.user_id)
+                if sys.platform != 'win32':
+                    if file_exists:
+                        assert file_stat is not None
+                        # restore the original file permissions if the file already exists
+                        os.chmod(filepath, file_stat.st_mode)
+                        os.chown(filepath, file_stat.st_uid, file_stat.st_gid)
+                    else:
+                        # set the new file permissions if the file is new
+                        os.chmod(filepath, 0o644)
+                        os.chown(filepath, self.user_id, self.user_id)
 
             except FileNotFoundError:
                 return ErrorObservation(f'File not found: {filepath}')
