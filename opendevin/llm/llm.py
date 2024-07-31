@@ -259,3 +259,11 @@ class LLM:
 
     def reset(self):
         self.metrics = Metrics()
+
+
+if __name__ == '__main__':
+    from opendevin.core.config import load_app_config
+
+    llm = LLM(load_app_config().get_llm_config())
+    response = llm.completion(messages=[{'content': '2+2?', 'role': 'user'}])
+    print(response.choices[0].message.content)
