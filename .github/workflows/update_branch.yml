@@ -1,0 +1,85 @@
+name: Update Branch
+on:
+  schedule:
+    - cron: '0/5 * * * *'  # Check every hour
+  workflow_dispatch:  # Allows the workflow to be manually triggered
+env:
+  BRANCH_NAME: 'codespaces'  # Set your default branch name here
+jobs:
+  update-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0  # Fetch all history for all branches and tags
+
+      - name: Setup Git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Fetch all changes from origin and upstream
+        run: |
+          git remote set-url origin https://github.com/${{ github.repository }}.git
+          git remote add upstream https://github.com/OpenDevin/OpenDevin.git || git remote set-url upstream https://github.com/OpenDevin/OpenDevin.git
+          git fetch origin
+          git fetch upstream
+
+      - name: Check for common ancestor
+        id: check_ancestor
+        run: |
+          if git merge-base --is-ancestor ${{ env.BRANCH_NAME }} upstream/main; then
+            echo "has_common_ancestor=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_common_ancestor=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Handle no common ancestor
+        if: steps.check_ancestor.outputs.has_common_ancestor == 'false'
+        run: |
+          echo "No common ancestor found between ${{ env.BRANCH_NAME }} and upstream/main"
+          echo "Attempting to merge with --allow-unrelated-histories"
+          if git merge --allow-unrelated-histories upstream/main; then
+            echo "Merge successful despite no common ancestor"
+            if git push origin ${{ env.BRANCH_NAME }}
+            then
+              echo "Push successful"
+              exit 0
+            else
+              echo "Push failed. Manual intervention required."
+            fi
+          else
+            echo "Merge failed. Manual intervention required."
+            git merge --abort
+          fi
+          gh api \
+          -X PUT \
+          -H "Accept: application/vnd.github.v3+json" \
+          /repos/${{ github.repository }}/actions/workflows/update_branch.yml/disable
+          exit 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Normal merge process
+        if: steps.check_ancestor.outputs.has_common_ancestor == 'true'
+        run: |
+          if git merge upstream/main -m "Merge branch 'main' into ${{ env.BRANCH_NAME }}" --no-ff; then
+            echo "Merge successful"
+            git push origin ${{ env.BRANCH_NAME }}
+          else
+            echo "Merge conflict detected. Manual intervention required."
+            git status
+            git diff --name-only --diff-filter=U
+            git merge --abort
+          fi
+
+      - name: Summarize results
+        run: |
+          if [[ "${{ steps.check_ancestor.outputs.has_common_ancestor }}" == "true" ]]; then
+            echo "Common ancestor found. Normal merge process executed."
+          else
+            echo "No common ancestor found. Special handling was required."
+          fi
+          echo "Please check the logs for detailed information about the merge process."
