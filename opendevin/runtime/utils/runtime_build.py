@@ -28,6 +28,8 @@ def _create_project_source_dist():
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(opendevin.__file__)))
     logger.info(f'Using project root: {project_root}')
 
+    # install build package
+    subprocess.run(['python', '-m', 'pip', 'install', 'build'])
     # run "python -m build -s" on project_root
     result = subprocess.run(['python', '-m', 'build', '-s', project_root])
     if result.returncode != 0:
