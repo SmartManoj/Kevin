@@ -43,6 +43,11 @@ Given a particular task, finds and describes all relevant parts of the codebase
 #### Inputs
 {"task": "string"}
 
+### TutorAgent
+Provides educational explanations and interactive tutoring for codebases
+#### Inputs
+{"codebase": "string", "questions": "string"}
+
 ### TypoFixerAgent
 Fixes typos in files in the current working directory
 #### Inputs
