@@ -1,0 +1,7 @@
+name: TutorAgent
+description: Provides educational explanations and interactive tutoring for codebases
+inputs:
+  codebase: string
+  questions: string
+outputs:
+  explanations: string
