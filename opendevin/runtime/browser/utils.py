@@ -3,12 +3,12 @@ import os
 from browsergym.utils.obs import flatten_axtree_to_str
 
 from opendevin.core.exceptions import BrowserUnavailableException
+from opendevin.core.logger import opendevin_logger as logger
 from opendevin.core.schema import ActionType
 from opendevin.events.action import BrowseInteractiveAction, BrowseURLAction
 from opendevin.events.observation import BrowserOutputObservation
 from opendevin.runtime.browser.browser_env import BrowserEnv
 
-from opendevin.core.logger import opendevin_logger as logger
 
 async def browse(
     action: BrowseURLAction | BrowseInteractiveAction, browser: BrowserEnv | None
