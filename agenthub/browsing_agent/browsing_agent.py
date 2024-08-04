@@ -179,10 +179,6 @@ class BrowsingAgent(Agent):
                     return MessageAction('Too many errors encountered. Task failed.')
             cur_axtree_txt = last_obs.axtree_txt
             if cur_axtree_txt.startswith('AX Error:'):
-                logger.error(
-                    'Error when trying to process the accessibility tree: %s',
-                    cur_axtree_txt.split(':', 1)[1],
-                )
                 return MessageAction('Error encountered when browsing.')
 
         if (goal := state.get_current_user_intent()) is None:

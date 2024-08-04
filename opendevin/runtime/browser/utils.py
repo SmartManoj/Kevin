@@ -8,6 +8,7 @@ from opendevin.events.action import BrowseInteractiveAction, BrowseURLAction
 from opendevin.events.observation import BrowserOutputObservation
 from opendevin.runtime.browser.browser_env import BrowserEnv
 
+from opendevin.core.logger import opendevin_logger as logger
 
 async def browse(
     action: BrowseURLAction | BrowseInteractiveAction, browser: BrowserEnv | None
@@ -42,6 +43,9 @@ async def browse(
                 filter_visible_only=True,
             )
         except Exception as e:
+            logger.error(
+                f'Error when trying to process the accessibility tree: {e}, obs: {obs}'
+            )
             axtree_txt = f'AX Error: {e}'
         return BrowserOutputObservation(
             content=obs['text_content'],  # text content of the page
