@@ -148,7 +148,8 @@ class ServerRuntime(Runtime):
             print(output)
             output = '\n[Failed to restart the kernel]'
         else:
-            output = '\n[Kernel restarted successfully]'
+            # output = '\n[Kernel restarted successfully]' is enough
+            output = '\n[Kernel restarted successfully to load the package]'
 
         # re-init the kernel after restart
         self._run_command(
