@@ -145,7 +145,7 @@ class ServerRuntime(Runtime):
         obs = self._run_command('cat /tmp/opendevin_jupyter_temp.py | execute_cli')
         output = obs.content
         if "{'status': 'ok', 'restart': True}" != output.strip():
-            print(output)
+            logger.error(f'Failed to restart the kernel: {output}')
             output = '\n[Failed to restart the kernel]'
         else:
             # output = '\n[Kernel restarted successfully]' is enough
