@@ -167,14 +167,14 @@ class ServerRuntime(Runtime):
         print(output)
         package_names = code.split(' ', 2)[-1]
         is_single_package = ' ' not in package_names
-
+        parsed_output = output
         if 'Successfully installed' in output:
-            output = '[Package installed successfully]'
+            parsed_output = '[Package installed successfully]'
             if (
                 'Note: you may need to restart the kernel to use updated packages.'
                 in output
             ):
-                output += self.restart_kernel()
+                parsed_output += self.restart_kernel()
             else:
                 # restart kernel if installed via bash too
                 self.restart_kernel()
@@ -182,9 +182,9 @@ class ServerRuntime(Runtime):
             is_single_package
             and f'Requirement already satisfied: {package_names}' in output
         ):
-            output = '[Package already installed]'
+            parsed_output = '[Package already installed]'
 
-        return output
+        return parsed_output
 
     async def run_ipython(self, action: IPythonRunCellAction) -> Observation:
         action.code = action.code.replace('!pip', '%pip')
