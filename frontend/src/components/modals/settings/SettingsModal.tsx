@@ -48,7 +48,8 @@ function SettingsModal({ isOpen, onOpenChange }: SettingsProps) {
     const isRunning =
       curAgentState === AgentState.RUNNING ||
       curAgentState === AgentState.PAUSED ||
-      curAgentState === AgentState.AWAITING_USER_INPUT;
+      curAgentState === AgentState.AWAITING_USER_INPUT ||
+      curAgentState === AgentState.AWAITING_USER_CONFIRMATION;
     setAgentIsRunning(isRunning);
   }, [curAgentState]);
 
@@ -58,7 +59,7 @@ function SettingsModal({ isOpen, onOpenChange }: SettingsProps) {
         setModels(await fetchModels());
         setAgents(await fetchAgents());
       } catch (error) {
-        console.error(error);
+        toast.error("settings", t(I18nKey.CONFIGURATION$ERROR_FETCH_MODELS));
       } finally {
         setLoading(false);
       }
@@ -87,6 +88,10 @@ function SettingsModal({ isOpen, onOpenChange }: SettingsProps) {
 
   const handleAPIKeyChange = (key: string) => {
     setSettings((prev) => ({ ...prev, LLM_API_KEY: key }));
+  };
+
+  const handleConfirmationModeChange = (confirmationMode: boolean) => {
+    setSettings((prev) => ({ ...prev, CONFIRMATION_MODE: confirmationMode }));
   };
 
   const handleResetSettings = () => {
@@ -170,6 +175,7 @@ function SettingsModal({ isOpen, onOpenChange }: SettingsProps) {
           onAgentChange={handleAgentChange}
           onLanguageChange={handleLanguageChange}
           onAPIKeyChange={handleAPIKeyChange}
+          onConfirmationModeChange={handleConfirmationModeChange}
         />
       )}
     </BaseModal>

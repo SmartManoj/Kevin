@@ -3,13 +3,11 @@ from opendevin.events.action.action import Action
 from opendevin.events.action.agent import (
     AgentDelegateAction,
     AgentFinishAction,
-    AgentRecallAction,
     AgentRejectAction,
     ChangeAgentStateAction,
 )
 from opendevin.events.action.browse import BrowseInteractiveAction, BrowseURLAction
 from opendevin.events.action.commands import (
-    CmdKillAction,
     CmdRunAction,
     IPythonRunCellAction,
 )
@@ -20,14 +18,12 @@ from opendevin.events.action.tasks import AddTaskAction, ModifyTaskAction
 
 actions = (
     NullAction,
-    CmdKillAction,
     CmdRunAction,
     IPythonRunCellAction,
     BrowseURLAction,
     BrowseInteractiveAction,
     FileReadAction,
     FileWriteAction,
-    AgentRecallAction,
     AgentFinishAction,
     AgentRejectAction,
     AgentDelegateAction,
@@ -58,6 +54,8 @@ def action_from_dict(action: dict) -> Action:
     args = action.get('args', {})
     try:
         decoded_action = action_class(**args)
+        if 'timeout' in action:
+            decoded_action.timeout = action['timeout']
     except TypeError:
         raise LLMMalformedActionError(f'action={action} has the wrong arguments')
     return decoded_action

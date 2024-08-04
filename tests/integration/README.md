@@ -36,10 +36,11 @@ The folder is organised as follows:
 ├── README.md
 ├── conftest.py
 ├── mock
-│   ├── [AgentName]
-│   │   └── [TestName]
-│   │       ├── prompt_*.log
-│   │       ├── response_*.log
+    ├── [RuntimeType]
+│   |   ├── [AgentName]
+│   │       └── [TestName]
+│   │           ├── prompt_*.log
+│   │           ├── response_*.log
 └── [TestFiles].py
 ```
 
@@ -51,11 +52,18 @@ of agents with real LLMs are stored under `mock/AgentName/TestName` folders.
 
 ## Run Integration Tests
 
-Take a look at `run-integration-tests.yml` (in the `.github` folder) to learn
-how integration tests are launched in a CI environment. You can also simply run:
+Take a look at `ghcr.yml` (in the `.github/workflow` folder) to learn
+how integration tests are launched in a CI environment.
+
+We currently have two runtime: `ServerRuntime` and `EventStreamRuntime`, each having their own sets of integration test prompts.
+
+You can run:
 
 ```bash
-TEST_ONLY=true ./tests/integration/regenerate.sh
+# for server runtime
+TEST_RUNTIME=server TEST_ONLY=true ./tests/integration/regenerate.sh
+# for event stream
+SANDBOX_UPDATE_SOURCE_CODE=True TEST_RUNTIME=eventstream TEST_ONLY=true ./tests/integration/regenerate.sh
 ```
 
 to run all integration tests until the first failure occurs.
@@ -75,7 +83,8 @@ When you make changes to an agent's prompt, the integration tests will fail. You
 by running the following command from OpenDevin's project root directory:
 
 ```bash
-./tests/integration/regenerate.sh
+TEST_RUNTIME=server ./tests/integration/regenerate.sh
+SANDBOX_UPDATE_SOURCE_CODE=True TEST_RUNTIME=eventstream ./tests/integration/regenerate.sh
 ```
 
 Please note that this will:
@@ -99,6 +108,16 @@ by regenerating prompts alone, but it still costs money! If you don't want
 to cover the cost, ask one of the maintainers to regenerate for you. Before asking,
 please try running the script first *without* setting `LLM_API_KEY`.
 Chance is, the test could be fixed after step 2.
+
+## Regenerate Integration Tests without testing first
+
+If you want to regenerate all prompts and/or responses without running the existing tests first, you can run:
+
+```bash
+FORCE_REGENERATE=true ./tests/integration/regenerate.sh
+```
+
+This will skip the first step and directly regenerate all tests when you know that the tests will fail due to changes in the prompt or the agent code itself and will save time.
 
 ## Regenerate a Specific Agent and/or Test
 

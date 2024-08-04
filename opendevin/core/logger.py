@@ -8,9 +8,8 @@ from typing import Literal, Mapping
 
 from termcolor import colored
 
-from opendevin.core.config import config
-
-DISABLE_COLOR_PRINTING = config.disable_color
+DISABLE_COLOR_PRINTING = False
+DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
 
 ColorType = Literal[
     'red',
@@ -31,9 +30,10 @@ ColorType = Literal[
 ]
 
 LOG_COLORS: Mapping[str, ColorType] = {
-    'BACKGROUND LOG': 'blue',
     'ACTION': 'green',
+    'USER_ACTION': 'light_red',
     'OBSERVATION': 'yellow',
+    'USER_OBSERVATION': 'light_green',
     'DETAIL': 'cyan',
     'ERROR': 'red',
     'PLAN': 'light_magenta',
@@ -42,7 +42,12 @@ LOG_COLORS: Mapping[str, ColorType] = {
 
 class ColoredFormatter(logging.Formatter):
     def format(self, record):
-        msg_type = record.__dict__.get('msg_type', None)
+        msg_type = record.__dict__.get('msg_type')
+        event_source = record.__dict__.get('event_source')
+        if event_source:
+            new_msg_type = f'{event_source.upper()}_{msg_type}'
+            if new_msg_type in LOG_COLORS:
+                msg_type = new_msg_type
         if msg_type in LOG_COLORS and not DISABLE_COLOR_PRINTING:
             msg_type_color = colored(msg_type, LOG_COLORS[msg_type])
             msg = colored(record.msg, LOG_COLORS[msg_type])
@@ -51,7 +56,7 @@ class ColoredFormatter(logging.Formatter):
             )
             name_str = colored(record.name, LOG_COLORS[msg_type])
             level_str = colored(record.levelname, LOG_COLORS[msg_type])
-            if msg_type in ['ERROR']:
+            if msg_type in ['ERROR'] or DEBUG:
                 return f'{time_str} - {name_str}:{level_str}: {record.filename}:{record.lineno}\n{msg_type_color}\n{msg}'
             return f'{time_str} - {msg_type_color}\n{msg}'
         elif msg_type == 'STEP':
@@ -109,25 +114,22 @@ class SensitiveDataFilter(logging.Filter):
 
 
 def get_console_handler():
-    """
-    Returns a console handler for logging.
-    """
+    """Returns a console handler for logging."""
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
+    if DEBUG:
+        console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(console_formatter)
     return console_handler
 
 
-def get_file_handler(log_dir=None):
-    """
-    Returns a file handler for logging.
-    """
-    log_dir = os.path.join(os.getcwd(), 'logs') if log_dir is None else log_dir
+def get_file_handler(log_dir):
+    """Returns a file handler for logging."""
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime('%Y-%m-%d')
     file_name = f'opendevin_{timestamp}.log'
     file_handler = logging.FileHandler(os.path.join(log_dir, file_name))
-    if config.debug:
+    if DEBUG:
         file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(file_formatter)
     return file_handler
@@ -138,8 +140,7 @@ logging.basicConfig(level=logging.ERROR)
 
 
 def log_uncaught_exceptions(ex_cls, ex, tb):
-    """
-    Logs uncaught exceptions along with the traceback.
+    """Logs uncaught exceptions along with the traceback.
 
     Args:
         ex_cls (type): The type of the exception.
@@ -157,14 +158,21 @@ sys.excepthook = log_uncaught_exceptions
 
 opendevin_logger = logging.getLogger('opendevin')
 opendevin_logger.setLevel(logging.INFO)
-opendevin_logger.addHandler(get_file_handler())
+LOG_DIR = os.path.join(
+    # parent dir of opendevin/core (i.e., root of the repo)
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    'logs',
+)
+if DEBUG:
+    opendevin_logger.setLevel(logging.DEBUG)
+    # default log to project root
+    opendevin_logger.info('DEBUG logging is enabled. Logging to %s', LOG_DIR)
+opendevin_logger.addHandler(get_file_handler(LOG_DIR))
 opendevin_logger.addHandler(get_console_handler())
 opendevin_logger.addFilter(SensitiveDataFilter(opendevin_logger.name))
 opendevin_logger.propagate = False
 opendevin_logger.debug('Logging initialized')
-opendevin_logger.debug(
-    'Logging to %s', os.path.join(os.getcwd(), 'logs', 'opendevin.log')
-)
+
 
 # Exclude LiteLLM from logging output
 logging.getLogger('LiteLLM').disabled = True
@@ -173,13 +181,10 @@ logging.getLogger('LiteLLM Proxy').disabled = True
 
 
 class LlmFileHandler(logging.FileHandler):
-    """
-    # LLM prompt and response logging
-    """
+    """# LLM prompt and response logging"""
 
     def __init__(self, filename, mode='a', encoding='utf-8', delay=False):
-        """
-        Initializes an instance of LlmFileHandler.
+        """Initializes an instance of LlmFileHandler.
 
         Args:
             filename (str): The name of the log file.
@@ -189,13 +194,13 @@ class LlmFileHandler(logging.FileHandler):
         """
         self.filename = filename
         self.message_counter = 1
-        if config.debug:
+        if DEBUG:
             self.session = datetime.now().strftime('%y-%m-%d_%H-%M')
         else:
             self.session = 'default'
-        self.log_directory = os.path.join(os.getcwd(), 'logs', 'llm', self.session)
+        self.log_directory = os.path.join(LOG_DIR, 'llm', self.session)
         os.makedirs(self.log_directory, exist_ok=True)
-        if not config.debug:
+        if not DEBUG:
             # Clear the log directory if not in debug mode
             for file in os.listdir(self.log_directory):
                 file_path = os.path.join(self.log_directory, file)
@@ -210,8 +215,7 @@ class LlmFileHandler(logging.FileHandler):
         super().__init__(self.baseFilename, mode, encoding, delay)
 
     def emit(self, record):
-        """
-        Emits a log record.
+        """Emits a log record.
 
         Args:
             record (logging.LogRecord): The log record to emit.
@@ -225,32 +229,22 @@ class LlmFileHandler(logging.FileHandler):
         self.message_counter += 1
 
 
-def get_llm_prompt_file_handler():
-    """
-    Returns a file handler for LLM prompt logging.
-    """
-    llm_prompt_file_handler = LlmFileHandler('prompt', delay=True)
-    llm_prompt_file_handler.setFormatter(llm_formatter)
-    llm_prompt_file_handler.setLevel(logging.DEBUG)
-    return llm_prompt_file_handler
+def _get_llm_file_handler(name, debug_level=logging.DEBUG):
+    # The 'delay' parameter, when set to True, postpones the opening of the log file
+    # until the first log message is emitted.
+    llm_file_handler = LlmFileHandler(name, delay=True)
+    llm_file_handler.setFormatter(llm_formatter)
+    llm_file_handler.setLevel(debug_level)
+    return llm_file_handler
 
 
-def get_llm_response_file_handler():
-    """
-    Returns a file handler for LLM response logging.
-    """
-    llm_response_file_handler = LlmFileHandler('response', delay=True)
-    llm_response_file_handler.setFormatter(llm_formatter)
-    llm_response_file_handler.setLevel(logging.DEBUG)
-    return llm_response_file_handler
+def _setup_llm_logger(name, debug_level=logging.DEBUG):
+    logger = logging.getLogger(name)
+    logger.propagate = False
+    logger.setLevel(debug_level)
+    logger.addHandler(_get_llm_file_handler(name, debug_level))
+    return logger
 
 
-llm_prompt_logger = logging.getLogger('prompt')
-llm_prompt_logger.propagate = False
-llm_prompt_logger.setLevel(logging.DEBUG)
-llm_prompt_logger.addHandler(get_llm_prompt_file_handler())
-
-llm_response_logger = logging.getLogger('response')
-llm_response_logger.propagate = False
-llm_response_logger.setLevel(logging.DEBUG)
-llm_response_logger.addHandler(get_llm_response_file_handler())
+llm_prompt_logger = _setup_llm_logger('prompt', logging.DEBUG)
+llm_response_logger = _setup_llm_logger('response', logging.DEBUG)

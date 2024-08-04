@@ -11,9 +11,8 @@ from opendevin.events.action import (
 
 
 class CodeActSWEActionParserFinish(ActionParser):
-    """
-    Parser action:
-        - AgentFinishAction() - end the interaction
+    """Parser action:
+    - AgentFinishAction() - end the interaction
     """
 
     def __init__(
@@ -34,10 +33,9 @@ class CodeActSWEActionParserFinish(ActionParser):
 
 
 class CodeActSWEActionParserCmdRun(ActionParser):
-    """
-    Parser action:
-        - CmdRunAction(command) - bash command to run
-        - AgentFinishAction() - end the interaction
+    """Parser action:
+    - CmdRunAction(command) - bash command to run
+    - AgentFinishAction() - end the interaction
     """
 
     def __init__(
@@ -64,16 +62,14 @@ class CodeActSWEActionParserCmdRun(ActionParser):
 
 
 class CodeActSWEActionParserIPythonRunCell(ActionParser):
-    """
-    Parser action:
-        - IPythonRunCellAction(code) - IPython code to run
+    """Parser action:
+    - IPythonRunCellAction(code) - IPython code to run
     """
 
     def __init__(
         self,
     ):
         self.python_code = None
-        self.jupyter_kernel_init_code: str = 'from agentskills import *'
 
     def check_condition(self, action_str: str) -> bool:
         self.python_code = re.search(
@@ -90,14 +86,12 @@ class CodeActSWEActionParserIPythonRunCell(ActionParser):
         return IPythonRunCellAction(
             code=code_group,
             thought=thought,
-            kernel_init_code=self.jupyter_kernel_init_code,
         )
 
 
 class CodeActSWEActionParserMessage(ActionParser):
-    """
-    Parser action:
-        - MessageAction(content) - Message action to run (e.g. ask for clarification)
+    """Parser action:
+    - MessageAction(content) - Message action to run (e.g. ask for clarification)
     """
 
     def __init__(

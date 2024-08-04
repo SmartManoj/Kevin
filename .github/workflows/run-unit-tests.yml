@@ -19,9 +19,38 @@ env:
   PERSIST_SANDBOX : "false"
 
 jobs:
+  fe-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run tests and collect coverage
+        working-directory: ./frontend
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   test-on-macos:
     name: Test on macOS
-    runs-on: macos-13
+    runs-on: macos-12
     env:
       INSTALL_DOCKER: "1" # Set to '0' to skip Docker installation
     strategy:
@@ -41,13 +70,52 @@ jobs:
           cache: "poetry"
 
       - name: Install Python dependencies using Poetry
-        run: poetry install
+        run: poetry install --without evaluation,llama-index
 
       - name: Install & Start Docker
         if: env.INSTALL_DOCKER == '1'
         run: |
-          brew install colima docker
-          colima start
+          INSTANCE_NAME="colima-${GITHUB_RUN_ID}"
+
+          # Uninstall colima to upgrade to the latest version
+          if brew list colima &>/dev/null; then
+            brew uninstall colima
+            # unlinking colima dependency: go
+            brew uninstall go@1.21
+          fi
+          rm -rf ~/.colima ~/.lima
+          brew install --HEAD colima
+          brew install docker
+
+          start_colima() {
+            # Find a free port in the range 10000-20000
+            RANDOM_PORT=$((RANDOM % 10001 + 10000))
+
+            # Original line:
+            if ! colima start --network-address --arch x86_64 --cpu=1 --memory=1 --verbose --ssh-port $RANDOM_PORT; then
+              echo "Failed to start Colima."
+              return 1
+            fi
+            return 0
+          }
+
+          # Attempt to start Colima for 5 total attempts:
+          ATTEMPT_LIMIT=5
+          for ((i=1; i<=ATTEMPT_LIMIT; i++)); do
+
+            if start_colima; then
+              echo "Colima started successfully."
+              break
+            else
+              colima stop -f
+              sleep 10
+              colima delete -f
+              if [ $i -eq $ATTEMPT_LIMIT ]; then
+                exit 1
+              fi
+              sleep 10
+            fi
+          done
 
           # For testcontainers to find the Colima socket
           # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
@@ -57,7 +125,7 @@ jobs:
         run: make build
 
       - name: Run Tests
-        run: poetry run pytest --forked --cov=agenthub --cov=opendevin --cov-report=xml ./tests/unit -k "not test_sandbox"
+        run: poetry run pytest --forked --cov=agenthub --cov=opendevin --cov-report=xml ./tests/unit -k "not test_sandbox.py and not test_runtime.py"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -85,13 +153,13 @@ jobs:
           cache: "poetry"
 
       - name: Install Python dependencies using Poetry
-        run: poetry install --without evaluation
+        run: poetry install --without evaluation,llama-index
 
       - name: Build Environment
         run: make build
 
       - name: Run Tests
-        run: poetry run pytest --forked --cov=agenthub --cov=opendevin --cov-report=xml ./tests/unit -k "not test_sandbox"
+        run: poetry run pytest --forked --cov=agenthub --cov=opendevin --cov-report=xml ./tests/unit -k "not test_sandbox.py and not test_runtime.py"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
