@@ -1,11 +1,11 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { IoMdChatbubbles } from "react-icons/io";
 import { RiArrowRightDoubleLine } from "react-icons/ri";
 import { useTranslation } from "react-i18next";
 import { VscArrowDown } from "react-icons/vsc";
 import { FaRegThumbsDown, FaRegThumbsUp } from "react-icons/fa";
-import { useDisclosure } from "@nextui-org/react";
+import { useDisclosure, Tooltip } from "@nextui-org/react";
 import ChatInput from "./ChatInput";
 import Chat from "./Chat";
 import TypingIndicator from "./TypingIndicator";
@@ -16,6 +16,7 @@ import { addUserMessage, addAssistantMessage } from "#/state/chatSlice";
 import { I18nKey } from "#/i18n/declaration";
 import { useScrollToBottom } from "#/hooks/useScrollToBottom";
 import FeedbackModal from "../modals/feedback/FeedbackModal";
+import beep from "#/utils/beep";
 
 interface ScrollButtonProps {
   onClick: () => void;
@@ -54,6 +55,7 @@ function ChatInterface() {
     "positive" | "negative"
   >("positive");
   const [feedbackShared, setFeedbackShared] = React.useState(0);
+  const [autoMode, setAutoMode] = useState(false);
 
   const {
     isOpen: feedbackModalIsOpen,
@@ -66,8 +68,8 @@ function ChatInterface() {
     setFeedbackPolarity(polarity);
   };
 
-  const handleSendMessage = (content: string) => {
-    dispatch(addUserMessage(content));
+  const handleSendMessage = (content: string, dispatchContent: string = "") => {
+    dispatch(addUserMessage(dispatchContent || content));
     sendChatMessage(content);
   };
 
@@ -76,22 +78,58 @@ function ChatInterface() {
     handleSendMessage(t(I18nKey.CHAT_INTERFACE$INPUT_CONTINUE_MESSAGE));
   };
 
+  const handleAutoMsg = () => {
+    handleSendMessage(
+      t(I18nKey.CHAT_INTERFACE$AUTO_MESSAGE),
+      t(I18nKey.CHAT_INTERFACE$INPUT_AUTO_MESSAGE),
+    );
+  };
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { scrollDomToBottom, onChatBodyScroll, hitBottom } =
     useScrollToBottom(scrollRef);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (curAgentState === AgentState.INIT && messages.length === 0) {
       dispatch(addAssistantMessage(t(I18nKey.CHAT_INTERFACE$INITIAL_MESSAGE)));
     }
   }, [curAgentState, dispatch, messages.length, t]);
+
+  useEffect(() => {
+    if (autoMode && curAgentState === AgentState.AWAITING_USER_INPUT) {
+      handleAutoMsg();
+    }
+  }, [autoMode, curAgentState]);
+
+  useEffect(() => {
+    if (
+      (!autoMode && curAgentState === AgentState.AWAITING_USER_INPUT) ||
+      curAgentState === AgentState.ERROR ||
+      curAgentState === AgentState.INIT
+    ) {
+      if (document.cookie.indexOf("audio") !== -1) beep();
+    }
+  }, [curAgentState]);
 
   return (
     <div className="flex flex-col h-full bg-neutral-800">
       <div className="flex items-center gap-2 border-b border-neutral-600 text-sm px-4 py-2">
         <IoMdChatbubbles />
         Chat
+        <div className="ml-auto">
+          <Tooltip content="⚠️ Use with caution! The agent will automatically continue task execution without requesting user inputs.">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={autoMode}
+                onChange={() => setAutoMode(!autoMode)}
+                aria-label="Auto Mode"
+              />
+              <span>Auto Mode</span>
+            </label>
+          </Tooltip>
+        </div>
       </div>
       <div className="flex-1 flex flex-col relative min-h-0">
         <div
@@ -114,15 +152,16 @@ function ChatInterface() {
           )}
           {hitBottom && (
             <>
-              {curAgentState === AgentState.AWAITING_USER_INPUT && (
-                <ScrollButton
-                  onClick={handleSendContinueMsg}
-                  icon={
-                    <RiArrowRightDoubleLine className="inline mr-2 w-3 h-3" />
-                  }
-                  label={t(I18nKey.CHAT_INTERFACE$INPUT_CONTINUE_MESSAGE)}
-                />
-              )}
+              {curAgentState === AgentState.AWAITING_USER_INPUT &&
+                !autoMode && (
+                  <ScrollButton
+                    onClick={handleSendContinueMsg}
+                    icon={
+                      <RiArrowRightDoubleLine className="inline mr-2 w-3 h-3" />
+                    }
+                    label={t(I18nKey.CHAT_INTERFACE$INPUT_CONTINUE_MESSAGE)}
+                  />
+                )}
               {curAgentState === AgentState.RUNNING && <TypingIndicator />}
             </>
           )}

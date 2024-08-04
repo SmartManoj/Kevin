@@ -25,7 +25,7 @@ from opendevin.runtime import (
     Sandbox,
 )
 from opendevin.runtime.browser.browser_env import BrowserEnv
-from opendevin.runtime.plugins import PluginRequirement
+from opendevin.runtime.plugins import JupyterRequirement, PluginRequirement
 from opendevin.runtime.runtime import Runtime
 from opendevin.runtime.tools import RuntimeTool
 from opendevin.storage.local import LocalFileStore
@@ -40,9 +40,10 @@ class ServerRuntime(Runtime):
         config: AppConfig,
         event_stream: EventStream,
         sid: str = 'default',
+        plugins: list[PluginRequirement] | None = None,
         sandbox: Sandbox | None = None,
     ):
-        super().__init__(config, event_stream, sid)
+        super().__init__(config, event_stream, sid, plugins)
         self.file_store = LocalFileStore(config.workspace_base)
         if sandbox is None:
             self.sandbox = self.create_sandbox(sid, config.sandbox.box_type)
@@ -79,9 +80,22 @@ class ServerRuntime(Runtime):
             raise ValueError(f'Invalid sandbox type: {box_type}')
 
     async def ainit(self, env_vars: dict[str, str] | None = None):
+        # init sandbox plugins
+        self.sandbox.init_plugins(self.plugins)
+
         # MUST call super().ainit() to initialize both default env vars
         # AND the ones in env vars!
         await super().ainit(env_vars)
+
+        if any(isinstance(plugin, JupyterRequirement) for plugin in self.plugins):
+            obs = await self.run_ipython(
+                IPythonRunCellAction(
+                    code=f'import os; os.chdir("{self.config.workspace_mount_path_in_sandbox}")'
+                )
+            )
+            logger.info(
+                f'Switch to working directory {self.config.workspace_mount_path_in_sandbox} in IPython. Output: {obs.content}'
+            )
 
     async def close(self):
         if hasattr(self, '_is_external_sandbox') and not self._is_external_sandbox:
@@ -89,14 +103,10 @@ class ServerRuntime(Runtime):
         if hasattr(self, 'browser') and self.browser is not None:
             self.browser.close()
 
-    def init_sandbox_plugins(self, plugins: list[PluginRequirement]) -> None:
-        self.sandbox.init_plugins(plugins)
-
     def init_runtime_tools(
         self,
         runtime_tools: list[RuntimeTool],
         runtime_tools_config: Optional[dict[RuntimeTool, Any]] = None,
-        is_async: bool = True,
     ) -> None:
         # if browser in runtime_tools, init it
         if RuntimeTool.BROWSER in runtime_tools:
@@ -104,72 +114,88 @@ class ServerRuntime(Runtime):
                 runtime_tools_config = {}
             browser_env_config = runtime_tools_config.get(RuntimeTool.BROWSER, {})
             try:
-                self.browser = BrowserEnv(is_async=is_async, **browser_env_config)
+                self.browser = BrowserEnv(**browser_env_config)
             except BrowserInitException:
                 logger.warn(
                     'Failed to start browser environment, web browsing functionality will not work'
                 )
 
+    async def copy_to(self, host_src: str, sandbox_dest: str, recursive: bool = False):
+        self.sandbox.copy_to(host_src, sandbox_dest, recursive)
+
     async def run(self, action: CmdRunAction) -> Observation:
         return self._run_command(action.command)
 
+    def restart_kernel(self) -> str:
+        if self.config.default_agent in ['CodeActAgent', 'CodeActSWEAgent']:
+            kernel_init_code = 'from agentskills import *'
+        else:
+            return ''
+
+        restart_kernel_code = (
+            'import IPython\nIPython.Application.instance().kernel.do_shutdown(True)'
+        )
+        self._run_command(
+            (
+                "cat > /tmp/opendevin_jupyter_temp.py <<'EOL'\n"
+                f'{restart_kernel_code}\n'
+                'EOL'
+            )
+        )
+        obs = self._run_command('cat /tmp/opendevin_jupyter_temp.py | execute_cli')
+        output = obs.content
+        if "{'status': 'ok', 'restart': True}" != output.strip():
+            print(output)
+            output = '\n[Failed to restart the kernel]'
+        else:
+            # output = '\n[Kernel restarted successfully]' is enough
+            output = '\n[Kernel restarted successfully to load the package]'
+
+        # re-init the kernel after restart
+        self._run_command(
+            (
+                f"cat > /tmp/opendevin_jupyter_init.py <<'EOL'\n"
+                f'{kernel_init_code}\n'
+                'EOL'
+            ),
+        )
+        self._run_command(
+            'cat /tmp/opendevin_jupyter_init.py | execute_cli',
+        )
+        return output
+
+    def parse_pip_output(self, code, output) -> str:
+        print(output)
+        package_names = code.split(' ', 2)[-1]
+        is_single_package = ' ' not in package_names
+        parsed_output = output
+        if 'Successfully installed' in output:
+            parsed_output = '[Package installed successfully]'
+            if (
+                'Note: you may need to restart the kernel to use updated packages.'
+                in output
+            ):
+                parsed_output += self.restart_kernel()
+            else:
+                # restart kernel if installed via bash too
+                self.restart_kernel()
+        elif (
+            is_single_package
+            and f'Requirement already satisfied: {package_names}' in output
+        ):
+            parsed_output = '[Package already installed]'
+
+        return parsed_output
+
     async def run_ipython(self, action: IPythonRunCellAction) -> Observation:
+        action.code = action.code.replace('!pip', '%pip')
         self._run_command(
             f"cat > /tmp/opendevin_jupyter_temp.py <<'EOL'\n{action.code}\nEOL"
         )
-
-        # run the code
         obs = self._run_command('cat /tmp/opendevin_jupyter_temp.py | execute_cli')
         output = obs.content
         if 'pip install' in action.code:
-            print(output)
-            package_names = action.code.split(' ', 2)[-1]
-            is_single_package = ' ' not in package_names
-
-            if 'Successfully installed' in output:
-                restart_kernel = 'import IPython\nIPython.Application.instance().kernel.do_shutdown(True)'
-                if (
-                    'Note: you may need to restart the kernel to use updated packages.'
-                    in output
-                ):
-                    self._run_command(
-                        (
-                            "cat > /tmp/opendevin_jupyter_temp.py <<'EOL'\n"
-                            f'{restart_kernel}\n'
-                            'EOL'
-                        )
-                    )
-                    obs = self._run_command(
-                        'cat /tmp/opendevin_jupyter_temp.py | execute_cli'
-                    )
-                    output = '[Package installed successfully]'
-                    if "{'status': 'ok', 'restart': True}" != obs.content.strip():
-                        print(obs.content)
-                        output += (
-                            '\n[But failed to restart the kernel to load the package]'
-                        )
-                    else:
-                        output += (
-                            '\n[Kernel restarted successfully to load the package]'
-                        )
-
-                    # re-init the kernel after restart
-                    if action.kernel_init_code:
-                        self._run_command(
-                            (
-                                f"cat > /tmp/opendevin_jupyter_init.py <<'EOL'\n"
-                                f'{action.kernel_init_code}\n'
-                                'EOL'
-                            ),
-                        )
-                        obs = self._run_command(
-                            'cat /tmp/opendevin_jupyter_init.py | execute_cli',
-                        )
-            elif (
-                is_single_package
-                and f'Requirement already satisfied: {package_names}' in output
-            ):
-                output = '[Package already installed]'
+            output = self.parse_pip_output(action.code, output)
         return IPythonRunCellObservation(content=output, code=action.code)
 
     async def read(self, action: FileReadAction) -> Observation:
@@ -206,17 +232,8 @@ class ServerRuntime(Runtime):
     def _run_command(self, command: str) -> Observation:
         try:
             exit_code, output = self.sandbox.execute(command)
-            if 'pip install' in command:
-                package_names = command.split(' ', 2)[-1]
-                is_single_package = ' ' not in package_names
-                print(output)
-                if 'Successfully installed' in output:
-                    output = '[Package installed successfully]'
-                elif (
-                    is_single_package
-                    and f'Requirement already satisfied: {package_names}' in output
-                ):
-                    output = '[Package already installed]'
+            if command.startswith('pip install'):
+                output = self.parse_pip_output(command, output)
             return CmdOutputObservation(
                 command_id=-1, content=str(output), command=command, exit_code=exit_code
             )

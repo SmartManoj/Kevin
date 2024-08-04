@@ -1,3 +1,12 @@
+### Kevin Changelogs:
+
+  1) Added [Auto Mode](https://github.com/OpenDevin/OpenDevin/pull/2782) 🔥🔥🔥
+  2) [Restarted Jupyter kernel if package installed via bash too](https://github.com/OpenDevin/OpenDevin/pull/3178) 👍
+
+### Separate Feature Branches:
+  1) [Added Tutor Agent](https://github.com/SmartManoj/Kevin/tree/add-tutor-agent) 🧑‍🏫
+---
+
 <a name="readme-top"></a>
 
 <!--
@@ -24,7 +33,7 @@
   <a href="https://github.com/OpenDevin/OpenDevin/issues"><img src="https://img.shields.io/github/issues/opendevin/opendevin?style=for-the-badge&color=blue" alt="Issues"></a>
   <a href="https://github.com/OpenDevin/OpenDevin/blob/main/LICENSE"><img src="https://img.shields.io/github/license/opendevin/opendevin?style=for-the-badge&color=blue" alt="MIT License"></a>
   <br/>
-  <a href="https://join.slack.com/t/opendevin/shared_invite/zt-2i1iqdag6-bVmvamiPA9EZUu7oCO6KhA"><img src="https://img.shields.io/badge/Slack-Join%20Us-red?logo=slack&logoColor=white&style=for-the-badge" alt="Join our Slack community"></a>
+  <a href="https://join.slack.com/t/opendevin/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw"><img src="https://img.shields.io/badge/Slack-Join%20Us-red?logo=slack&logoColor=white&style=for-the-badge" alt="Join our Slack community"></a>
   <a href="https://discord.gg/ESHStjSjD4"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord community"></a>
   <a href="https://codecov.io/github/opendevin/opendevin?branch=main"><img alt="CodeCov" src="https://img.shields.io/codecov/c/github/opendevin/opendevin?style=for-the-badge"></a>
 </div>
@@ -47,6 +56,9 @@ OpenDevin agents collaborate with human developers to write code, fix bugs, and 
 ![App screenshot](./docs/static/img/screenshot.png)
 
 ## ⚡ Getting Started
+
+The easiest way to run OpenDevin is to [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/OpenDevin/OpenDevin) 🔥🔥🔥
+
 OpenDevin works best with Docker version 26.0.0+ (Docker Desktop 4.31.0+).
 You must be using Linux, Mac OS, or WSL on Windows.
 
@@ -66,7 +78,7 @@ docker run -it \
     -p 3000:3000 \
     --add-host host.docker.internal:host-gateway \
     --name opendevin-app-$(date +%Y%m%d%H%M%S) \
-    ghcr.io/opendevin/opendevin
+    ghcr.io/opendevin/opendevin:0.8
 ```
 
 > [!NOTE]
@@ -111,7 +123,7 @@ For details, please check [CONTRIBUTING.md](./CONTRIBUTING.md).
 Whether you're a developer, a researcher, or simply enthusiastic about OpenDevin, we'd love to have you in our community.
 Let's make software engineering better together!
 
-- [Slack workspace](https://join.slack.com/t/opendevin/shared_invite/zt-2jsrl32uf-fTeeFjNyNYxqSZt5NPY3fA) - Here we talk about research, architecture, and future development.
+- [Slack workspace](https://join.slack.com/t/opendevin/shared_invite/zt-2ngejmfw6-9gW4APWOC9XUp1n~SiQ6iw) - Here we talk about research, architecture, and future development.
 - [Discord server](https://discord.gg/ESHStjSjD4) - This is a community-run server for general discussion, questions, and feedback.
 
 ## 📈 Progress
@@ -141,12 +153,12 @@ Distributed under the MIT License. See [`LICENSE`](./LICENSE) for more informati
 
 ```
 @misc{opendevin,
-      title={{OpenDevin: An Open Platform for AI Software Developers as Generalist Agents}}, 
+      title={{OpenDevin: An Open Platform for AI Software Developers as Generalist Agents}},
       author={Xingyao Wang and Boxuan Li and Yufan Song and Frank F. Xu and Xiangru Tang and Mingchen Zhuge and Jiayi Pan and Yueqi Song and Bowen Li and Jaskirat Singh and Hoang H. Tran and Fuqiang Li and Ren Ma and Mingzhang Zheng and Bill Qian and Yanjun Shao and Niklas Muennighoff and Yizhe Zhang and Binyuan Hui and Junyang Lin and Robert Brennan and Hao Peng and Heng Ji and Graham Neubig},
       year={2024},
       eprint={2407.16741},
       archivePrefix={arXiv},
       primaryClass={cs.SE},
-      url={https://arxiv.org/abs/2407.16741}, 
+      url={https://arxiv.org/abs/2407.16741},
 }
 ```

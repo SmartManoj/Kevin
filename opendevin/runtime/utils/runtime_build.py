@@ -29,6 +29,8 @@ def _create_project_source_dist():
     logger.info(f'Using project root: {project_root}')
 
     # run "python -m build -s" on project_root
+    # install build package if not installed
+    subprocess.run(['python', '-m', 'pip', 'install', 'build'])
     result = subprocess.run(['python', '-m', 'build', '-s', project_root])
     if result.returncode != 0:
         logger.error(f'Build failed: {result}')
