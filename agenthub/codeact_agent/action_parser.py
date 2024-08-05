@@ -114,7 +114,6 @@ class CodeActActionParserIPythonRunCell(ActionParser):
         self,
     ):
         self.python_code = None
-        self.jupyter_kernel_init_code: str = 'from agentskills import *'
 
     def check_condition(self, action_str: str) -> bool:
         self.python_code = re.search(
@@ -131,7 +130,6 @@ class CodeActActionParserIPythonRunCell(ActionParser):
         return IPythonRunCellAction(
             code=code_group,
             thought=thought,
-            kernel_init_code=self.jupyter_kernel_init_code,
         )
 
 

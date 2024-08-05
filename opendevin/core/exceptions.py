@@ -93,3 +93,8 @@ class SummarizeError(Exception):
 class InvalidSummaryResponseError(Exception):
     def __init__(self, message='Invalid summary response'):
         super().__init__(message)
+
+
+class UserCancelledError(Exception):
+    def __init__(self, message='User cancelled the request'):
+        super().__init__(message)

@@ -10,6 +10,14 @@ from .action import Action, ActionConfirmationStatus
 class CmdRunAction(Action):
     command: str
     thought: str = ''
+    keep_prompt: bool = True
+    # if True, the command prompt will be kept in the command output observation
+    # Example of command output:
+    # root@sandbox:~# ls
+    # file1.txt
+    # file2.txt
+    # root@sandbox:~# <-- this is the command prompt
+
     action: str = ActionType.RUN
     runnable: ClassVar[bool] = True
     is_confirmed: ActionConfirmationStatus = ActionConfirmationStatus.CONFIRMED
@@ -33,7 +41,6 @@ class IPythonRunCellAction(Action):
     action: str = ActionType.RUN_IPYTHON
     runnable: ClassVar[bool] = True
     is_confirmed: ActionConfirmationStatus = ActionConfirmationStatus.CONFIRMED
-    kernel_init_code: str = ''  # code to run in the kernel (if the kernel is restarted)
 
     def __str__(self) -> str:
         ret = '**IPythonRunCellAction**\n'

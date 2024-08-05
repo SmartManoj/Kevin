@@ -9,6 +9,7 @@ from agenthub.codeact_agent.prompt import (
 from opendevin.controller.agent import Agent
 from opendevin.controller.state.state import State
 from opendevin.core.exceptions import ContextWindowLimitExceededError
+from opendevin.core.message import ImageContent, Message, TextContent
 from opendevin.events.action import (
     Action,
     AgentDelegateAction,
@@ -26,7 +27,6 @@ from opendevin.events.observation import (
 from opendevin.events.observation.observation import Observation
 from opendevin.events.serialization.event import truncate_content
 from opendevin.llm.llm import LLM
-from opendevin.llm.messages import Message
 from opendevin.runtime.plugins import (
     AgentSkillsRequirement,
     JupyterRequirement,
@@ -137,7 +137,6 @@ class CodeActAgent(Agent):
         return ''
 
     def get_action_message(self, action: Action) -> Message | None:
-        message = None
         if (
             isinstance(action, AgentDelegateAction)
             or isinstance(action, CmdRunAction)
@@ -146,47 +145,60 @@ class CodeActAgent(Agent):
             or isinstance(action, AgentSummarizeAction)
             or (isinstance(action, AgentFinishAction) and action.source == 'agent')
         ):
-            message = {
-                'role': 'user' if action.source == 'user' else 'assistant',
-                'content': self.action_to_str(action),
-            }
-        if message:
-            return Message(message=message, condensable=True, event_id=action.id)
-        else:
-            return None
+            content = [TextContent(text=self.action_to_str(action))]
+
+            if isinstance(action, MessageAction) and action.images_urls:
+                content.append(ImageContent(image_urls=action.images_urls))
+
+            return Message(
+                role='user' if action.source == 'user' else 'assistant',
+                content=content,
+                condensable=True,
+                event_id=action.id,
+            )
+        return None
 
     def get_observation_message(self, obs: Observation) -> Message | None:
-        message = None
         max_message_chars = self.llm.config.max_message_chars
         if isinstance(obs, CmdOutputObservation):
-            content = 'OBSERVATION:\n' + truncate_content(
-                obs.content, max_message_chars
-            )
-            content += (
+            text = 'OBSERVATION:\n' + truncate_content(obs.content, max_message_chars)
+            text += (
                 f'\n[Command {obs.command_id} finished with exit code {obs.exit_code}]'
             )
-            message = {'role': 'user', 'content': content}
+            return Message(
+                role='user',
+                content=[TextContent(text=text)],
+                condensable=True,
+                event_id=obs.id,
+            )
         elif isinstance(obs, IPythonRunCellObservation):
-            content = 'OBSERVATION:\n' + obs.content
+            text = 'OBSERVATION:\n' + obs.content
             # replace base64 images with a placeholder
-            splitted = content.split('\n')
+            splitted = text.split('\n')
             for i, line in enumerate(splitted):
                 if '![image](data:image/png;base64,' in line:
                     splitted[i] = (
                         '![image](data:image/png;base64, ...) already displayed to user'
                     )
-            content = '\n'.join(splitted)
-            content = truncate_content(content, max_message_chars)
-            message = {'role': 'user', 'content': content}
+            text = '\n'.join(splitted)
+            text = truncate_content(text, max_message_chars)
+            return Message(
+                role='user',
+                content=[TextContent(text=text)],
+                condensable=True,
+                event_id=obs.id,
+            )
         elif isinstance(obs, AgentDelegateObservation):
-            content = 'OBSERVATION:\n' + truncate_content(
+            text = 'OBSERVATION:\n' + truncate_content(
                 str(obs.outputs), max_message_chars
             )
-            message = {'role': 'user', 'content': content}
-        if message:
-            return Message(message=message, condensable=True, event_id=obs.id)
-        else:
-            return None
+            return Message(
+                role='user',
+                content=[TextContent(text=text)],
+                condensable=True,
+                event_id=obs.id,
+            )
+        return None
 
     def reset(self) -> None:
         """Resets the CodeAct Agent."""
@@ -221,7 +233,7 @@ class CodeActAgent(Agent):
             print('No of tokens, ' + str(self.llm.get_token_count(messages)) + '\n')
             try:
                 response = self.llm.completion(
-                    messages=messages,
+                    messages=[message.model_dump() for message in messages],
                     stop=[
                         '</execute_ipython>',
                         '</execute_bash>',
@@ -236,17 +248,16 @@ class CodeActAgent(Agent):
 
         return self.action_parser.parse(response)
 
-    def search_memory(self, query: str) -> list[str]:
-        raise NotImplementedError('Implement this abstract method')
-
     def _get_messages(self, state: State) -> list[Message]:
-        messages = [
+        messages: list[Message] = [
             Message(
-                message={'role': 'system', 'content': self.system_message},
+                role='system',
+                content=[TextContent(text=self.system_message)],
                 condensable=False,
             ),
             Message(
-                message={'role': 'user', 'content': self.in_context_example},
+                role='user',
+                content=[TextContent(text=self.in_context_example)],
                 condensable=False,
             ),
         ]
@@ -266,7 +277,13 @@ class CodeActAgent(Agent):
                     raise ValueError(f'Unknown event type: {type(event)}')
                 # add regular message
                 if message:
-                    messages.append(message)
+                    # handle error if the message is the SAME role as the previous message
+                    # litellm.exceptions.BadRequestError: litellm.BadRequestError: OpenAIException - Error code: 400 - {'detail': 'Only supports u/a/u/a/u...'}
+                    # there should not have two consecutive messages from the same role
+                    if messages and messages[-1].role == message.role:
+                        messages[-1].content.extend(message.content)
+                    else:
+                        messages.append(message)
 
         # the latest user message is important:
         # we want to remind the agent of the environment constraints
@@ -274,10 +291,24 @@ class CodeActAgent(Agent):
             (m for m in reversed(messages) if m.message['role'] == 'user'), None
         )
 
-        # add a reminder to the prompt
+        # Get the last user text inside content
         if latest_user_message:
-            latest_user_message.message['content'] += (
-                f'\n\nENVIRONMENT REMINDER: You have {state.max_iterations - state.iteration} turns left to complete the task. When finished reply with <finish></finish>'
+            latest_user_message_text = next(
+                (
+                    t
+                    for t in reversed(latest_user_message.content)
+                    if isinstance(t, TextContent)
+                )
             )
+            # add a reminder to the prompt
+            reminder_text = f'\n\nENVIRONMENT REMINDER: You have {state.max_iterations - state.iteration} turns left to complete the task. When finished reply with <finish></finish>.'
+
+            if latest_user_message_text:
+                latest_user_message_text.text = (
+                    latest_user_message_text.text + reminder_text
+                )
+            else:
+                latest_user_message_text = TextContent(text=reminder_text)
+                latest_user_message.content.append(latest_user_message_text)
 
         return messages

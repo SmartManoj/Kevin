@@ -132,9 +132,9 @@ class AgentController:
         - a user-friendly message, which will be shown in the chat box. This should not be a raw exception message.
         - an ErrorObservation that can be sent to the LLM by the agent, with the exception message, so it can self-correct next time.
         """
-        self.state.last_error = message
         if exception:
-            self.state.last_error += f': {exception}'
+            message += f': {exception}'
+        self.state.last_error = message
         self.event_stream.add_event(ErrorObservation(message), EventSource.AGENT)
 
     async def _start_step_loop(self):
@@ -146,7 +146,6 @@ class AgentController:
                 logger.info('AgentController task was cancelled')
                 break
             except Exception as e:
-                traceback.print_exc()
                 logger.error(f'Error while running the agent: {e}')
                 logger.error(traceback.format_exc())
                 await self.report_error(

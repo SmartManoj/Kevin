@@ -39,11 +39,11 @@ ActionObs = TypedDict(
 
 
 class DummyAgent(Agent):
+    """
+    The DummyAgent is used for e2e testing. It just sends the same set of actions deterministically,without making any LLM calls.
+    """
+
     VERSION = '1.0'
-    """
-    The DummyAgent is used for e2e testing. It just sends the same set of actions deterministically,
-    without making any LLM calls.
-    """
 
     def __init__(self, llm: LLM):
         super().__init__(llm)
