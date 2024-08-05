@@ -68,14 +68,20 @@ function ChatInterface() {
     setFeedbackPolarity(polarity);
   };
 
-  const handleSendMessage = (content: string, dispatchContent: string = "", imageUrls: string[] = []) => {
-    dispatch(addUserMessage({ content: dispatchContent || content, imageUrls }));
+  const handleSendMessage = (
+    content: string,
+    dispatchContent: string = "",
+    imageUrls: string[] = [],
+  ) => {
+    dispatch(
+      addUserMessage({ content: dispatchContent || content, imageUrls }),
+    );
     sendChatMessage(content, imageUrls);
-};
+  };
 
   const { t } = useTranslation();
   const handleSendContinueMsg = () => {
-    handleSendMessage(t(I18nKey.CHAT_INTERFACE$INPUT_CONTINUE_MESSAGE), []);
+    handleSendMessage(t(I18nKey.CHAT_INTERFACE$INPUT_CONTINUE_MESSAGE), "", []);
   };
 
   const handleAutoMsg = () => {

@@ -7,7 +7,11 @@ import { I18nKey } from "#/i18n/declaration";
 
 interface ChatInputProps {
   disabled?: boolean;
-  onSendMessage: (message: string, image_urls: string[]) => void;
+  onSendMessage: (
+    message: string,
+    dispatchContent?: string,
+    image_urls?: string[],
+  ) => void;
 }
 
 function ChatInput({ disabled = false, onSendMessage }: ChatInputProps) {
@@ -36,7 +40,7 @@ function ChatInput({ disabled = false, onSendMessage }: ChatInputProps) {
           files.map((file) => convertImageToBase64(file)),
         );
       }
-      onSendMessage(message, base64images);
+      onSendMessage(message, "", base64images);
       setMessage("");
       setFiles([]);
     }
