@@ -461,7 +461,7 @@ class LLM(CondenserMixin):
             int: The number of tokens.
         """
         if isinstance(messages[0], Message):
-            messages = [{'content': m.content, 'role': m.role} for m in messages]
+            messages = [m.model_dump() for m in messages]
         return litellm.token_counter(model=self.config.model, messages=messages)
 
     def is_local(self):
