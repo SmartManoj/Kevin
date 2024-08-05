@@ -4,6 +4,7 @@ import warnings
 from functools import partial
 
 from opendevin.core.config import LLMConfig
+from opendevin.core.message import Message
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
@@ -35,7 +36,6 @@ from opendevin.core.exceptions import (
 from opendevin.core.logger import llm_prompt_logger, llm_response_logger
 from opendevin.core.logger import opendevin_logger as logger
 from opendevin.core.metrics import Metrics
-from opendevin.llm.messages import Message
 
 message_separator = '\n\n----------\n\n'
 
@@ -460,6 +460,8 @@ class LLM(CondenserMixin):
         Returns:
             int: The number of tokens.
         """
+        if isinstance(messages[0], Message):
+            messages = [{'content': m.content, 'role': m.role} for m in messages]
         return litellm.token_counter(model=self.config.model, messages=messages)
 
     def is_local(self):

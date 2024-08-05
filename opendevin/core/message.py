@@ -41,6 +41,8 @@ class ImageContent(Content):
 class Message(BaseModel):
     role: Literal['user', 'system', 'assistant']
     content: list[TextContent | ImageContent] = Field(default=list)
+    condensable: bool = True
+    event_id: int = -1
 
     @property
     def contains_image(self) -> bool:

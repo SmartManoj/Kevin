@@ -153,7 +153,6 @@ class CodeActAgent(Agent):
             return Message(
                 role='user' if action.source == 'user' else 'assistant',
                 content=content,
-                condensable=True,
                 event_id=action.id,
             )
         return None
@@ -168,7 +167,6 @@ class CodeActAgent(Agent):
             return Message(
                 role='user',
                 content=[TextContent(text=text)],
-                condensable=True,
                 event_id=obs.id,
             )
         elif isinstance(obs, IPythonRunCellObservation):
@@ -185,7 +183,6 @@ class CodeActAgent(Agent):
             return Message(
                 role='user',
                 content=[TextContent(text=text)],
-                condensable=True,
                 event_id=obs.id,
             )
         elif isinstance(obs, AgentDelegateObservation):
@@ -195,7 +192,6 @@ class CodeActAgent(Agent):
             return Message(
                 role='user',
                 content=[TextContent(text=text)],
-                condensable=True,
                 event_id=obs.id,
             )
         return None
@@ -288,7 +284,7 @@ class CodeActAgent(Agent):
         # the latest user message is important:
         # we want to remind the agent of the environment constraints
         latest_user_message = next(
-            (m for m in reversed(messages) if m.message['role'] == 'user'), None
+            (m for m in reversed(messages) if m.role == 'user'), None
         )
 
         # Get the last user text inside content

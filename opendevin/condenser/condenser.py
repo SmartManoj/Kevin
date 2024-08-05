@@ -2,10 +2,10 @@ from opendevin.core.exceptions import (
     SummarizeError,
 )
 from opendevin.core.logger import opendevin_logger as logger
+from opendevin.core.message import Message
 from opendevin.events.action import (
     AgentSummarizeAction,
 )
-from opendevin.llm.messages import Message
 
 from .prompts import (
     MESSAGE_SUMMARY_WARNING_FRAC,
