@@ -8,7 +8,6 @@ from agenthub.codeact_agent.prompt import (
 )
 from opendevin.controller.agent import Agent
 from opendevin.controller.state.state import State
-from opendevin.core.exceptions import ContextWindowLimitExceededError
 from opendevin.core.message import ImageContent, Message, TextContent
 from opendevin.events.action import (
     Action,
@@ -127,10 +126,8 @@ class CodeActAgent(Agent):
         elif isinstance(action, AgentSummarizeAction):
             return (
                 'Summary of all Action and Observations till now. \n'
-                + 'Action: '
-                + action.summarized_actions
-                + '\nObservation: '
-                + action.summarized_observations
+                f'Action: {action.summarized_actions}\n'
+                f'Observation: {action.summarized_observations}'
             )
         elif isinstance(action, AgentFinishAction) and action.source == 'agent':
             return action.thought
@@ -223,23 +220,21 @@ class CodeActAgent(Agent):
         # give it multiple chances to get a response
         # if it fails, we'll try to condense memory
         attempt = 0
+        # TODO check why loop is necessary as response is not None after the first attempt
         while not response and attempt < self.llm.config.attempts_to_condense:
             # prepare what we want to send to the LLM
             messages: list[Message] = self._get_messages(state)
             print('No of tokens, ' + str(self.llm.get_token_count(messages)) + '\n')
-            try:
-                response = self.llm.completion(
-                    messages=[message.model_dump() for message in messages],
-                    stop=[
-                        '</execute_ipython>',
-                        '</execute_bash>',
-                        '</execute_browse>',
-                    ],
-                    temperature=0.0,
-                    condense=True,
-                )
-            except ContextWindowLimitExceededError:
-                response = None
+            response = self.llm.completion(
+                messages=[message.model_dump() for message in messages],
+                stop=[
+                    '</execute_ipython>',
+                    '</execute_bash>',
+                    '</execute_browse>',
+                ],
+                temperature=0.0,
+                condense=True,
+            )
             attempt += 1
 
         return self.action_parser.parse(response)
