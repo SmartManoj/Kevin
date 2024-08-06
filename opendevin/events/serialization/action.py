@@ -58,6 +58,8 @@ def action_from_dict(action: dict) -> Action:
         decoded_action = action_class(**args)
         if 'timeout' in action:
             decoded_action.timeout = action['timeout']
-    except TypeError:
-        raise LLMMalformedActionError(f'action={action} has the wrong arguments')
+    except TypeError as e:
+        raise LLMMalformedActionError(
+            f'Error creating {action_class} from {action=}: {e}'
+        )
     return decoded_action

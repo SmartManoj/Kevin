@@ -224,9 +224,8 @@ class CodeActAgent(Agent):
         while not response and attempt < self.llm.config.attempts_to_condense:
             # prepare what we want to send to the LLM
             messages: list[Message] = self._get_messages(state)
-            print('No of tokens, ' + str(self.llm.get_token_count(messages)) + '\n')
             response = self.llm.completion(
-                messages=[message.model_dump() for message in messages],
+                messages=messages,
                 stop=[
                     '</execute_ipython>',
                     '</execute_bash>',

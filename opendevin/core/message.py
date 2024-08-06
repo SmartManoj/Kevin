@@ -18,8 +18,8 @@ class Content(BaseModel):
 
 
 class TextContent(Content):
-    type: ContentType = ContentType.TEXT
     text: str
+    type: ContentType = ContentType.TEXT
 
     @model_serializer
     def serialize_model(self):
@@ -27,8 +27,8 @@ class TextContent(Content):
 
 
 class ImageContent(Content):
-    type: ContentType = ContentType.IMAGE_URL
     image_urls: list[str]
+    type: ContentType = ContentType.IMAGE_URL
 
     @model_serializer
     def serialize_model(self):

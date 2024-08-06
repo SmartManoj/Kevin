@@ -2,7 +2,7 @@ from opendevin.core.exceptions import (
     SummarizeError,
 )
 from opendevin.core.logger import opendevin_logger as logger
-from opendevin.core.message import Message
+from opendevin.core.message import Message, TextContent
 from opendevin.events.action import (
     AgentSummarizeAction,
 )
@@ -103,7 +103,7 @@ class CondenserMixin:
         summary_input = self._format_summary_history(
             self.get_text_messages(message_sequence_to_summarize)  # type: ignore
         )
-        summary_input_tkns = self.get_token_count(summary_input)  # type: ignore
+        summary_input_tkns = self.get_token_count(text=summary_input)  # type: ignore
         if context_window is None:
             raise ValueError('context_window should not be None')
         if summary_input_tkns > MESSAGE_SUMMARY_WARNING_FRAC * context_window:
@@ -114,21 +114,26 @@ class CondenserMixin:
             curr_summary = self.summarize_messages(
                 message_sequence_to_summarize=message_sequence_to_summarize[:cutoff]
             )
+            curr_summary = parse_summary_response(curr_summary)
             curr_summary_message = (
                 'Summary of all Action and Observations till now. \n'
-                + 'Action: '
-                + curr_summary['args']['summarized_actions']
-                + '\nObservation: '
-                + curr_summary['args']['summarized_observations']
+                f'Action: {curr_summary.summarized_actions}\n'
+                f'Observation: {curr_summary.summarized_observations}'
             )
             input = [
-                Message({'role': 'assistant', 'content': curr_summary_message})
+                Message(
+                    role='assistant', content=[TextContent(text=curr_summary_message)]
+                )
             ] + message_sequence_to_summarize[cutoff:]
             summary_input = self._format_summary_history(self.get_text_messages(input))  # type: ignore
 
         message_sequence = []
-        message_sequence.append(Message({'role': 'system', 'content': summary_prompt}))
-        message_sequence.append(Message({'role': 'user', 'content': summary_input}))
+        message_sequence.append(
+            Message(role='system', content=[TextContent(text=summary_prompt)])
+        )
+        message_sequence.append(
+            Message(role='user', content=[TextContent(text=summary_input)])
+        )
 
         response = self.completion(  # type: ignore
             messages=message_sequence,

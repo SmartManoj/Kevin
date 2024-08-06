@@ -2,6 +2,7 @@ import asyncio
 import copy
 import warnings
 from functools import partial
+from typing import Optional
 
 from opendevin.core.config import LLMConfig
 from opendevin.core.message import Message
@@ -157,7 +158,6 @@ class LLM(CondenserMixin):
                 if self.is_over_token_limit(messages):
                     raise TokenLimitExceededError()
             except TokenLimitExceededError:
-                print('An error occurred: ')
                 # If we got a context alert, try trimming the messages length, then try again
                 if kwargs['condense'] and self.is_over_token_limit(messages):
                     # A separate call to run a summarizer
@@ -166,6 +166,10 @@ class LLM(CondenserMixin):
                 else:
                     print('step() failed with an unrecognized exception:')
                     raise ContextWindowLimitExceededError()
+
+            kwargs.pop('condense', None)
+            if isinstance(messages[0], Message):
+                messages = [message.model_dump() for message in messages]
 
             # log the prompt
             debug_message = ''
@@ -451,7 +455,9 @@ class LLM(CondenserMixin):
                 self.metrics.accumulated_cost,
             )
 
-    def get_token_count(self, messages):
+    def get_token_count(
+        self, messages: Optional[list[Message]] = None, text: Optional[str] = None
+    ) -> int:
         """Get the number of tokens in a list of messages.
 
         Args:
@@ -460,9 +466,11 @@ class LLM(CondenserMixin):
         Returns:
             int: The number of tokens.
         """
-        if isinstance(messages[0], Message):
+        if messages and isinstance(messages[0], Message):
             messages = [m.model_dump() for m in messages]
-        return litellm.token_counter(model=self.config.model, messages=messages)
+        return litellm.token_counter(
+            model=self.config.model, messages=messages, text=text
+        )
 
     def is_local(self):
         """Determines if the system is using a locally running LLM.
@@ -545,10 +553,11 @@ class LLM(CondenserMixin):
         if not self.config.max_input_tokens:
             return False
         token_count = self.get_token_count(messages=messages) + MAX_TOKEN_COUNT_PADDING
+        logger.debug(f'Token count: {token_count}')
         return token_count >= self.config.max_input_tokens
 
     def get_text_messages(self, messages: list[Message]) -> list[dict]:
         text_messages = []
         for message in messages:
-            text_messages.append(message.message)
+            text_messages.append(message.model_dump())
         return text_messages
