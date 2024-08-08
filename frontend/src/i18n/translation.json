@@ -601,6 +601,12 @@
     "zh-CN": "继续",
     "de": "Fortfahren"
   },
+  "CHAT_INTERFACE$AUTO_MESSAGE": {
+    "en": "Please continue working on the task on whatever approach you think is suitable.\nIf you think you have solved the task, you can give <finish> to end the interaction.\nIMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n"
+  },
+  "CHAT_INTERFACE$INPUT_AUTO_MESSAGE":{
+    "en": "Sent the default Auto Msg 🤖"
+  },
   "CHAT_INTERFACE$USER_ASK_CONFIRMATION": {
     "en": "Do you want to continue with this action?",
     "de": "Möchten Sie mit dieser Aktion fortfahren?",
@@ -648,6 +654,11 @@
     "en": "Send message",
     "zh-CN": "发送消息",
     "de": "Nachricht senden"
+  },
+  "CHAT_INTERFACE$TOOLTIP_UPLOAD_IMAGE": {
+    "en": "Upload image",
+    "zh-CN": "上传图片",
+    "de": "Bild hochladen"
   },
   "CHAT_INTERFACE$INITIAL_MESSAGE": {
     "en": "Hi! I'm OpenDevin, an AI Software Engineer. What would you like to build with me today?",
@@ -720,6 +731,9 @@
     "en": "Awaits for user confirmation before executing code.",
     "de": "Wartet auf die Bestätigung des Benutzers, bevor der Code ausgeführt wird.",
     "zh-CN": "在执行代码之前等待用户确认。"
+  },
+  "SETTINGS$AGENT_SELECT_ENABLED": {
+    "en": "Enable Agent Selection - Advanced Users"
   },
   "BROWSER$EMPTY_MESSAGE": {
     "en": "No page loaded.",

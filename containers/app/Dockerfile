@@ -26,11 +26,13 @@ RUN apt-get update -y \
 
 COPY ./pyproject.toml ./poetry.lock ./
 RUN touch README.md
-RUN poetry install --without evaluation --no-root && rm -rf $POETRY_CACHE_DIR
+RUN export POETRY_CACHE_DIR && poetry install --without evaluation,llama-index --no-root && rm -rf $POETRY_CACHE_DIR
 
 FROM python:3.12.3-slim AS runtime
 
 WORKDIR /app
+
+ARG OPEN_DEVIN_BUILD_VERSION #re-declare for this section
 
 ENV RUN_AS_DEVIN=true
 # A random number--we need this to be different from the user's UID on the host machine

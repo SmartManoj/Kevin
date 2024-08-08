@@ -78,6 +78,8 @@ class LLMConfig:
     input_cost_per_token: float | None = None
     output_cost_per_token: float | None = None
     ollama_base_url: str | None = None
+    message_summary_trunc_tokens_frac: float = 0.75
+    attempts_to_condense: int = 2
     drop_params: bool | None = None
 
     def defaults_to_dict(self) -> dict:
@@ -110,6 +112,12 @@ class LLMConfig:
             if k in LLM_SENSITIVE_FIELDS:
                 ret[k] = '******' if v else None
         return ret
+
+    def set_missing_attributes(self):
+        """Set any missing attributes to their default values."""
+        for field_name, field_obj in self.__dataclass_fields__.items():
+            if not hasattr(self, field_name):
+                setattr(self, field_name, field_obj.default)
 
 
 @dataclass
@@ -146,15 +154,25 @@ class SandboxConfig(metaclass=Singleton):
         enable_auto_lint: Whether to enable auto-lint.
         use_host_network: Whether to use the host network.
         initialize_plugins: Whether to initialize plugins.
-        update_source_code: Whether to update the source code in the EventStreamRuntime.
-            Used for development of EventStreamRuntime.
+        od_runtime_extra_deps: The extra dependencies to install in the runtime image (typically used for evaluation).
+            This will be rendered into the end of the Dockerfile that builds the runtime image.
+            It can contain any valid shell commands (e.g., pip install numpy).
+            The path to the interpreter is available as $OD_INTERPRETER_PATH,
+            which can be used to install dependencies for the OD-specific Python interpreter.
+        od_runtime_startup_env_vars: The environment variables to set at the launch of the runtime.
+            This is a dictionary of key-value pairs.
+            This is useful for setting environment variables that are needed by the runtime.
+            For example, for specifying the base url of website for browsergym evaluation.
+        browsergym_eval_env: The BrowserGym environment to use for evaluation.
+            Default is None for general purpose browsing. Check evaluation/miniwob and evaluation/webarena for examples.
+        persist_sandbox: Whether to persist the sandbox after the task is done.
+        fast_boot: Whether to use a fast boot mode for the sandbox.
+        port: The port to use for the sandbox.
     """
 
     box_type: str = 'ssh'
-    container_image: str = 'ghcr.io/opendevin/sandbox' + (
-        f':{os.getenv("OPEN_DEVIN_BUILD_VERSION")}'
-        if os.getenv('OPEN_DEVIN_BUILD_VERSION')
-        else ':main'
+    container_image: str = (
+        'ubuntu:22.04'  # default to ubuntu:22.04 for eventstream runtime
     )
     user_id: int = os.getuid() if hasattr(os, 'getuid') else 1000
     timeout: int = 120
@@ -163,7 +181,12 @@ class SandboxConfig(metaclass=Singleton):
     )
     use_host_network: bool = False
     initialize_plugins: bool = True
-    update_source_code: bool = False
+    od_runtime_extra_deps: str | None = None
+    od_runtime_startup_env_vars: dict[str, str] = field(default_factory=dict)
+    browsergym_eval_env: str | None = None
+    persist_sandbox: bool = False
+    fast_boot: bool = False
+    port: int = 63710
 
     def defaults_to_dict(self) -> dict:
         """Serialize fields to a dict for the frontend, including type hints, defaults, and whether it's optional."""
@@ -224,13 +247,14 @@ class AppConfig(metaclass=Singleton):
     agents: dict = field(default_factory=dict)
     default_agent: str = _DEFAULT_AGENT
     sandbox: SandboxConfig = field(default_factory=SandboxConfig)
-    runtime: str = 'server'
+    runtime: str = 'eventstream'
     file_store: str = 'memory'
     file_store_path: str = '/tmp/file_store'
+    # TODO: clean up workspace path after the removal of ServerRuntime
     workspace_base: str = os.path.join(os.getcwd(), 'workspace')
-    workspace_mount_path: str = (
+    workspace_mount_path: str | None = (
         UndefinedString.UNDEFINED  # this path should always be set when config is fully loaded
-    )
+    )  # when set to None, do not mount the workspace
     workspace_mount_path_in_sandbox: str = '/workspace'
     workspace_mount_rewrite: str | None = None
     cache_dir: str = '/tmp/cache'
@@ -241,7 +265,6 @@ class AppConfig(metaclass=Singleton):
     e2b_api_key: str = ''
     ssh_hostname: str = 'localhost'
     disable_color: bool = False
-    persist_sandbox: bool = False
     ssh_port: int = 63710
     ssh_password: str | None = None
     jwt_secret: str = uuid.uuid4().hex
@@ -390,6 +413,11 @@ def load_from_env(cfg: AppConfig, env_or_toml_dict: dict | MutableMapping[str, s
             elif env_var_name in env_or_toml_dict:
                 # convert the env var to the correct type and set it
                 value = env_or_toml_dict[env_var_name]
+
+                # skip empty config values (fall back to default)
+                if not value:
+                    continue
+
                 try:
                     # if it's an optional type, get the non-None type
                     if get_origin(field_type) is UnionType:
@@ -433,8 +461,7 @@ def load_from_toml(cfg: AppConfig, toml_file: str = 'config.toml'):
     try:
         with open(toml_file, 'r', encoding='utf-8') as toml_contents:
             toml_config = toml.load(toml_contents)
-    except FileNotFoundError as e:
-        logger.opendevin_logger.info(f'Config file not found: {e}')
+    except FileNotFoundError:
         return
     except toml.TomlDecodeError as e:
         logger.opendevin_logger.warning(
@@ -530,7 +557,7 @@ def finalize_config(cfg: AppConfig):
     cfg.workspace_base = os.path.abspath(cfg.workspace_base)
 
     # In local there is no sandbox, the workspace will have the same pwd as the host
-    if cfg.sandbox.box_type == 'local':
+    if cfg.sandbox.box_type == 'local' and cfg.workspace_mount_path is not None:
         cfg.workspace_mount_path_in_sandbox = cfg.workspace_mount_path
 
     if cfg.workspace_mount_rewrite:  # and not config.workspace_mount_path:
