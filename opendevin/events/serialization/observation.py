@@ -1,3 +1,6 @@
+from browsergym.utils.obs import flatten_axtree_to_str
+
+from opendevin.core.logger import opendevin_logger as logger
 from opendevin.events.observation.agent import AgentStateChangedObservation
 from opendevin.events.observation.browse import BrowserOutputObservation
 from opendevin.events.observation.commands import (
@@ -41,6 +44,21 @@ def observation_from_dict(observation: dict) -> Observation:
         raise KeyError(
             f"'{observation['observation']=}' is not defined. Available observations: {OBSERVATION_TYPE_TO_CLASS.keys()}"
         )
+    if observation['observation'] == 'browse':
+        observation['extras'].pop('dom_object')
+        try:
+            axtree_txt = flatten_axtree_to_str(
+                observation['extras'].pop('axtree_object'),
+                extra_properties=observation['extras'].pop('extra_element_properties'),
+                with_clickable=True,
+                filter_visible_only=True,
+            )
+        except Exception as e:
+            logger.error(
+                f'Error when trying to process the accessibility tree: {e}, obs: {observation}'
+            )
+            axtree_txt = f'AX Error: {e}'
+        observation['extras']['axtree_txt'] = axtree_txt
     observation.pop('observation')
     observation.pop('message', None)
     content = observation.pop('content', '')
