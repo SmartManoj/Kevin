@@ -10,6 +10,6 @@
     },
 	"onCreateCommand": "sh ./.devcontainer/on_create.sh",
 	"postCreateCommand": "make build",
-	"postStartCommand": "USE_HOST_NETWORK=True nohup bash -c 'make run &'"
+	"postStartCommand": "SANDBOX_USE_HOST_NETWORK=True nohup bash -c 'make run &'"
 
 }

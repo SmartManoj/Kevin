@@ -1,6 +1,9 @@
 import os
 
+from browsergym.utils.obs import flatten_axtree_to_str
+
 from opendevin.core.exceptions import BrowserUnavailableException
+from opendevin.core.logger import opendevin_logger as logger
 from opendevin.core.schema import ActionType
 from opendevin.events.action import BrowseInteractiveAction, BrowseURLAction
 from opendevin.events.observation import BrowserOutputObservation
@@ -30,23 +33,37 @@ async def browse(
     try:
         # obs provided by BrowserGym: see https://github.com/ServiceNow/BrowserGym/blob/main/core/src/browsergym/core/env.py#L396
         obs = browser.step(action_str)
+        try:
+            axtree_txt = flatten_axtree_to_str(
+                obs['axtree_object'],  # accessibility tree object
+                extra_properties=obs[
+                    'extra_element_properties'
+                ],  # extra element properties
+                with_clickable=True,
+                filter_visible_only=True,
+            )
+        except Exception as e:
+            logger.error(
+                f'Error when trying to process the accessibility tree: {e}, obs: {obs}'
+            )
+            axtree_txt = f'AX Error: {e}'
         return BrowserOutputObservation(
             content=obs['text_content'],  # text content of the page
-            open_pages_urls=obs['open_pages_urls'],  # list of open pages
-            active_page_index=obs['active_page_index'],  # index of the active page
-            dom_object=obs['dom_object'],  # DOM object
-            axtree_object=obs['axtree_object'],  # accessibility tree object
-            extra_element_properties=obs[
-                'extra_element_properties'
-            ],  # extra element properties
-            last_browser_action=obs['last_action'],  # last browser env action performed
-            focused_element_bid=obs['focused_element_bid'],  # focused element bid
-            screenshot=obs['screenshot'],  # base64-encoded screenshot, png
-            url=obs['url'],  # URL of the page
-            error=True if obs['last_action_error'] else False,  # error flag
-            last_browser_action_error=obs[
-                'last_action_error'
-            ],  # last browser env action error
+            url=obs.get('url', ''),  # URL of the page
+            screenshot=obs.get('screenshot', ''),  # base64-encoded screenshot, png
+            open_pages_urls=obs.get('open_pages_urls', []),  # list of open pages
+            active_page_index=obs.get(
+                'active_page_index', -1
+            ),  # index of the active page
+            axtree_txt=axtree_txt,  # accessibility tree text
+            focused_element_bid=obs.get(
+                'focused_element_bid', ''
+            ),  # focused element bid
+            last_browser_action=obs.get(
+                'last_action', ''
+            ),  # last browser env action performed
+            last_browser_action_error=obs.get('last_action_error', ''),
+            error=True if obs.get('last_action_error') else False,  # error flag
         )
     except Exception as e:
         return BrowserOutputObservation(
