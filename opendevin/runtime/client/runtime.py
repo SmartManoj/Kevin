@@ -53,13 +53,20 @@ class EventStreamRuntime(Runtime):
         super().__init__(
             config, event_stream, sid, plugins
         )  # will initialize the event stream
-        self._port = find_available_tcp_port()
+        self.persist_sandbox = self.config.sandbox.persist_sandbox
+        self.fast_boot = self.config.sandbox.fast_boot
+        if self.persist_sandbox:
+            user = 'od' if self.config.run_as_devin else 'root'
+            path = config.workspace_mount_path
+            path = ''.join(c if c.isalnum() else '_' for c in path)  # type: ignore
+            self.instance_id = f'persisted-{user}-{path}'
+            self._port = self.config.sandbox.port
+        else:
+            self.instance_id = (sid or '') + str(uuid.uuid4())
+            self._port = find_available_tcp_port()
         self.api_url = f'http://localhost:{self._port}'
         self.session: Optional[aiohttp.ClientSession] = None
 
-        self.instance_id = (
-            sid + str(uuid.uuid4()) if sid is not None else str(uuid.uuid4())
-        )
         # TODO: We can switch to aiodocker when `get_od_sandbox_image` is updated to use aiodocker
         self.docker_client: docker.DockerClient = self._init_docker_client()
         self.container_image = (
@@ -78,27 +85,38 @@ class EventStreamRuntime(Runtime):
             logger.info(
                 f'Installing extra user-provided dependencies in the runtime image: {self.config.sandbox.od_runtime_extra_deps}'
             )
+        try:
+            docker.DockerClient().containers.get(self.container_name)
+            self.is_initial_session = False
+        except docker.errors.NotFound:
+            self.is_initial_session = True
 
-        self.container_image = build_runtime_image(
-            self.container_image,
-            self.docker_client,
-            extra_deps=self.config.sandbox.od_runtime_extra_deps,
-        )
-        self.container = await self._init_container(
-            self.sandbox_workspace_dir,
-            mount_dir=self.config.workspace_mount_path,
-            plugins=self.plugins,
-        )
-        # MUST call super().ainit() to initialize both default env vars
-        # AND the ones in env vars!
-        await super().ainit(env_vars)
+        if self.is_initial_session:
+            logger.info('Creating new Docker container')
+            self.container_image = build_runtime_image(
+                self.container_image,
+                self.docker_client,
+                extra_deps=self.config.sandbox.od_runtime_extra_deps,
+            )
+            self.container = await self._init_container(
+                self.sandbox_workspace_dir,
+                mount_dir=self.config.workspace_mount_path,
+                plugins=self.plugins,
+            )
+            # MUST call super().ainit() to initialize both default env vars
+            # AND the ones in env vars!
+            await super().ainit(env_vars)
 
-        logger.info(
-            f'Container initialized with plugins: {[plugin.name for plugin in self.plugins]}'
-        )
-        logger.info(f'Container initialized with env vars: {env_vars}')
+            logger.info(
+                f'Container initialized with plugins: {[plugin.name for plugin in self.plugins]}'
+            )
+            logger.info(f'Container initialized with env vars: {env_vars}')
 
-        await self._init_git_config()
+            await self._init_git_config()
+        else:
+            logger.info('Using existing Docker container')
+            self.container = self.docker_client.containers.get(self.container_name)
+            await self.start_docker_container()
 
     @staticmethod
     def _init_docker_client() -> docker.DockerClient:
@@ -122,7 +140,7 @@ class EventStreamRuntime(Runtime):
     ):
         try:
             logger.info(
-                f'Starting container with image: {self.container_image} and name: {self.container_name}'
+                f'Starting container with image: {self.container_image} and name: {self.container_name} with port: {self._port}'
             )
             plugin_arg = ''
             if plugins is not None and len(plugins) > 0:
@@ -218,6 +236,23 @@ class EventStreamRuntime(Runtime):
     def sandbox_workspace_dir(self):
         return self.config.workspace_mount_path_in_sandbox
 
+    async def start_docker_container(self):
+        try:
+            container = self.docker_client.containers.get(self.container_name)
+            logger.info('Container status: %s', container.status)
+            if container.status != 'running':
+                container.start()
+                logger.info('Container started')
+            elapsed = 0
+            while container.status != 'running':
+                await asyncio.sleep(1)
+                elapsed += 1
+                if elapsed > self.config.sandbox.timeout:
+                    break
+                container = self.docker_client.containers.get(self.container_name)
+        except Exception:
+            logger.exception('Failed to start container')
+
     async def close(self, close_client: bool = True):
         if self.session is not None and not self.session.closed:
             await self.session.close()
@@ -230,7 +265,11 @@ class EventStreamRuntime(Runtime):
                     logger.debug(
                         f'==== Container logs ====\n{logs}\n==== End of container logs ===='
                     )
-                    container.remove(force=True)
+                    if self.persist_sandbox:
+                        if not self.fast_boot:
+                            container.stop()
+                    else:
+                        container.remove(force=True)
             except docker.errors.NotFound:
                 pass
         if close_client:

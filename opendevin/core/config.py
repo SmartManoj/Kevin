@@ -163,6 +163,9 @@ class SandboxConfig(metaclass=Singleton):
             For example, for specifying the base url of website for browsergym evaluation.
         browsergym_eval_env: The BrowserGym environment to use for evaluation.
             Default is None for general purpose browsing. Check evaluation/miniwob and evaluation/webarena for examples.
+        persist_sandbox: Whether to persist the sandbox after the task is done.
+        fast_boot: Whether to use a fast boot mode for the sandbox.
+        port: The port to use for the sandbox.
     """
 
     box_type: str = 'ssh'
@@ -179,6 +182,9 @@ class SandboxConfig(metaclass=Singleton):
     od_runtime_extra_deps: str | None = None
     od_runtime_startup_env_vars: dict[str, str] = field(default_factory=dict)
     browsergym_eval_env: str | None = None
+    persist_sandbox: bool = False
+    fast_boot: bool = False
+    port: int = 63710
 
     def defaults_to_dict(self) -> dict:
         """Serialize fields to a dict for the frontend, including type hints, defaults, and whether it's optional."""
