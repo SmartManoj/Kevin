@@ -45,7 +45,7 @@ def observation_from_dict(observation: dict) -> Observation:
             f"'{observation['observation']=}' is not defined. Available observations: {OBSERVATION_TYPE_TO_CLASS.keys()}"
         )
     if observation['observation'] == 'browse':
-        observation['extras'].pop('dom_object')
+        observation['extras'].pop('dom_object', None)
         try:
             axtree_txt = flatten_axtree_to_str(
                 observation['extras'].pop('axtree_object'),

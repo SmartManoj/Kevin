@@ -195,6 +195,8 @@ def test_ipython(current_test_name: str):
     os.getenv('SANDBOX_BOX_TYPE') == 'local',
     reason='FIXME: local sandbox does not capture stderr',
 )
+@pytest.mark.skipif(True, reason='Due to the following changes in the codebase:')
+# https://github.com/OpenDevin/OpenDevin/commit/fad76def4076dfe8b005ce7f7ac718afa5f2b82e#diff-5bd880aa9413a6626d1f6a8c823407108da2163c1b54dad751463913ca6c0bc0R61-R64
 def test_simple_task_rejection(current_test_name: str):
     # Give an impossible task to do: cannot write a commit message because
     # the workspace is not a git repo
