@@ -12,6 +12,7 @@ from threading import Thread
 import pytest
 from litellm import completion
 
+from opendevin.core.message import Message
 from opendevin.llm.llm import message_separator
 
 script_dir = os.environ.get('SCRIPT_DIR')
@@ -174,6 +175,8 @@ def mock_completion(*args, test_name, **kwargs):
     global cur_id
     messages = kwargs['messages']
     message_str = ''
+    if isinstance(messages[0], Message):
+        messages = [message.model_dump() for message in messages]
     for message in messages:
         for m in message['content']:
             if m['type'] == 'text':
