@@ -263,7 +263,10 @@ class EventStreamRuntime(Runtime):
         containers = self.docker_client.containers.list(all=True)
         for container in containers:
             try:
-                if container.name.startswith(self.container_name_prefix):
+                # only remove the container we created
+                # otherwise all other containers with the same prefix will be removed
+                # which will mess up with parallel evaluation
+                if container.name.startswith(self.container_name):
                     logs = container.logs(tail=1000).decode('utf-8')
                     logger.debug(
                         f'==== Container logs ====\n{logs}\n==== End of container logs ===='
