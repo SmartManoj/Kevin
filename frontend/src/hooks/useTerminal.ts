@@ -98,8 +98,7 @@ export const useTerminal = (commands: Command[] = []) => {
         lines.forEach((line, index) => {
           if (index < lines.length - 1 || command.type === "input") {
             terminal.current?.writeln(line);
-          }
-          else {
+          } else {
             terminal.current?.write(line);
           }
         });
