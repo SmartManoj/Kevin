@@ -48,15 +48,15 @@ def observation_from_dict(observation: dict) -> Observation:
         observation['extras'].pop('dom_object', None)
         try:
             axtree_txt = flatten_axtree_to_str(
-                observation['extras'].pop('axtree_object'),
-                extra_properties=observation['extras'].pop('extra_element_properties'),
+                observation['extras'].pop('axtree_object', None),
+                extra_properties=observation['extras'].pop(
+                    'extra_element_properties', None
+                ),
                 with_clickable=True,
                 filter_visible_only=True,
             )
         except Exception as e:
-            logger.error(
-                f'Error when trying to process the accessibility tree: {e}, obs: {observation}'
-            )
+            logger.error(f'Error when trying to process the accessibility tree: {e}')
             axtree_txt = f'AX Error: {e}'
         observation['extras']['axtree_txt'] = axtree_txt
     observation.pop('observation')
