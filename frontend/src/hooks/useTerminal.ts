@@ -105,7 +105,6 @@ export const useTerminal = (commands: Command[] = []) => {
         if (command.type === "input") {
           terminal.current.write("\r\n");
         }
-
       }
 
       lastCommandIndex.current = commands.length; // Update the position of the last command
