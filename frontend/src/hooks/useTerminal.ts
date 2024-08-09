@@ -96,15 +96,13 @@ export const useTerminal = (commands: Command[] = []) => {
         const lines = command.content.split("\r\n");
 
         lines.forEach((line, index) => {
-          terminal.current?.write(line);
-          if (index < lines.length - 1) {
-            terminal.current?.write("\r\n");
+          if (index < lines.length - 1 || command.type === "input") {
+            terminal.current?.writeln(line);
+          }
+          else {
+            terminal.current?.write(line);
           }
         });
-
-        if (command.type === "input") {
-          terminal.current.write("\r\n");
-        }
       }
 
       lastCommandIndex.current = commands.length; // Update the position of the last command
