@@ -212,20 +212,6 @@ class EventStreamRuntime(Runtime):
     )
     async def _wait_until_alive(self):
         logger.info('Reconnecting session')
-        container = self.docker_client.containers.get(self.container_name)
-        # print logs
-        _logs = container.logs(tail=10).decode('utf-8').split('\n')
-        # add indent
-        _logs = '\n'.join([f'    |{log}' for log in _logs])
-        logger.info(
-            '\n'
-            + '-' * 30
-            + 'Container logs (last 10 lines):'
-            + '-' * 30
-            + f'\n{_logs}'
-            + '\n'
-            + '-' * 90
-        )
         async with aiohttp.ClientSession() as session:
             async with session.get(f'{self.api_url}/alive') as response:
                 if response.status == 200:
@@ -304,7 +290,7 @@ class EventStreamRuntime(Runtime):
             assert action.timeout is not None
 
             try:
-                logger.info('Executing command')
+                logger.info(f'Executing action {action}')
                 async with session.post(
                     f'{self.api_url}/execute_action',
                     json={'action': event_to_dict(action)},
