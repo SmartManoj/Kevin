@@ -34,7 +34,7 @@ export const useTerminal = (commands: Command[] = []) => {
       terminal.current.loadAddon(fitAddon.current);
       terminal.current.open(ref.current);
 
-      terminal.current.write("$ ");
+      terminal.current.write("opendevin@docker-desktop:/workspace $ ");
       terminal.current.onKey(({ key, domEvent }) => {
         if (domEvent.key === "Enter") {
           terminal.current?.write("\r\n");
@@ -93,15 +93,19 @@ export const useTerminal = (commands: Command[] = []) => {
       // Start writing commands from the last command index
       for (let i = lastCommandIndex.current; i < commands.length; i += 1) {
         const command = commands[i];
-        const lines = command.content.split("\n");
+        const lines = command.content.split("\r\n");
 
-        lines.forEach((line: string) => {
-          terminal.current?.writeln(line);
+        lines.forEach((line, index) => {
+          terminal.current?.write(line);
+          if (index < lines.length - 1) {
+            terminal.current?.write("\r\n");
+          }
         });
 
-        if (command.type === "output") {
-          terminal.current.write("\n$ ");
+        if (command.type === "input") {
+          terminal.current.write("\r\n");
         }
+
       }
 
       lastCommandIndex.current = commands.length; // Update the position of the last command
