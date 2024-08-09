@@ -44,7 +44,9 @@ describe("Terminal", () => {
     expect(screen.getByText("Terminal")).toBeInTheDocument();
     expect(mockTerminal.open).toHaveBeenCalledTimes(1);
 
-    expect(mockTerminal.write).toHaveBeenCalledWith("opendevin@docker-desktop:/workspace $ ");
+    expect(mockTerminal.write).toHaveBeenCalledWith(
+      "opendevin@docker-desktop:/workspace $ ",
+    );
   });
 
   it("should load commands to the terminal", () => {
@@ -99,7 +101,9 @@ describe("Terminal", () => {
     });
 
     expect(mockTerminal.writeln).toHaveBeenCalledWith("echo Hello");
-    expect(mockTerminal.write).toHaveBeenCalledWith("opendevin@docker-desktop:/workspace $ ");
+    expect(mockTerminal.write).toHaveBeenCalledWith(
+      "opendevin@docker-desktop:/workspace $ ",
+    );
   });
 
   // This test fails because it expects `disposeMock` to have been called before the component is unmounted.
