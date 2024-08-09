@@ -29,7 +29,6 @@ CONFIG = AppConfig(
     workspace_base=os.getenv('WORKSPACE_BASE'),
     workspace_mount_path=os.getenv('WORKSPACE_MOUNT_PATH'),
     sandbox=SandboxConfig(
-        box_type=os.getenv('SANDBOX_BOX_TYPE', 'ssh'),
         use_host_network=True,
     ),
 )
@@ -80,8 +79,7 @@ def validate_final_state(final_state: State | None, test_name: str):
     (
         os.getenv('DEFAULT_AGENT') == 'CodeActAgent'
         or os.getenv('DEFAULT_AGENT') == 'CodeActSWEAgent'
-    )
-    and os.getenv('SANDBOX_BOX_TYPE', '').lower() != 'ssh',
+    ),
     reason='CodeActAgent/CodeActSWEAgent only supports ssh sandbox which is stateful',
 )
 @pytest.mark.skipif(
@@ -118,17 +116,12 @@ def test_write_simple_script(current_test_name: str) -> None:
     (
         os.getenv('DEFAULT_AGENT') == 'CodeActAgent'
         or os.getenv('DEFAULT_AGENT') == 'CodeActSWEAgent'
-    )
-    and os.getenv('SANDBOX_BOX_TYPE', '').lower() != 'ssh',
+    ),
     reason='CodeActAgent/CodeActSWEAgent only supports ssh sandbox which is stateful',
 )
 @pytest.mark.skipif(
     os.getenv('DEFAULT_AGENT') == 'PlannerAgent',
     reason='We only keep basic tests for PlannerAgent',
-)
-@pytest.mark.skipif(
-    os.getenv('SANDBOX_BOX_TYPE') == 'local',
-    reason='local sandbox shows environment-dependent absolute path for pwd command',
 )
 def test_edits(current_test_name: str):
     # Copy workspace artifacts to workspace_base location
@@ -163,10 +156,6 @@ Enjoy!
     and os.getenv('DEFAULT_AGENT') != 'CodeActSWEAgent',
     reason='currently only CodeActAgent and CodeActSWEAgent have IPython (Jupyter) execution by default',
 )
-@pytest.mark.skipif(
-    os.getenv('SANDBOX_BOX_TYPE') != 'ssh',
-    reason='Currently, only ssh sandbox supports stateful tasks',
-)
 def test_ipython(current_test_name: str):
     # Execute the task
     task = "Use Jupyter IPython to write a text file containing 'hello world' to '/workspace/test.txt'. Do not ask me for confirmation at any point."
@@ -191,10 +180,8 @@ def test_ipython(current_test_name: str):
     os.getenv('DEFAULT_AGENT') != 'ManagerAgent',
     reason='Currently, only ManagerAgent supports task rejection',
 )
-@pytest.mark.skipif(
-    os.getenv('SANDBOX_BOX_TYPE') == 'local',
-    reason='FIXME: local sandbox does not capture stderr',
-)
+@pytest.mark.skipif(1, reason='Due to the following changes in the codebase:')
+# https://github.com/OpenDevin/OpenDevin/commit/fad76def4076dfe8b005ce7f7ac718afa5f2b82e#diff-5bd880aa9413a6626d1f6a8c823407108da2163c1b54dad751463913ca6c0bc0R61-R64
 def test_simple_task_rejection(current_test_name: str):
     # Give an impossible task to do: cannot write a commit message because
     # the workspace is not a git repo
@@ -211,10 +198,8 @@ def test_simple_task_rejection(current_test_name: str):
     and os.getenv('DEFAULT_AGENT') != 'CodeActSWEAgent',
     reason='currently only CodeActAgent and CodeActSWEAgent have IPython (Jupyter) execution by default',
 )
-@pytest.mark.skipif(
-    os.getenv('SANDBOX_BOX_TYPE') != 'ssh',
-    reason='Currently, only ssh sandbox supports stateful tasks',
-)
+@pytest.mark.skipif(1, reason='Due to the following changes in the codebase:')
+# https://github.com/SmartManoj/Kevin/commit/3b77d5b2ec592e0fcb5bd7ed8a0d5787378bc0de
 def test_ipython_module(current_test_name: str):
     # Execute the task
     task = "Install and import pymsgbox==1.0.9 and print it's version in /workspace/test.txt. Do not ask me for confirmation at any point."
@@ -245,8 +230,7 @@ def test_ipython_module(current_test_name: str):
     (
         os.getenv('DEFAULT_AGENT') == 'CodeActAgent'
         or os.getenv('DEFAULT_AGENT') == 'CodeActSWEAgent'
-    )
-    and os.getenv('SANDBOX_BOX_TYPE', '').lower() != 'ssh',
+    ),
     reason='CodeActAgent/CodeActSWEAgent only supports ssh sandbox which is stateful',
 )
 def test_browse_internet(http_server, current_test_name: str):

@@ -180,7 +180,9 @@ class BrowsingAgent(Agent):
                     return MessageAction('Too many errors encountered. Task failed.')
             cur_axtree_txt = last_obs.axtree_txt
             if cur_axtree_txt.startswith('AX Error:'):
-                return MessageAction('Error encountered when browsing.')
+                return MessageAction(
+                    f'Error encountered when browsing. {cur_axtree_txt}'
+                )
 
         goal, _ = state.get_current_user_intent()
 

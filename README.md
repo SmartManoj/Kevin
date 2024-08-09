@@ -1,3 +1,5 @@
+The easiest way to run Kevin is to [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/SmartManoj/Kevin) 🔥🔥🔥
+
 ### Kevin Changelogs:
 
   1) [Added Auto Mode](https://github.com/OpenDevin/OpenDevin/pull/2782) 🔥🔥🔥
@@ -6,16 +8,19 @@
   4) [Showed relevant error in UI](https://github.com/OpenDevin/OpenDevin/pull/2657) 🚨
   5) [Added Event History Condenser](https://github.com/OpenDevin/OpenDevin/pull/2937) 📜
   6) [Feat: Persist sandbox for Event Runtime](https://github.com/SmartManoj/Kevin/commit/2200b21dd01ecf3618d7e676cf16f875c5fce154) 🥳🥳
-  7) [Parsed pip output and restarted kernel automatically (for bash too)](https://github.com/SmartManoj/Kevin/commit/c8a51c97f985a748761cc86bf6a36a8bac36a3e0) 📦
+  7) [Parsed pip output and restarted kernel automatically (for bash too)](https://github.com/SmartManoj/Kevin/commit/3b77d5b2ec592e0fcb5bd7ed8a0d5787378bc0de) 📦
+  8) [Added editable address bar in browser tab](https://github.com/OpenDevin/OpenDevin/pull/3078) 🌐
 
 ### Bug Fixes:
   1) [Fixed GroqException - content must be a string for role system & assisstant](https://github.com/SmartManoj/Kevin/commit/30c98d458a299d789ebd6b8ada842c050bc91b20) 🛠️
   2) [Fixed GroqException - condense' is unsupported](https://github.com/SmartManoj/Kevin/commit/1ece04784beb657dccbf615b3085e72f23a73e77) 🛠️
   3) [Clear history when starting a new task](https://github.com/SmartManoj/Kevin/commit/f874e13fdd4ea50dcd0d8484639de40a1d6f66f4) 🧹
+  4) [Add miniforge path to synchronize bash and notebook](https://github.com/SmartManoj/Kevin/commit/6753d8b2b2b4e5a753cc4b3e26982d36464b6002) 🛣️
+  5) [Fixed frontend terminal prompt](https://github.com/SmartManoj/Kevin/commit/77950625b51a779b99533a9af616c97e640d5cd6) 🛠️
+  6) [Set TERM variable in bash](https://github.com/SmartManoj/Kevin/ec84c3b633ac23effac9f096a68560abc7388d2f) 🛠️
 
 ### Minor Changes:
   1) [Notify after task is finished](https://github.com/SmartManoj/Kevin/commit/cec8e7d9af109efc6abb099e2f9ac5b42b6650f6) 📢
-
 
 ### Separate Feature Branches:
   1) [Added Tutor Agent](https://github.com/SmartManoj/Kevin/tree/add-tutor-agent) 🧑‍🏫
@@ -70,8 +75,6 @@ OpenDevin agents collaborate with human developers to write code, fix bugs, and 
 ![App screenshot](./docs/static/img/screenshot.png)
 
 ## ⚡ Getting Started
-
-The easiest way to run OpenDevin is to [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/SmartManoj/Kevin) 🔥🔥🔥
 
 OpenDevin works best with Docker version 26.0.0+ (Docker Desktop 4.31.0+).
 You must be using Linux, Mac OS, or WSL on Windows.

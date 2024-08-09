@@ -12,6 +12,7 @@ from threading import Thread
 import pytest
 from litellm import completion
 
+from opendevin.core.message import Message
 from opendevin.llm.llm import message_separator
 
 script_dir = os.environ.get('SCRIPT_DIR')
@@ -112,40 +113,43 @@ def get_mock_response(test_name: str, messages: str, id: int) -> str:
     prompt_file_path = os.path.join(mock_dir, f'prompt_{"{0:03}".format(id)}.log')
     resp_file_path = os.path.join(mock_dir, f'response_{"{0:03}".format(id)}.log')
     # Open the prompt file and compare its contents
-    with open(prompt_file_path, 'r') as f:
-        file_content = filter_out_symbols(f.read())
-        if file_content.strip() == prompt.strip():
-            # Read the response file and return its content
-            with open(resp_file_path, 'r') as resp_file:
-                return resp_file.read()
-        else:
-            # print the mismatched lines
-            print('Mismatched Prompt File path', prompt_file_path)
-            print('---' * 10)
-            # Create a temporary file to store messages
-            with tempfile.NamedTemporaryFile(
-                delete=False, mode='w', encoding='utf-8'
-            ) as tmp_file:
-                tmp_file_path = tmp_file.name
-                tmp_file.write(messages)
+    from test_patch import test_patces
 
-            try:
-                # Use diff command to compare files and capture the output
-                result = subprocess.run(
-                    ['diff', '-u', prompt_file_path, tmp_file_path],
-                    capture_output=True,
-                    text=True,
-                )
-                if result.returncode != 0:
-                    print('Diff:')
-                    print(result.stdout)
-                else:
-                    print('No differences found.')
-            finally:
-                # Clean up the temporary file
-                os.remove(tmp_file_path)
+    for key, value in test_patces.items():
+        with open(prompt_file_path, 'r') as f:
+            file_content = filter_out_symbols(f.read().replace(key, value))
+            if file_content.strip() == prompt.strip():
+                # Read the response file and return its content
+                with open(resp_file_path, 'r') as resp_file:
+                    return resp_file.read()
+    else:
+        # print the mismatched lines
+        print('Mismatched Prompt File path', prompt_file_path)
+        print('---' * 10)
+        # Create a temporary file to store messages
+        with tempfile.NamedTemporaryFile(
+            delete=False, mode='w', encoding='utf-8'
+        ) as tmp_file:
+            tmp_file_path = tmp_file.name
+            tmp_file.write(messages)
 
-            print('---' * 10)
+        try:
+            # Use diff command to compare files and capture the output
+            result = subprocess.run(
+                ['diff', '-u', prompt_file_path, tmp_file_path],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                print('Diff:')
+                print(result.stdout)
+            else:
+                print('No differences found.')
+        finally:
+            # Clean up the temporary file
+            os.remove(tmp_file_path)
+
+        print('---' * 10)
 
 
 def mock_user_response(*args, test_name, **kwargs):
@@ -174,6 +178,8 @@ def mock_completion(*args, test_name, **kwargs):
     global cur_id
     messages = kwargs['messages']
     message_str = ''
+    if isinstance(messages[0], Message):
+        messages = [message.model_dump() for message in messages]
     for message in messages:
         for m in message['content']:
             if m['type'] == 'text':

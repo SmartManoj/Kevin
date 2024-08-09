@@ -22,7 +22,6 @@ from opendevin.events.action import (
 )
 from opendevin.events.action.action import Action
 from opendevin.events.observation import (
-    CmdOutputObservation,
     ErrorObservation,
     NullObservation,
     Observation,
@@ -65,6 +64,7 @@ class EventStreamRuntime(Runtime):
             self.instance_id = (sid or '') + str(uuid.uuid4())
             self._port = find_available_tcp_port()
         self.api_url = f'http://localhost:{self._port}'
+        self.api_url = f'http://{self.config.sandbox.api_hostname}:{self._port}'
         self.session: Optional[aiohttp.ClientSession] = None
 
         # TODO: We can switch to aiodocker when `get_od_sandbox_image` is updated to use aiodocker
@@ -112,7 +112,6 @@ class EventStreamRuntime(Runtime):
             )
             logger.info(f'Container initialized with env vars: {env_vars}')
 
-            await self._init_git_config()
         else:
             logger.info('Using existing Docker container')
             self.container = self.docker_client.containers.get(self.container_name)
@@ -201,16 +200,6 @@ class EventStreamRuntime(Runtime):
             await self.close(close_client=False)
             raise e
 
-    async def _init_git_config(self):
-        action = CmdRunAction(
-            'git config --global user.name "opendevin" && '
-            'git config --global user.email "opendevin@all-hands.dev"'
-        )
-        logger.info(f'Setting git config: {action}')
-        obs: Observation = await self.run_action(action)
-        assert isinstance(obs, CmdOutputObservation)
-        assert obs.exit_code == 0, f'Failed to set git config: {obs}'
-
     async def _ensure_session(self):
         await asyncio.sleep(1)
         if self.session is None or self.session.closed:
@@ -260,7 +249,10 @@ class EventStreamRuntime(Runtime):
         containers = self.docker_client.containers.list(all=True)
         for container in containers:
             try:
-                if container.name.startswith(self.container_name_prefix):
+                # only remove the container it created
+                # otherwise all other containers with the same prefix will be removed
+                # which will mess up with parallel evaluation
+                if container.name.startswith(self.container_name):
                     logs = container.logs(tail=1000).decode('utf-8')
                     logger.debug(
                         f'==== Container logs ====\n{logs}\n==== End of container logs ===='
@@ -298,7 +290,7 @@ class EventStreamRuntime(Runtime):
             assert action.timeout is not None
 
             try:
-                logger.info('Executing command')
+                logger.info(f'Executing action {action}')
                 async with session.post(
                     f'{self.api_url}/execute_action',
                     json={'action': event_to_dict(action)},

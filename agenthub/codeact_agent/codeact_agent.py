@@ -18,11 +18,13 @@ from opendevin.events.action import (
     IPythonRunCellAction,
     MessageAction,
 )
+from opendevin.events.action.browse import BrowseURLAction
 from opendevin.events.observation import (
     AgentDelegateObservation,
     CmdOutputObservation,
     IPythonRunCellObservation,
 )
+from opendevin.events.observation.browse import BrowserOutputObservation
 from opendevin.events.observation.observation import Observation
 from opendevin.events.serialization.event import truncate_content
 from opendevin.llm.llm import LLM
@@ -123,6 +125,8 @@ class CodeActAgent(Agent):
             return f'{action.thought}\n<execute_browse>\n{action.inputs["task"]}\n</execute_browse>'
         elif isinstance(action, MessageAction):
             return action.content
+        elif isinstance(action, BrowseURLAction):
+            return f'Opening {action.url} in browser manually'
         elif isinstance(action, AgentSummarizeAction):
             return (
                 'Summary of all Action and Observations till now. \n'
@@ -139,6 +143,7 @@ class CodeActAgent(Agent):
             or isinstance(action, CmdRunAction)
             or isinstance(action, IPythonRunCellAction)
             or isinstance(action, MessageAction)
+            or isinstance(action, BrowseURLAction)
             or isinstance(action, AgentSummarizeAction)
             or (isinstance(action, AgentFinishAction) and action.source == 'agent')
         ):
@@ -186,6 +191,13 @@ class CodeActAgent(Agent):
             text = 'OBSERVATION:\n' + truncate_content(
                 str(obs.outputs), max_message_chars
             )
+            return Message(
+                role='user',
+                content=[TextContent(text=text)],
+                event_id=obs.id,
+            )
+        elif isinstance(obs, BrowserOutputObservation):
+            text = 'OBSERVATION:\n' + truncate_content(obs.content, max_message_chars)
             return Message(
                 role='user',
                 content=[TextContent(text=text)],
