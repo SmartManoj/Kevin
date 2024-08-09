@@ -6,7 +6,7 @@
   4) [Showed relevant error in UI](https://github.com/OpenDevin/OpenDevin/pull/2657) 🚨
   5) [Added Event History Condenser](https://github.com/OpenDevin/OpenDevin/pull/2937) 📜
   6) [Feat: Persist sandbox for Event Runtime](https://github.com/SmartManoj/Kevin/commit/2200b21dd01ecf3618d7e676cf16f875c5fce154) 🥳🥳
-  7) [Parsed pip output and restarted kernel automatically (for bash too)](https://github.com/SmartManoj/Kevin/commit/c8a51c97f985a748761cc86bf6a36a8bac36a3e0) 📦
+  7) [Parsed pip output and restarted kernel automatically (for bash too)](https://github.com/SmartManoj/Kevin/commit/3b77d5b2ec592e0fcb5bd7ed8a0d5787378bc0de) 📦
 
 ### Bug Fixes:
   1) [Fixed GroqException - content must be a string for role system & assisstant](https://github.com/SmartManoj/Kevin/commit/30c98d458a299d789ebd6b8ada842c050bc91b20) 🛠️
