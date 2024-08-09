@@ -249,7 +249,7 @@ class EventStreamRuntime(Runtime):
         containers = self.docker_client.containers.list(all=True)
         for container in containers:
             try:
-                # only remove the container we created
+                # only remove the container it created
                 # otherwise all other containers with the same prefix will be removed
                 # which will mess up with parallel evaluation
                 if container.name.startswith(self.container_name):

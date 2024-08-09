@@ -32,7 +32,7 @@ async def browse(
 
     try:
         # obs provided by BrowserGym:
-        # https://github.com/ServiceNow/BrowserGym/blob/418421abdc5da4d77dc71d3b82a9e5e931be0c4f/browsergym/core/src/browsergym/core/env.py#L521
+        # https://github.com/ServiceNow/BrowserGym/blob/main/browsergym/core/src/browsergym/core/env.py#L521
         # https://github.com/ServiceNow/BrowserGym/blob/418421abdc5da4d77dc71d3b82a9e5e931be0c4f/browsergym/core/src/browsergym/core/env.py#L521
         obs = browser.step(action_str)
         try:
