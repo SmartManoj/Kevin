@@ -1,3 +1,5 @@
+import os
+
 from agenthub.codeact_agent.action_parser import CodeActResponseParser
 from agenthub.codeact_agent.prompt import (
     COMMAND_DOCS,
@@ -8,6 +10,7 @@ from agenthub.codeact_agent.prompt import (
 )
 from opendevin.controller.agent import Agent
 from opendevin.controller.state.state import State
+from opendevin.core.config import load_app_config
 from opendevin.core.message import ImageContent, Message, TextContent
 from opendevin.events.action import (
     Action,
@@ -36,6 +39,8 @@ from opendevin.runtime.plugins import (
 from opendevin.runtime.tools import RuntimeTool
 
 ENABLE_GITHUB = True
+
+config = load_app_config()
 
 
 # FIXME: We can tweak these two settings to create MicroAgents specialized toward different area
@@ -263,6 +268,20 @@ class CodeActAgent(Agent):
                 condensable=False,
             ),
         ]
+
+        if len(state.history.get_events_as_list()) == 1:
+            workspace_contents = ', '.join(os.listdir(config.workspace_base))
+            if workspace_contents:
+                messages.append(
+                    Message(
+                        role='user',
+                        content=[
+                            TextContent(
+                                text=f'WORKSPACE CONTENTS: {workspace_contents}'
+                            )
+                        ],
+                    )
+                )
 
         if state.history.summary:
             summary_message = self.get_action_message(state.history.summary)
