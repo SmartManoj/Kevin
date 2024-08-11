@@ -286,10 +286,16 @@ clean:
 	@rm -rf opendevin/.cache
 	@echo "$(GREEN)Caches cleaned up successfully.$(RESET)"
 
-# Kill all processes on port 3000 and 3001
+# Kill all processes on port BACKEND_PORT and FRONTEND_PORT
 kill:
-	@echo "$(YELLOW)Killing all processes on port 3000 and 3001$(RESET)"
-	@kill -9  $$(lsof -t -i:3000) $$(lsof -t -i:3001)
+	@echo "$(YELLOW)Killing all processes on port $(BACKEND_PORT) and $(FRONTEND_PORT)...$(RESET)"
+	ports=$$(lsof -t -i:$(BACKEND_PORT) -i:$(FRONTEND_PORT)); \
+	if [ -n "$$ports" ]; then \
+		kill -9 $$ports; \
+		echo "$(GREEN)Processes killed successfully.$(RESET)"; \
+	else \
+		echo "$(BLUE)No processes found on port $(BACKEND_PORT) and $(FRONTEND_PORT).$(RESET)"; \
+	fi
 # Help
 help:
 	@echo "$(BLUE)Usage: make [target]$(RESET)"
