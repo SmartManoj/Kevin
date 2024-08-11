@@ -258,7 +258,7 @@ class RuntimeClient:
             EOF,
             TIMEOUT,
         ]
-        command_output = ''
+        output = ''
         timeout_counter = 0
         timeout = 5
         while True:
@@ -267,7 +267,7 @@ class RuntimeClient:
                 index = self.shell.expect(prompts, timeout=1)
                 line = self.shell.before
                 logger.info(line)
-                command_output += line
+                output += line
                 if index == 0:
                     self.shell.sendline('Y')
                 elif index == 1:
@@ -286,7 +286,6 @@ class RuntimeClient:
                 logger.exception(f'Unexpected exception: {e}')
                 break
 
-        output = command_output.strip()
         if keep_prompt:
             output += '\r\n' + self._get_bash_prompt_and_update_pwd()
 
