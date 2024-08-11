@@ -39,11 +39,11 @@ ActionObs = TypedDict(
 
 
 class DummyAgent(Agent):
+    """
+    The DummyAgent is used for e2e testing. It just sends the same set of actions deterministically,without making any LLM calls.
+    """
+
     VERSION = '1.0'
-    """
-    The DummyAgent is used for e2e testing. It just sends the same set of actions deterministically,
-    without making any LLM calls.
-    """
 
     def __init__(self, llm: LLM):
         super().__init__(llm)
@@ -208,9 +208,3 @@ class DummyAgent(Agent):
                 f' Unable to perform interactive browsing: {action.browser_actions}'
             )
         return MessageAction(content=message)
-
-    async def get_working_directory(self, state: State) -> str:
-        # Implement this method to return the current working directory
-        # This might involve accessing state information or making an async call
-        # For now, we'll return a placeholder value
-        return './workspace'

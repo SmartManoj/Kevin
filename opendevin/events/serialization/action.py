@@ -4,6 +4,7 @@ from opendevin.events.action.agent import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentRejectAction,
+    AgentSummarizeAction,
     ChangeAgentStateAction,
 )
 from opendevin.events.action.browse import BrowseInteractiveAction, BrowseURLAction
@@ -31,6 +32,7 @@ actions = (
     ModifyTaskAction,
     ChangeAgentStateAction,
     MessageAction,
+    AgentSummarizeAction,
 )
 
 ACTION_TYPE_TO_CLASS = {action_class.action: action_class for action_class in actions}  # type: ignore[attr-defined]
@@ -54,6 +56,10 @@ def action_from_dict(action: dict) -> Action:
     args = action.get('args', {})
     try:
         decoded_action = action_class(**args)
-    except TypeError:
-        raise LLMMalformedActionError(f'action={action} has the wrong arguments')
+        if 'timeout' in action:
+            decoded_action.timeout = action['timeout']
+    except TypeError as e:
+        raise LLMMalformedActionError(
+            f'Error creating {action_class} from {action=}: {e}'
+        )
     return decoded_action

@@ -44,7 +44,9 @@ describe("Terminal", () => {
     expect(screen.getByText("Terminal")).toBeInTheDocument();
     expect(mockTerminal.open).toHaveBeenCalledTimes(1);
 
-    expect(mockTerminal.write).toHaveBeenCalledWith("$ ");
+    expect(mockTerminal.write).toHaveBeenCalledWith(
+      "opendevin@docker-desktop:/workspace $ ",
+    );
   });
 
   it("should load commands to the terminal", () => {
@@ -54,7 +56,7 @@ describe("Terminal", () => {
     ]);
 
     expect(mockTerminal.writeln).toHaveBeenNthCalledWith(1, "INPUT");
-    expect(mockTerminal.writeln).toHaveBeenNthCalledWith(2, "OUTPUT");
+    expect(mockTerminal.write).toHaveBeenNthCalledWith(2, "OUTPUT");
   });
 
   it("should write commands to the terminal", () => {
@@ -66,13 +68,13 @@ describe("Terminal", () => {
     });
 
     expect(mockTerminal.writeln).toHaveBeenNthCalledWith(1, "echo Hello");
-    expect(mockTerminal.writeln).toHaveBeenNthCalledWith(2, "Hello");
+    expect(mockTerminal.write).toHaveBeenNthCalledWith(2, "Hello");
 
     act(() => {
       store.dispatch(appendInput("echo World"));
     });
 
-    expect(mockTerminal.writeln).toHaveBeenNthCalledWith(3, "echo World");
+    expect(mockTerminal.writeln).toHaveBeenNthCalledWith(2, "echo World");
   });
 
   it("should load and write commands to the terminal", () => {
@@ -82,13 +84,13 @@ describe("Terminal", () => {
     ]);
 
     expect(mockTerminal.writeln).toHaveBeenNthCalledWith(1, "echo Hello");
-    expect(mockTerminal.writeln).toHaveBeenNthCalledWith(2, "Hello");
+    expect(mockTerminal.write).toHaveBeenNthCalledWith(2, "Hello");
 
     act(() => {
       store.dispatch(appendInput("echo Hello"));
     });
 
-    expect(mockTerminal.writeln).toHaveBeenNthCalledWith(3, "echo Hello");
+    expect(mockTerminal.writeln).toHaveBeenNthCalledWith(2, "echo Hello");
   });
 
   it("should end the line with a dollar sign after writing a command", () => {
@@ -99,7 +101,9 @@ describe("Terminal", () => {
     });
 
     expect(mockTerminal.writeln).toHaveBeenCalledWith("echo Hello");
-    expect(mockTerminal.write).toHaveBeenCalledWith("$ ");
+    expect(mockTerminal.write).toHaveBeenCalledWith(
+      "opendevin@docker-desktop:/workspace $ ",
+    );
   });
 
   // This test fails because it expects `disposeMock` to have been called before the component is unmounted.
