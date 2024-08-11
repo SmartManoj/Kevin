@@ -23,9 +23,6 @@ RESET=$(shell tput -Txterm sgr0)
 build:
 	@echo "$(GREEN)Building project...$(RESET)"
 	@$(MAKE) -s check-dependencies
-ifeq ($(INSTALL_DOCKER),)
-	@$(MAKE) -s pull-docker-image
-endif
 	@$(MAKE) -s install-python-dependencies
 	@$(MAKE) -s install-frontend-dependencies
 	@$(MAKE) -s install-pre-commit-hooks
@@ -124,11 +121,6 @@ check-poetry:
 		exit 1; \
 	fi
 
-pull-docker-image:
-	@echo "$(YELLOW)Pulling Docker image...$(RESET)"
-	@docker pull $(DOCKER_IMAGE)
-	@echo "$(GREEN)Docker image pulled successfully.$(RESET)"
-
 install-python-dependencies:
 	@echo "$(GREEN)Installing Python dependencies...$(RESET)"
 	@if [ -z "${TZ}" ]; then \
@@ -141,7 +133,7 @@ install-python-dependencies:
 		export HNSWLIB_NO_NATIVE=1; \
 		poetry run pip install chroma-hnswlib; \
 	fi
-	@poetry install
+	@poetry install --without llama-index
 	@if [ -f "/etc/manjaro-release" ]; then \
 		echo "$(BLUE)Detected Manjaro Linux. Installing Playwright dependencies...$(RESET)"; \
 		poetry run pip install playwright; \
@@ -195,42 +187,45 @@ build-frontend:
 	@echo "$(YELLOW)Building frontend...$(RESET)"
 	@cd frontend && npm run build
 
-# Start backend
+# Start backend server with auto-reload
 start-backend:
 	@echo "$(YELLOW)Starting backend...$(RESET)"
 	@poetry run uvicorn opendevin.server.listen:app --port $(BACKEND_PORT) --reload --reload-exclude "workspace/*"
 
-# Start frontend
+# Start frontend server
 start-frontend:
 	@echo "$(YELLOW)Starting frontend...$(RESET)"
-	@cd frontend && VITE_BACKEND_HOST=$(BACKEND_HOST) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run start
+	@if [ -n "$$WSL_DISTRO_NAME" ]; then \
+		mode=dev_wsl; \
+	else \
+		mode=start; \
+	fi; \
+	@cd frontend && VITE_BACKEND_HOST=$(BACKEND_HOST) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run $$mode
 
-# Common setup for running the app (non-callable)
-_run_setup:
+# check for Windows (non-callable)
+_run_check:
 	@if [ "$(OS)" = "Windows_NT" ]; then \
 		echo "$(RED) Windows is not supported, use WSL instead!$(RESET)"; \
 		exit 1; \
 	fi
 	@mkdir -p logs
-	@echo "$(YELLOW)Starting backend server...$(RESET)"
-	@poetry run uvicorn opendevin.server.listen:app --port $(BACKEND_PORT) &
-	@echo "$(YELLOW)Waiting for the backend to start...$(RESET)"
-	@until nc -z localhost $(BACKEND_PORT); do sleep 0.1; done
-	@echo "$(GREEN)Backend started successfully.$(RESET)"
 
-# Run the app (standard mode)
+# Run the app in standard mode for end-users
 run:
 	@echo "$(YELLOW)Running the app...$(RESET)"
-	@$(MAKE) -s _run_setup
-	@cd frontend && echo "$(BLUE)Starting frontend with npm...$(RESET)" && npm run start -- --port $(FRONTEND_PORT)
+	@$(MAKE) -s _run_check
+	@poetry run uvicorn opendevin.server.listen:app --port $(BACKEND_PORT) &
+	@echo "$(YELLOW)Waiting for the app to start...$(RESET)"
+	@until nc -z localhost $(BACKEND_PORT); do sleep 0.1; done
 	@echo "$(GREEN)Application started successfully.$(RESET)"
 
-# Run the app (WSL mode)
-run-wsl:
-	@echo "$(YELLOW)Running the app in WSL mode...$(RESET)"
-	@$(MAKE) -s _run_setup
-	@cd frontend && echo "$(BLUE)Starting frontend with npm (WSL mode)...$(RESET)" && npm run dev_wsl -- --port $(FRONTEND_PORT)
-	@echo "$(GREEN)Application started successfully in WSL mode.$(RESET)"
+# Start both backend and frontend servers
+start:
+	@echo "$(YELLOW)Start the app in dev mode...$(RESET)"
+	@$(MAKE) -s start-backend
+	@$(MAKE) -s start-frontend
+	@echo "$(GREEN)Application started successfully.$(RESET)"
+
 
 # Setup config.toml
 setup-config:
@@ -245,16 +240,6 @@ setup-config-prompts:
 	@read -p "Enter your workspace directory (as absolute path) [default: $(DEFAULT_WORKSPACE_DIR)]: " workspace_dir; \
 	 workspace_dir=$${workspace_dir:-$(DEFAULT_WORKSPACE_DIR)}; \
 	 echo "workspace_base=\"$$workspace_dir\"" >> $(CONFIG_FILE).tmp
-
-	@read -p "Do you want to persist the sandbox container? [true/false] [default: false]: " persist_sandbox; \
-	 persist_sandbox=$${persist_sandbox:-false}; \
-	 if [ "$$persist_sandbox" = "true" ]; then \
-		 read -p "Enter a password for the sandbox container: " ssh_password; \
-		 echo "ssh_password=\"$$ssh_password\"" >> $(CONFIG_FILE).tmp; \
-		 echo "persist_sandbox=$$persist_sandbox" >> $(CONFIG_FILE).tmp; \
-	 else \
-		echo "persist_sandbox=$$persist_sandbox" >> $(CONFIG_FILE).tmp; \
-	 fi
 
 	@echo "" >> $(CONFIG_FILE).tmp
 
@@ -301,6 +286,16 @@ clean:
 	@rm -rf opendevin/.cache
 	@echo "$(GREEN)Caches cleaned up successfully.$(RESET)"
 
+# Kill all processes on port BACKEND_PORT and FRONTEND_PORT
+kill:
+	@echo "$(YELLOW)Killing all processes on port $(BACKEND_PORT) and $(FRONTEND_PORT)...$(RESET)"
+	ports=$$(lsof -t -i:$(BACKEND_PORT) -i:$(FRONTEND_PORT)); \
+	if [ -n "$$ports" ]; then \
+		kill -9 $$ports; \
+		echo "$(GREEN)Processes killed successfully.$(RESET)"; \
+	else \
+		echo "$(BLUE)No processes found on port $(BACKEND_PORT) and $(FRONTEND_PORT).$(RESET)"; \
+	fi
 # Help
 help:
 	@echo "$(BLUE)Usage: make [target]$(RESET)"
@@ -309,11 +304,14 @@ help:
 	@echo "  $(GREEN)lint$(RESET)                - Run linters on the project."
 	@echo "  $(GREEN)setup-config$(RESET)        - Setup the configuration for OpenDevin by providing LLM API key,"
 	@echo "                        LLM Model name, and workspace directory."
-	@echo "  $(GREEN)start-backend$(RESET)       - Start the backend server for the OpenDevin project."
+	@echo "  $(GREEN)start-backend$(RESET)       - Start the backend server for the OpenDevin project with auto-reload."
 	@echo "  $(GREEN)start-frontend$(RESET)      - Start the frontend server for the OpenDevin project."
-	@echo "  $(GREEN)run$(RESET)                 - Run the OpenDevin application, starting both backend and frontend servers."
+	@echo "  $(GREEN)start$(RESET)               - Start both backend and frontend servers."
+	@echo "  $(GREEN)run$(RESET)                 - Run the OpenDevin application for end-users."
+	@echo "  $(GREEN)run-wsl$(RESET)         - Run the OpenDevin application, starting both backend and frontend servers for WSL users."
+	@echo "  $(GREEN)kill$(RESET)                - Kill all processes on port 3000 and 3001."
 	@echo "                        Backend Log file will be stored in the 'logs' directory."
 	@echo "  $(GREEN)help$(RESET)                - Display this help message, providing information on available targets."
 
 # Phony targets
-.PHONY: build check-dependencies check-python check-npm check-docker check-poetry pull-docker-image install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint start-backend start-frontend run run-wsl setup-config setup-config-prompts help
+.PHONY: build check-dependencies check-python check-npm check-docker check-poetry install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint start-backend start-frontend start run run-wsl setup-config setup-config-prompts kill help

@@ -4,6 +4,7 @@ from opendevin.core.logger import opendevin_logger as logger
 from opendevin.events.action.action import Action
 from opendevin.events.action.agent import (
     AgentDelegateAction,
+    AgentSummarizeAction,
     ChangeAgentStateAction,
 )
 from opendevin.events.action.empty import NullAction
@@ -40,6 +41,12 @@ class ShortTermHistory(list[Event]):
         self.start_id = -1
         self.end_id = -1
         self.delegates = {}
+        self.summary = None
+        self.last_summarized_event_id = -1
+
+    def add_summary(self, summary_action: AgentSummarizeAction):
+        self.summary = summary_action
+        self.last_summarized_event_id = summary_action.last_summarized_event_id
 
     def set_event_stream(self, event_stream: EventStream):
         self._event_stream = event_stream
@@ -60,24 +67,29 @@ class ShortTermHistory(list[Event]):
             if self.end_id != -1
             else self._event_stream.get_latest_event_id()
         )
-
+        summary_yielded = False
         for event in self._event_stream.get_events(
             start_id=start_id,
             end_id=end_id,
             reverse=reverse,
             filter_out_type=self.filter_out,
         ):
-            # TODO add summaries
-            # and filter out events that were included in a summary
-
             # filter out the events from a delegate of the current agent
-            if not any(
+            if (
+                self.summary is not None
+                and event.id <= self.last_summarized_event_id
+                and not summary_yielded
+            ):
+                summary_action = self.summary
+                summary_yielded = True
+                yield summary_action
+            elif not any(
                 # except for the delegate action and observation themselves, currently
                 # AgentDelegateAction has id = delegate_start
                 # AgentDelegateObservation has id = delegate_end
                 delegate_start < event.id < delegate_end
                 for delegate_start, delegate_end in self.delegates.keys()
-            ):
+            ) and (event.id > self.last_summarized_event_id):
                 yield event
 
     def get_last_action(self, end_id: int = -1) -> Action | None:

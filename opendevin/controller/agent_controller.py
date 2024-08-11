@@ -21,6 +21,7 @@ from opendevin.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentRejectAction,
+    AgentSummarizeAction,
     ChangeAgentStateAction,
     CmdRunAction,
     IPythonRunCellAction,
@@ -36,6 +37,7 @@ from opendevin.events.observation import (
     ErrorObservation,
     Observation,
 )
+from opendevin.events.observation.browse import BrowserOutputObservation
 from opendevin.llm.llm import LLM
 
 # note: RESUME is only available on web GUI
@@ -131,9 +133,9 @@ class AgentController:
         - a user-friendly message, which will be shown in the chat box. This should not be a raw exception message.
         - an ErrorObservation that can be sent to the LLM by the agent, with the exception message, so it can self-correct next time.
         """
-        self.state.last_error = message
         if exception:
-            self.state.last_error += f': {exception}'
+            message += f': {exception}'
+        self.state.last_error = message
         self.event_stream.add_event(ErrorObservation(message), EventSource.AGENT)
 
     async def _start_step_loop(self):
@@ -145,7 +147,6 @@ class AgentController:
                 logger.info('AgentController task was cancelled')
                 break
             except Exception as e:
-                traceback.print_exc()
                 logger.error(f'Error while running the agent: {e}')
                 logger.error(traceback.format_exc())
                 await self.report_error(
@@ -161,6 +162,10 @@ class AgentController:
             await self.set_agent_state_to(event.agent_state)  # type: ignore
         elif isinstance(event, MessageAction):
             if event.source == EventSource.USER:
+                logger.info(
+                    event,
+                    extra={'msg_type': 'ACTION', 'event_source': EventSource.USER},
+                )
                 if self.get_agent_state() != AgentState.RUNNING:
                     await self.set_agent_state_to(AgentState.RUNNING)
             elif event.source == EventSource.AGENT and event.wait_for_response:
@@ -195,6 +200,8 @@ class AgentController:
                     await self.set_agent_state_to(AgentState.AWAITING_USER_INPUT)
                 logger.info(event, extra={'msg_type': 'OBSERVATION'})
             elif isinstance(event, CmdOutputObservation):
+                logger.info(event, extra={'msg_type': 'OBSERVATION'})
+            elif isinstance(event, BrowserOutputObservation):
                 logger.info(event, extra={'msg_type': 'OBSERVATION'})
             elif isinstance(event, AgentDelegateObservation):
                 self.state.history.on_event(event)
@@ -376,16 +383,27 @@ class AgentController:
                     self.state.traffic_control_state = TrafficControlState.NORMAL
                 else:
                     self.state.traffic_control_state = TrafficControlState.THROTTLING
-                    await self.report_error(
-                        f'Task budget exceeded. Current cost: {current_cost:.2f}, Max budget: {self.max_budget_per_task:.2f}, task paused. {TRAFFIC_CONTROL_REMINDER}'
-                    )
-                    await self.set_agent_state_to(AgentState.PAUSED)
+                    if self.headless_mode:
+                        # set to ERROR state if running in headless mode
+                        # there is no way to resume
+                        await self.report_error(
+                            f'Task budget exceeded. Current cost: {current_cost:.2f}, max budget: {self.max_budget_per_task:.2f}, task stopped.'
+                        )
+                        await self.set_agent_state_to(AgentState.ERROR)
+                    else:
+                        await self.report_error(
+                            f'Task budget exceeded. Current cost: {current_cost:.2f}, Max budget: {self.max_budget_per_task:.2f}, task paused. {TRAFFIC_CONTROL_REMINDER}'
+                        )
+                        await self.set_agent_state_to(AgentState.PAUSED)
                     return
 
         self.update_state_before_step()
         action: Action = NullAction()
         try:
             action = self.agent.step(self.state)
+            if isinstance(action, AgentSummarizeAction):
+                self.state.history.add_summary(action)
+                return
             if action is None:
                 raise LLMNoActionError('No action was returned')
         except (LLMMalformedActionError, LLMNoActionError, LLMResponseError) as e:
