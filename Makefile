@@ -288,10 +288,8 @@ clean:
 
 # Kill all processes on port 3000 and 3001
 kill:
-	@echo "$(YELLOW)Killing all processes on port 3000(RESET)"
-	@kill -9  $(lsof -t -i:3000)
-	@echo "$(YELLOW)Killing all processes on port 3001(RESET)"
-	@kill -9  $(lsof -t -i:3001)
+	@echo "$(YELLOW)Killing all processes on port 3000 and 3001$(RESET)"
+	@kill -9  $$(lsof -t -i:3000) $$(lsof -t -i:3001)
 # Help
 help:
 	@echo "$(BLUE)Usage: make [target]$(RESET)"
