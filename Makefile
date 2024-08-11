@@ -195,7 +195,12 @@ start-backend:
 # Start frontend server
 start-frontend:
 	@echo "$(YELLOW)Starting frontend...$(RESET)"
-	@cd frontend && VITE_BACKEND_HOST=$(BACKEND_HOST) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run start
+	@if [ -n "$$WSL_DISTRO_NAME" ]; then \
+		mode=dev_wsl; \
+	else \
+		mode=start; \
+	fi; \
+	@cd frontend && VITE_BACKEND_HOST=$(BACKEND_HOST) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run $$mode
 
 # check for Windows (non-callable)
 _run_check:
@@ -205,16 +210,8 @@ _run_check:
 	fi
 	@mkdir -p logs
 
-# Common setup for running the app (non-callable)
-_run_backend:
-	@$(MAKE) -s _run_check
-	@poetry run uvicorn opendevin.server.listen:app --port $(BACKEND_PORT) &
-	@echo "$(YELLOW)Waiting for the backend to start...$(RESET)"
-	@until nc -z localhost $(BACKEND_PORT); do sleep 0.1; done
-	@echo "$(GREEN)Backend started successfully.$(RESET)"
-
-# Start the app in standard mode for end-users
-start:
+# Run the app in standard mode for end-users
+run:
 	@echo "$(YELLOW)Running the app...$(RESET)"
 	@$(MAKE) -s _run_check
 	@poetry run uvicorn opendevin.server.listen:app --port $(BACKEND_PORT) &
@@ -222,19 +219,13 @@ start:
 	@until nc -z localhost $(BACKEND_PORT); do sleep 0.1; done
 	@echo "$(GREEN)Application started successfully.$(RESET)"
 
-# Run the app (development mode)
-run:
-	@echo "$(YELLOW)Running the app in dev mode...$(RESET)"
-	@$(MAKE) -s _run_backend
-	@cd frontend && echo "$(BLUE)Starting frontend with npm...$(RESET)" && npm run start -- --port $(FRONTEND_PORT)
+# Start both backend and frontend servers
+start:
+	@echo "$(YELLOW)Start the app in dev mode...$(RESET)"
+	@$(MAKE) -s start-backend
+	@$(MAKE) -s start-frontend
 	@echo "$(GREEN)Application started successfully.$(RESET)"
 
-# Run the app (development mode for WSL)
-run-wsl:
-	@echo "$(YELLOW)Running the app in dev mode for WSL...$(RESET)"
-	@$(MAKE) -s _run_backend
-	@cd frontend && echo "$(BLUE)Starting frontend with npm (WSL mode)...$(RESET)" && npm run dev_wsl -- --port $(FRONTEND_PORT)
-	@echo "$(GREEN)Application started successfully in WSL mode.$(RESET)"
 
 # Setup config.toml
 setup-config:
@@ -311,8 +302,8 @@ help:
 	@echo "                        LLM Model name, and workspace directory."
 	@echo "  $(GREEN)start-backend$(RESET)       - Start the backend server for the OpenDevin project with auto-reload."
 	@echo "  $(GREEN)start-frontend$(RESET)      - Start the frontend server for the OpenDevin project."
-	@echo "  $(GREEN)start$(RESET)               - Start the OpenDevin application for end users.
-	@echo "  $(GREEN)run$(RESET)                 - Run the OpenDevin application, starting both backend and frontend servers."
+	@echo "  $(GREEN)start$(RESET)               - Start both backend and frontend servers."
+	@echo "  $(GREEN)run$(RESET)                 - Run the OpenDevin application for end-users."
 	@echo "  $(GREEN)run-wsl$(RESET)         - Run the OpenDevin application, starting both backend and frontend servers for WSL users."
 	@echo "  $(GREEN)kill$(RESET)                - Kill all processes on port 3000 and 3001."
 	@echo "                        Backend Log file will be stored in the 'logs' directory."
