@@ -12,7 +12,11 @@ import TypingIndicator from "./TypingIndicator";
 import { RootState } from "#/store";
 import AgentState from "#/types/AgentState";
 import { sendChatMessage, regenerateLastMessage } from "#/services/chatService";
-import { addUserMessage, addAssistantMessage, removeLastAssistantMessage } from "#/state/chatSlice";
+import {
+  addUserMessage,
+  addAssistantMessage,
+  removeLastAssistantMessage,
+} from "#/state/chatSlice";
 import { I18nKey } from "#/i18n/declaration";
 import { useScrollToBottom } from "#/hooks/useScrollToBottom";
 import FeedbackModal from "../modals/feedback/FeedbackModal";
@@ -91,7 +95,6 @@ function ChatInterface() {
       t(I18nKey.CHAT_INTERFACE$INPUT_AUTO_MESSAGE),
     );
   };
-
 
   const handleRegenerateClick = () => {
     dispatch(removeLastAssistantMessage());

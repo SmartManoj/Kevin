@@ -105,7 +105,7 @@ function Jupyter(): JSX.Element {
   const onKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); // prevent a new line
-        handleInputSubmit();
+      handleInputSubmit();
     }
   };
 
@@ -135,8 +135,10 @@ function Jupyter(): JSX.Element {
           </button>
         </div>
       )}
-       <div className="sticky bottom-2 flex items-center p-2 border-t border-neutral-600 bg-neutral-800"
-        onKeyDown={onKeyPress}>
+      <div
+        className="sticky bottom-2 flex items-center p-2 border-t border-neutral-600 bg-neutral-800"
+        onKeyDown={onKeyPress}
+      >
         <input
           type="text"
           value={inputValue}

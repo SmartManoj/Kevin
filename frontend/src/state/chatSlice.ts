@@ -41,6 +41,10 @@ export const chatSlice = createSlice({
   },
 });
 
-export const { addUserMessage, addAssistantMessage, clearMessages, removeLastAssistantMessage } =
-  chatSlice.actions;
+export const {
+  addUserMessage,
+  addAssistantMessage,
+  clearMessages,
+  removeLastAssistantMessage,
+} = chatSlice.actions;
 export default chatSlice.reducer;

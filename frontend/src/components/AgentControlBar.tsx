@@ -83,7 +83,6 @@ function AgentControlBar() {
       return;
     }
 
-
     setDesiredState(action);
     changeAgentState(action);
 

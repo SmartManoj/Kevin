@@ -25,6 +25,10 @@ export const cellSlice = createSlice({
   },
 });
 
-export const { appendJupyterInput, appendJupyterOutput, handleInputSubmission } = cellSlice.actions;
+export const {
+  appendJupyterInput,
+  appendJupyterOutput,
+  handleInputSubmission,
+} = cellSlice.actions;
 
 export default cellSlice.reducer;

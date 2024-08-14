@@ -22,7 +22,7 @@ export function regenerateLastMessage(): void {
 export function sendJupyterCode(code: string): void {
   const event = {
     action: ActionType.RUN_IPYTHON,
-    args: { code},
+    args: { code },
   };
   const eventString = JSON.stringify(event);
   Session.send(eventString);
