@@ -28,6 +28,7 @@ vi.mock("#/services/settings", async (importOriginal) => ({
     LANGUAGE: "en",
     LLM_API_KEY: "sk-...",
     CONFIRMATION_MODE: true,
+    SECURITY_ANALYZER: "invariant",
   }),
   getDefaultSettings: vi.fn().mockReturnValue({
     LLM_MODEL: "gpt-4o",
@@ -35,6 +36,7 @@ vi.mock("#/services/settings", async (importOriginal) => ({
     LANGUAGE: "en",
     LLM_API_KEY: "",
     CONFIRMATION_MODE: false,
+    SECURITY_ANALYZER: "",
   }),
   settingsAreUpToDate: vi.fn().mockReturnValue(true),
   saveSettings: vi.fn(),
@@ -106,6 +108,7 @@ describe("SettingsModal", () => {
       LANGUAGE: "en",
       LLM_API_KEY: "sk-...",
       CONFIRMATION_MODE: true,
+      SECURITY_ANALYZER: "invariant",
     };
 
     it("should save the settings", async () => {
@@ -172,7 +175,7 @@ describe("SettingsModal", () => {
       await user.click(model3);
       await user.click(saveButton);
 
-      expect(toastSpy).toHaveBeenCalledTimes(3);
+      expect(toastSpy).toHaveBeenCalledTimes(4);
     });
 
     it("should change the language", async () => {
@@ -230,6 +233,10 @@ describe("SettingsModal", () => {
         <SettingsModal isOpen onOpenChange={onOpenChangeMock} />,
       ),
     );
+
+    // We need to enable the agent select first
+    const agentSwitch = screen.getByTestId("enableagentselect");
+    await user.click(agentSwitch);
 
     const resetButton = screen.getByRole("button", {
       name: /MODAL_RESET_BUTTON_LABEL/i,

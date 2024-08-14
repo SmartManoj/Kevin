@@ -10,7 +10,7 @@ from .browse import BrowseInteractiveAction, BrowseURLAction
 from .commands import CmdRunAction, IPythonRunCellAction
 from .empty import NullAction
 from .files import FileReadAction, FileWriteAction
-from .message import MessageAction
+from .message import MessageAction, RegenerateAction
 from .tasks import AddTaskAction, ModifyTaskAction
 
 __all__ = [
@@ -30,5 +30,6 @@ __all__ = [
     'ChangeAgentStateAction',
     'IPythonRunCellAction',
     'MessageAction',
+    'RegenerateAction',
     'ActionConfirmationStatus',
 ]

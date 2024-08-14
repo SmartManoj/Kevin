@@ -21,12 +21,14 @@ from opendevin.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentRejectAction,
+    AgentSummarizeAction,
     ChangeAgentStateAction,
     CmdRunAction,
     IPythonRunCellAction,
     MessageAction,
     ModifyTaskAction,
     NullAction,
+    RegenerateAction,
 )
 from opendevin.events.event import Event
 from opendevin.events.observation import (
@@ -36,6 +38,7 @@ from opendevin.events.observation import (
     ErrorObservation,
     Observation,
 )
+from opendevin.events.observation.browse import BrowserOutputObservation
 from opendevin.llm.llm import LLM
 
 # note: RESUME is only available on web GUI
@@ -131,9 +134,9 @@ class AgentController:
         - a user-friendly message, which will be shown in the chat box. This should not be a raw exception message.
         - an ErrorObservation that can be sent to the LLM by the agent, with the exception message, so it can self-correct next time.
         """
-        self.state.last_error = message
         if exception:
-            self.state.last_error += f': {exception}'
+            message += f': {exception}'
+        self.state.last_error = message
         self.event_stream.add_event(ErrorObservation(message), EventSource.AGENT)
 
     async def _start_step_loop(self):
@@ -145,7 +148,6 @@ class AgentController:
                 logger.info('AgentController task was cancelled')
                 break
             except Exception as e:
-                traceback.print_exc()
                 logger.error(f'Error while running the agent: {e}')
                 logger.error(traceback.format_exc())
                 await self.report_error(
@@ -159,14 +161,17 @@ class AgentController:
     async def on_event(self, event: Event):
         if isinstance(event, ChangeAgentStateAction):
             await self.set_agent_state_to(event.agent_state)  # type: ignore
+        elif isinstance(event, RegenerateAction):
+            logger.info(event, extra={'msg_type': 'ACTION'})
+            self.event_stream.remove_latest_event()
+            await self.set_agent_state_to(AgentState.RUNNING)
         elif isinstance(event, MessageAction):
             if event.source == EventSource.USER:
                 logger.info(
                     event,
                     extra={'msg_type': 'ACTION', 'event_source': EventSource.USER},
                 )
-                if self.get_agent_state() != AgentState.RUNNING:
-                    await self.set_agent_state_to(AgentState.RUNNING)
+                await self.set_agent_state_to(AgentState.RUNNING)
             elif event.source == EventSource.AGENT and event.wait_for_response:
                 await self.set_agent_state_to(AgentState.AWAITING_USER_INPUT)
         elif isinstance(event, AgentDelegateAction):
@@ -199,6 +204,8 @@ class AgentController:
                     await self.set_agent_state_to(AgentState.AWAITING_USER_INPUT)
                 logger.info(event, extra={'msg_type': 'OBSERVATION'})
             elif isinstance(event, CmdOutputObservation):
+                logger.info(event, extra={'msg_type': 'OBSERVATION'})
+            elif isinstance(event, BrowserOutputObservation):
                 logger.info(event, extra={'msg_type': 'OBSERVATION'})
             elif isinstance(event, AgentDelegateObservation):
                 self.state.history.on_event(event)
@@ -398,6 +405,9 @@ class AgentController:
         action: Action = NullAction()
         try:
             action = self.agent.step(self.state)
+            if isinstance(action, AgentSummarizeAction):
+                self.state.history.add_summary(action)
+                return
             if action is None:
                 raise LLMNoActionError('No action was returned')
         except (LLMMalformedActionError, LLMNoActionError, LLMResponseError) as e:

@@ -167,8 +167,8 @@ function FeedbackModal({
         value={permissions}
         onValueChange={(value) => setPermissions(value as "public" | "private")}
       >
-        <Radio value="private">{t(I18nKey.FEEDBACK$PRIVATE_LABEL)}</Radio>
         <Radio value="public">{t(I18nKey.FEEDBACK$PUBLIC_LABEL)}</Radio>
+        <Radio value="private">{t(I18nKey.FEEDBACK$PRIVATE_LABEL)}</Radio>
       </RadioGroup>
     </BaseModal>
   );

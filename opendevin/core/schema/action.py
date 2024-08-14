@@ -12,6 +12,10 @@ class ActionTypeSchema(BaseModel):
     """Represents a message.
     """
 
+    REGENERATE: str = Field(default='regenerate')
+    """Regenerates the message.
+    """
+
     START: str = Field(default='start')
     """Starts a new development task OR send chat from the user. Only sent by the client.
     """

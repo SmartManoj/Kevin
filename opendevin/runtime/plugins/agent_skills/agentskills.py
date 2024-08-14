@@ -17,7 +17,6 @@ Functions:
 """
 
 import base64
-import functools
 import os
 import re
 import shutil
@@ -41,38 +40,38 @@ CURRENT_LINE = 1
 WINDOW = 100
 
 
-ENABLE_AUTO_LINT = os.getenv('ENABLE_AUTO_LINT', 'false').lower() == 'true'
-
 # This is also used in unit tests!
 MSG_FILE_UPDATED = '[File updated (edited at line {line_number}). Please review the changes and make sure they are correct (correct indentation, no duplicate lines, etc). Edit the file again if necessary.]'
 
+
+# ==================================================================================================
 # OPENAI
-OPENAI_API_KEY = os.getenv(
-    'OPENAI_API_KEY', os.getenv('SANDBOX_ENV_OPENAI_API_KEY', '')
-)
-OPENAI_BASE_URL = os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
-OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o-2024-05-13')
-MAX_TOKEN = os.getenv('MAX_TOKEN', 500)
-
-OPENAI_PROXY = f'{OPENAI_BASE_URL}/chat/completions'
-
-client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+# TODO: Move this to EventStream Actions when EventStreamRuntime is fully implemented
+# NOTE: we need to get env vars inside functions because they will be set in IPython
+# AFTER the agentskills is imported (the case for EventStreamRuntime)
+# ==================================================================================================
+def _get_openai_api_key():
+    return os.getenv('OPENAI_API_KEY', os.getenv('SANDBOX_ENV_OPENAI_API_KEY', ''))
 
 
-# Define the decorator using the functionality of UpdatePwd
-def update_pwd_decorator(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        old_pwd = os.getcwd()
-        jupyter_pwd = os.environ.get('JUPYTER_PWD', None)
-        if jupyter_pwd:
-            os.chdir(jupyter_pwd)
-        try:
-            return func(*args, **kwargs)
-        finally:
-            os.chdir(old_pwd)
+def _get_openai_base_url():
+    return os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
 
-    return wrapper
+
+def _get_openai_model():
+    return os.getenv('OPENAI_MODEL', 'gpt-4o-2024-05-13')
+
+
+def _get_max_token():
+    return os.getenv('MAX_TOKEN', 500)
+
+
+def _get_openai_client():
+    client = OpenAI(api_key=_get_openai_api_key(), base_url=_get_openai_base_url())
+    return client
+
+
+# ==================================================================================================
 
 
 def _is_valid_filename(file_name) -> bool:
@@ -194,7 +193,6 @@ def _cur_file_header(current_file, total_lines) -> str:
     return f'[File: {os.path.abspath(current_file)} ({total_lines} lines total)]\n'
 
 
-@update_pwd_decorator
 def open_file(
     path: str, line_number: int | None = 1, context_lines: int | None = WINDOW
 ) -> None:
@@ -231,7 +229,6 @@ def open_file(
     print(output)
 
 
-@update_pwd_decorator
 def goto_line(line_number: int) -> None:
     """Moves the window to show the specified line number.
 
@@ -253,7 +250,6 @@ def goto_line(line_number: int) -> None:
     print(output)
 
 
-@update_pwd_decorator
 def scroll_down() -> None:
     """Moves the window down by 100 lines.
 
@@ -271,7 +267,6 @@ def scroll_down() -> None:
     print(output)
 
 
-@update_pwd_decorator
 def scroll_up() -> None:
     """Moves the window up by 100 lines.
 
@@ -289,7 +284,6 @@ def scroll_up() -> None:
     print(output)
 
 
-@update_pwd_decorator
 def create_file(filename: str) -> None:
     """Creates and opens a new file with the given name.
 
@@ -506,7 +500,10 @@ def _edit_file_impl(
         shutil.move(temp_file_path, src_abs_path)
 
         # Handle linting
-        if ENABLE_AUTO_LINT:
+        # NOTE: we need to get env var inside this function
+        # because the env var will be set AFTER the agentskills is imported
+        enable_auto_lint = os.getenv('ENABLE_AUTO_LINT', 'false').lower() == 'true'
+        if enable_auto_lint:
             # BACKUP the original file
             original_file_backup_path = os.path.join(
                 os.path.dirname(file_name),
@@ -598,7 +595,6 @@ def _edit_file_impl(
     return ret_str
 
 
-@update_pwd_decorator
 def edit_file_by_replace(file_name: str, to_replace: str, new_content: str) -> None:
     """Edit a file. This will search for `to_replace` in the given file and replace it with `new_content`.
 
@@ -700,7 +696,6 @@ def edit_file_by_replace(file_name: str, to_replace: str, new_content: str) -> N
     print(ret_str)
 
 
-@update_pwd_decorator
 def insert_content_at_line(file_name: str, line_number: int, content: str) -> None:
     """Insert content at the given line number in a file.
     This will NOT modify the content of the lines before OR after the given line number.
@@ -735,7 +730,6 @@ def insert_content_at_line(file_name: str, line_number: int, content: str) -> No
     print(ret_str)
 
 
-@update_pwd_decorator
 def append_file(file_name: str, content: str) -> None:
     """Append content to the given file.
     It appends text `content` to the end of the specified file.
@@ -756,7 +750,6 @@ def append_file(file_name: str, content: str) -> None:
     print(ret_str)
 
 
-@update_pwd_decorator
 def search_dir(search_term: str, dir_path: str = './') -> None:
     """Searches for search_term in all files in dir. If dir is not provided, searches in the current directory.
 
@@ -796,7 +789,6 @@ def search_dir(search_term: str, dir_path: str = './') -> None:
     print(f'[End of matches for "{search_term}" in {dir_path}]')
 
 
-@update_pwd_decorator
 def search_file(search_term: str, file_path: Optional[str] = None) -> None:
     """Searches for search_term in file. If file is not provided, searches in the current open file.
 
@@ -829,7 +821,6 @@ def search_file(search_term: str, file_path: Optional[str] = None) -> None:
         print(f'[No matches found for "{search_term}" in {file_path}]')
 
 
-@update_pwd_decorator
 def find_file(file_name: str, dir_path: str = './') -> None:
     """Finds all files with the given name in the specified directory.
 
@@ -855,7 +846,6 @@ def find_file(file_name: str, dir_path: str = './') -> None:
         print(f'[No matches found for "{file_name}" in {dir_path}]')
 
 
-@update_pwd_decorator
 def parse_pdf(file_path: str) -> None:
     """Parses the content of a PDF file and prints it.
 
@@ -874,7 +864,6 @@ def parse_pdf(file_path: str) -> None:
     print(text.strip())
 
 
-@update_pwd_decorator
 def parse_docx(file_path: str) -> None:
     """Parses the content of a DOCX file and prints it.
 
@@ -889,7 +878,6 @@ def parse_docx(file_path: str) -> None:
     print(text)
 
 
-@update_pwd_decorator
 def parse_latex(file_path: str) -> None:
     """Parses the content of a LaTex file and prints it.
 
@@ -942,7 +930,6 @@ def _prepare_image_messages(task: str, base64_image: str):
     ]
 
 
-@update_pwd_decorator
 def parse_audio(file_path: str, model: str = 'whisper-1') -> None:
     """Parses the content of an audio file and prints it.
 
@@ -954,14 +941,15 @@ def parse_audio(file_path: str, model: str = 'whisper-1') -> None:
     try:
         # TODO: record the COST of the API call
         with open(file_path, 'rb') as audio_file:
-            transcript = client.audio.translations.create(model=model, file=audio_file)
+            transcript = _get_openai_client().audio.translations.create(
+                model=model, file=audio_file
+            )
         print(transcript.text)
 
     except Exception as e:
         print(f'Error transcribing audio file: {e}')
 
 
-@update_pwd_decorator
 def parse_image(
     file_path: str, task: str = 'Describe this image as detail as possible.'
 ) -> None:
@@ -975,10 +963,10 @@ def parse_image(
     # TODO: record the COST of the API call
     try:
         base64_image = _base64_img(file_path)
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
+        response = _get_openai_client().chat.completions.create(
+            model=_get_openai_model(),
             messages=_prepare_image_messages(task, base64_image),
-            max_tokens=MAX_TOKEN,
+            max_tokens=_get_max_token(),
         )
         content = response.choices[0].message.content
         print(content)
@@ -987,7 +975,6 @@ def parse_image(
         print(f'Error with the request: {error}')
 
 
-@update_pwd_decorator
 def parse_video(
     file_path: str,
     task: str = 'Describe this image as detail as possible.',
@@ -1021,10 +1008,10 @@ def parse_video(
         print(f'Process the {file_path}, current No. {idx * frame_interval} frame...')
         # TODO: record the COST of the API call
         try:
-            response = client.chat.completions.create(
-                model=OPENAI_MODEL,
+            response = _get_openai_client().chat.completions.create(
+                model=_get_openai_model(),
                 messages=_prepare_image_messages(task, base64_frame),
-                max_tokens=MAX_TOKEN,
+                max_tokens=_get_max_token(),
             )
 
             content = response.choices[0].message.content
@@ -1035,7 +1022,6 @@ def parse_video(
             print(f'Error with the request: {error}')
 
 
-@update_pwd_decorator
 def parse_pptx(file_path: str) -> None:
     """Parses the content of a pptx file and prints it.
 
@@ -1077,7 +1063,9 @@ __all__ = [
     'parse_pptx',
 ]
 
-if OPENAI_API_KEY and OPENAI_BASE_URL:
+# This is called from OpenDevin's side
+# If SANDBOX_ENV_OPENAI_API_KEY is set, we will be able to use these tools in the sandbox environment
+if _get_openai_api_key() and _get_openai_base_url():
     __all__ += ['parse_audio', 'parse_video', 'parse_image']
 
 DOCUMENTATION = ''

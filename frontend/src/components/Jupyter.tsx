@@ -1,14 +1,15 @@
-import React, { useRef } from "react";
-import { useSelector } from "react-redux";
+import React, { useRef, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import Markdown from "react-markdown";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
-import { VscArrowDown } from "react-icons/vsc";
+import { VscArrowDown, VscArrowUp } from "react-icons/vsc";
 import { useTranslation } from "react-i18next";
 import { RootState } from "#/store";
-import { Cell } from "#/state/jupyterSlice";
+import { Cell, appendJupyterInput } from "#/state/jupyterSlice";
 import { useScrollToBottom } from "#/hooks/useScrollToBottom";
 import { I18nKey } from "#/i18n/declaration";
+import { sendJupyterCode } from "#/services/chatService";
 
 interface IJupyterCell {
   cell: Cell;
@@ -80,6 +81,7 @@ function JupyterCell({ cell }: IJupyterCell): JSX.Element {
 
 function Jupyter(): JSX.Element {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
 
   const { cells } = useSelector((state: RootState) => state.jupyter);
   const jupyterRef = useRef<HTMLDivElement>(null);
@@ -87,10 +89,30 @@ function Jupyter(): JSX.Element {
   const { hitBottom, scrollDomToBottom, onChatBodyScroll } =
     useScrollToBottom(jupyterRef);
 
+  const [inputValue, setInputValue] = useState("");
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleInputSubmit = () => {
+    if (inputValue.trim()) {
+      dispatch(appendJupyterInput(inputValue));
+      sendJupyterCode(inputValue);
+      setInputValue("");
+    }
+  };
+  const onKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault(); // prevent a new line
+        handleInputSubmit();
+    }
+  };
+
   return (
     <div className="flex-1">
       <div
-        className="overflow-y-auto h-full"
+        className="overflow-y-auto h-full max-h-[85%] scrollbar-custom scrollbar-thumb-gray-500 hover:scrollbar-thumb-gray-400 dark:scrollbar-thumb-white/10 dark:hover:scrollbar-thumb-white/20"
         ref={jupyterRef}
         onScroll={(e) => onChatBodyScroll(e.currentTarget)}
       >
@@ -113,6 +135,24 @@ function Jupyter(): JSX.Element {
           </button>
         </div>
       )}
+       <div className="sticky bottom-2 flex items-center p-2 border-t border-neutral-600 bg-neutral-800"
+        onKeyDown={onKeyPress}>
+        <input
+          type="text"
+          value={inputValue}
+          size={1}
+          onChange={handleInputChange}
+          className="flex-1 p-2 bg-neutral-700 text-white rounded-l"
+          placeholder="Enter Python code here..."
+        />
+        <button
+          type="button"
+          onClick={handleInputSubmit}
+          className="p-2 bg-blue-600 text-white rounded-r"
+        >
+          <VscArrowUp size={25} />
+        </button>
+      </div>
     </div>
   );
 }

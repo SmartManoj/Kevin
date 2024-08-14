@@ -20,16 +20,27 @@ class ChangeAgentStateAction(Action):
 
 @dataclass
 class AgentSummarizeAction(Action):
-    summary: str
+    """
+    Action to summarize a list of events.
+
+    Attributes:
+    - summarized_actions: A sentence summarizing all the actions.
+    - summarized_observations: A few sentences summarizing all the observations.
+    """
+
+    summarized_actions: str = ''
+    summarized_observations: str = ''
     action: str = ActionType.SUMMARIZE
+    last_summarized_event_id = -1
 
     @property
     def message(self) -> str:
-        return self.summary
+        return self.summarized_observations
 
     def __str__(self) -> str:
         ret = '**AgentSummarizeAction**\n'
-        ret += f'SUMMARY: {self.summary}'
+        ret += f'SUMMARIZED ACTIONS: {self.summarized_actions}\n'
+        ret += f'SUMMARIZED OBSERVATIONS: {self.summarized_observations}\n'
         return ret
 
 

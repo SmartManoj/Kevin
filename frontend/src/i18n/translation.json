@@ -170,17 +170,17 @@
     "es": "Planificador"
   },
   "WORKSPACE$JUPYTER_TAB_LABEL": {
-    "en": "Jupyter IPython",
-    "zh-CN": "Jupyter IPython",
-    "de": "Jupyter IPython",
-    "ko-KR": "Jupyter IPython",
-    "no": "Jupyter IPython",
-    "zh-TW": "Jupyter IPython",
-    "ar": "Jupyter IPython",
-    "fr": "Jupyter IPython",
-    "it": "Jupyter IPython",
-    "pt": "Jupyter IPython",
-    "es": "Jupyter IPython"
+    "en": "Jupyter Notebook",
+    "zh-CN": "Jupyter Notebook",
+    "de": "Jupyter Notebook",
+    "ko-KR": "Jupyter Notebook",
+    "no": "Jupyter Notebook",
+    "zh-TW": "Jupyter Notebook",
+    "ar": "Jupyter Notebook",
+    "fr": "Jupyter Notebook",
+    "it": "Jupyter Notebook",
+    "pt": "Jupyter Notebook",
+    "es": "Jupyter Notebook"
   },
   "WORKSPACE$CODE_EDITOR_TAB_LABEL": {
     "en": "Code Editor",
@@ -344,6 +344,16 @@
     "ar": "حدد لغة",
     "fr": "Sélectionner une langue",
     "tr": "Dil Seç"
+  },
+  "CONFIGURATION$SECURITY_SELECT_LABEL": {
+    "en": "Security analyzer",
+    "de": "Sicherheitsanalysator",
+    "zh-CN": "安全分析器"
+  },
+  "CONFIGURATION$SECURITY_SELECT_PLACEHOLDER": {
+    "en": "Select a security analyzer (optional)",
+    "de": "Wählen Sie einen Sicherheitsanalysator (optional)",
+    "zh-CN": "选择一个安全分析器（可选）"
   },
   "CONFIGURATION$MODAL_CLOSE_BUTTON_LABEL": {
     "en": "Close",
@@ -601,6 +611,12 @@
     "zh-CN": "继续",
     "de": "Fortfahren"
   },
+  "CHAT_INTERFACE$AUTO_MESSAGE": {
+    "en": "Please continue working on the task on whatever approach you think is suitable.\nIf you think you have solved the task, you can give <finish> to end the interaction.\nIMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n"
+  },
+  "CHAT_INTERFACE$INPUT_AUTO_MESSAGE":{
+    "en": "Sent the default Auto Msg 🤖"
+  },
   "CHAT_INTERFACE$USER_ASK_CONFIRMATION": {
     "en": "Do you want to continue with this action?",
     "de": "Möchten Sie mit dieser Aktion fortfahren?",
@@ -649,6 +665,11 @@
     "zh-CN": "发送消息",
     "de": "Nachricht senden"
   },
+  "CHAT_INTERFACE$TOOLTIP_UPLOAD_IMAGE": {
+    "en": "Upload image",
+    "zh-CN": "上传图片",
+    "de": "Bild hochladen"
+  },
   "CHAT_INTERFACE$INITIAL_MESSAGE": {
     "en": "Hi! I'm OpenDevin, an AI Software Engineer. What would you like to build with me today?",
     "zh-CN": "你好！我是 OpenDevin，一名 AI 软件工程师。今天想和我一起编写什么程序呢?",
@@ -680,6 +701,26 @@
     "en": "To Bottom",
     "de": "Nach unten",
     "zh-CN": "回到底部"
+  },
+  "SECURITY_ANALYZER$UNKNOWN_RISK": {
+    "en": "Unknown Risk",
+    "de": "Unbekanntes Risiko",
+    "zh-CN": "未知风险"
+  },
+  "SECURITY_ANALYZER$LOW_RISK": {
+    "en": "Low Risk",
+    "de": "Niedriges Risiko",
+    "zh-CN": "低风险"
+  },
+  "SECURITY_ANALYZER$MEDIUM_RISK": {
+    "en": "Medium Risk",
+    "de": "Mittleres Risiko",
+    "zh-CN": "中等风险"
+  },
+  "SECURITY_ANALYZER$HIGH_RISK": {
+    "en": "High Risk",
+    "de": "Hohes Risiko",
+    "zh-CN": "高风险"
   },
   "SETTINGS$MODEL_TOOLTIP": {
     "en": "Select the language model to use.",
@@ -720,6 +761,14 @@
     "en": "Awaits for user confirmation before executing code.",
     "de": "Wartet auf die Bestätigung des Benutzers, bevor der Code ausgeführt wird.",
     "zh-CN": "在执行代码之前等待用户确认。"
+  },
+  "SETTINGS$AGENT_SELECT_ENABLED": {
+    "en": "Enable Agent Selection - Advanced Users"
+  },
+  "SETTINGS$SECURITY_ANALYZER": {
+    "en": "Enable Security Analyzer",
+    "de": "Sicherheitsanalysator aktivieren",
+    "zh-CN": "启用安全分析器"
   },
   "BROWSER$EMPTY_MESSAGE": {
     "en": "No page loaded.",

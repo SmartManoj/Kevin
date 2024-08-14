@@ -11,17 +11,12 @@ class BrowserOutputObservation(Observation):
 
     url: str
     screenshot: str = field(repr=False)  # don't show in repr
-    status_code: int = 200
     error: bool = False
     observation: str = ObservationType.BROWSE
     # do not include in the memory
     open_pages_urls: list = field(default_factory=list)
     active_page_index: int = -1
-    dom_object: dict = field(default_factory=dict, repr=False)  # don't show in repr
-    axtree_object: dict = field(default_factory=dict, repr=False)  # don't show in repr
-    extra_element_properties: dict = field(
-        default_factory=dict, repr=False
-    )  # don't show in repr
+    axtree_txt: str = ''
     last_browser_action: str = ''
     last_browser_action_error: str = ''
     focused_element_bid: str = ''
@@ -34,7 +29,6 @@ class BrowserOutputObservation(Observation):
         return (
             '**BrowserOutputObservation**\n'
             f'URL: {self.url}\n'
-            f'Status code: {self.status_code}\n'
             f'Error: {self.error}\n'
             f'Open pages: {self.open_pages_urls}\n'
             f'Active page index: {self.active_page_index}\n'
