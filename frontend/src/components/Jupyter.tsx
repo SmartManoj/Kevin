@@ -151,6 +151,7 @@ function Jupyter(): JSX.Element {
           type="button"
           onClick={handleInputSubmit}
           className="p-2 bg-blue-600 text-white rounded-r"
+          aria-label="Run"
         >
           <VscArrowUp size={25} />
         </button>

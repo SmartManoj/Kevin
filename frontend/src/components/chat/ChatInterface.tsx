@@ -4,7 +4,7 @@ import { IoMdChatbubbles } from "react-icons/io";
 import { RiArrowRightDoubleLine } from "react-icons/ri";
 import { useTranslation } from "react-i18next";
 import { VscArrowDown } from "react-icons/vsc";
-import { FaRegThumbsDown, FaRegThumbsUp } from "react-icons/fa";
+import { FaRegThumbsDown, FaRegThumbsUp, FaSyncAlt } from "react-icons/fa";
 import { useDisclosure } from "@nextui-org/react";
 import ChatInput from "./ChatInput";
 import Chat from "./Chat";
@@ -21,7 +21,6 @@ import { I18nKey } from "#/i18n/declaration";
 import { useScrollToBottom } from "#/hooks/useScrollToBottom";
 import FeedbackModal from "../modals/feedback/FeedbackModal";
 import beep from "#/utils/beep";
-import { FaSyncAlt } from "react-icons/fa";
 
 interface ScrollButtonProps {
   onClick: () => void;
