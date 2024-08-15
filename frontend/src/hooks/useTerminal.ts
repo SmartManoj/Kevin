@@ -28,6 +28,14 @@ export const useTerminal = (commands: Command[] = []) => {
 
     let resizeObserver: ResizeObserver;
     let commandBuffer = "";
+    const terminalElement = terminal.current?.element;
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      navigator.clipboard.readText().then((text) => {
+        terminal.current?.write(text);
+        commandBuffer += text;
+      });
+    };
 
     if (ref.current) {
       /* Initialize the terminal in the DOM */
@@ -73,14 +81,12 @@ export const useTerminal = (commands: Command[] = []) => {
         }
         return true;
       });
-      // right click to paste
-      terminal.current.element?.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        navigator.clipboard.readText().then((text) => {
-          terminal.current?.write(text);
-          commandBuffer += text;
-        });
-      });
+
+      if (terminalElement) {
+        // right click to paste
+        terminalElement.addEventListener("contextmenu", handleContextMenu);
+      }
+
       /* Listen for resize events */
       resizeObserver = new ResizeObserver(() => {
         fitAddon.current?.fit();
@@ -89,6 +95,9 @@ export const useTerminal = (commands: Command[] = []) => {
     }
 
     return () => {
+      if (terminalElement) {
+        terminalElement.removeEventListener("contextmenu", handleContextMenu);
+      }
       terminal.current?.dispose();
       resizeObserver.disconnect();
     };
