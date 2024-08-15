@@ -91,15 +91,16 @@ class Session:
         max_iterations = args.get(ConfigType.MAX_ITERATIONS, self.config.max_iterations)
         # override default LLM config
         default_llm_config = self.config.get_llm_config()
-        default_llm_config.model = args.get(
-            ConfigType.LLM_MODEL, default_llm_config.model
-        )
-        default_llm_config.api_key = args.get(
-            ConfigType.LLM_API_KEY, default_llm_config.api_key
-        )
-        default_llm_config.base_url = args.get(
-            ConfigType.LLM_BASE_URL, default_llm_config.base_url
-        )
+        if not self.config.override_UI_setttings:
+            default_llm_config.model = args.get(
+                ConfigType.LLM_MODEL, default_llm_config.model
+            )
+            default_llm_config.api_key = args.get(
+                ConfigType.LLM_API_KEY, default_llm_config.api_key
+            )
+            default_llm_config.base_url = args.get(
+                ConfigType.LLM_BASE_URL, default_llm_config.base_url
+            )
 
         # TODO: override other LLM config & agent config groups (#2075)
 

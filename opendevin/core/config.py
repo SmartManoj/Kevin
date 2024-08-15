@@ -271,6 +271,7 @@ class AppConfig(metaclass=Singleton):
         file_uploads_max_file_size_mb: Maximum file size for uploads in megabytes. 0 means no limit.
         file_uploads_restrict_file_types: Whether to restrict file types for file uploads. Defaults to False.
         file_uploads_allowed_extensions: List of allowed file extensions for uploads. ['.*'] means all extensions are allowed.
+        override_UI_setttings: Whether to override UI settings.
     """
 
     llms: dict[str, LLMConfig] = field(default_factory=dict)
@@ -300,6 +301,7 @@ class AppConfig(metaclass=Singleton):
     file_uploads_max_file_size_mb: int = 0
     file_uploads_restrict_file_types: bool = False
     file_uploads_allowed_extensions: list[str] = field(default_factory=lambda: ['.*'])
+    override_UI_setttings: bool = False
 
     defaults_dict: ClassVar[dict] = {}
 
