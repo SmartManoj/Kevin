@@ -949,6 +949,9 @@ DO NOT re-run the same failed edit command. Running it again will lead to the sa
 
 
 @pytest.mark.asyncio
+# skip
+@pytest.mark.skip(reason='Agentskills are updated in the forked repo')
+# https://github.com/SmartManoj/Kevin/pull/35
 async def test_ipython_agentskills_fileop_pwd(
     temp_dir, box_class, run_as_devin, enable_auto_lint
 ):
@@ -964,6 +967,8 @@ async def test_ipython_agentskills_fileop_pwd(
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip(reason='Agentskills are updated in the forked repo')
+# https://github.com/SmartManoj/Kevin/pull/35
 async def test_ipython_agentskills_fileop_pwd_with_userdir(temp_dir, box_class):
     """Make sure that cd in bash also update the current working directory in ipython.
 
