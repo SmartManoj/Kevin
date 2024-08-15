@@ -1,5 +1,11 @@
+import asyncio
+import copy
 import warnings
 from functools import partial
+from typing import Optional
+
+from opendevin.core.config import LLMConfig
+from opendevin.core.message import Message
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
@@ -10,6 +16,7 @@ from litellm.exceptions import (
     APIConnectionError,
     ContentPolicyViolationError,
     InternalServerError,
+    OpenAIError,
     RateLimitError,
     ServiceUnavailableError,
 )
@@ -21,172 +28,106 @@ from tenacity import (
     wait_random_exponential,
 )
 
-from opendevin.core.config import config
+from opendevin.condenser.condenser import CondenserMixin
+from opendevin.core.exceptions import (
+    ContextWindowLimitExceededError,
+    TokenLimitExceededError,
+    UserCancelledError,
+)
 from opendevin.core.logger import llm_prompt_logger, llm_response_logger
 from opendevin.core.logger import opendevin_logger as logger
 from opendevin.core.metrics import Metrics
 
-__all__ = ['LLM']
-
 message_separator = '\n\n----------\n\n'
 
 
-class LLM:
+class LLM(CondenserMixin):
     """The LLM class represents a Language Model instance.
 
     Attributes:
-        model_name (str): The name of the language model.
-        api_key (str): The API key for accessing the language model.
-        base_url (str): The base URL for the language model API.
-        api_version (str): The version of the API to use.
-        max_input_tokens (int): The maximum number of tokens to send to the LLM per task.
-        max_output_tokens (int): The maximum number of tokens to receive from the LLM per task.
-        llm_timeout (int): The maximum time to wait for a response in seconds.
-        custom_llm_provider (str): A custom LLM provider.
+        config: an LLMConfig object specifying the configuration of the LLM.
     """
 
     def __init__(
         self,
-        model=None,
-        api_key=None,
-        base_url=None,
-        api_version=None,
-        num_retries=None,
-        retry_min_wait=None,
-        retry_max_wait=None,
-        llm_timeout=None,
-        llm_temperature=None,
-        llm_top_p=None,
-        custom_llm_provider=None,
-        max_input_tokens=None,
-        max_output_tokens=None,
-        llm_config=None,
-        metrics=None,
-        cost_metric_supported=True,
-        input_cost_per_token=None,
-        output_cost_per_token=None,
+        config: LLMConfig,
+        metrics: Metrics | None = None,
     ):
         """Initializes the LLM. If LLMConfig is passed, its values will be the fallback.
 
         Passing simple parameters always overrides config.
 
         Args:
-            model (str, optional): The name of the language model. Defaults to LLM_MODEL.
-            api_key (str, optional): The API key for accessing the language model. Defaults to LLM_API_KEY.
-            base_url (str, optional): The base URL for the language model API. Defaults to LLM_BASE_URL. Not necessary for OpenAI.
-            api_version (str, optional): The version of the API to use. Defaults to LLM_API_VERSION. Not necessary for OpenAI.
-            num_retries (int, optional): The number of retries for API calls. Defaults to LLM_NUM_RETRIES.
-            retry_min_wait (int, optional): The minimum time to wait between retries in seconds. Defaults to LLM_RETRY_MIN_TIME.
-            retry_max_wait (int, optional): The maximum time to wait between retries in seconds. Defaults to LLM_RETRY_MAX_TIME.
-            max_input_tokens (int, optional): The maximum number of tokens to send to the LLM per task. Defaults to LLM_MAX_INPUT_TOKENS.
-            max_output_tokens (int, optional): The maximum number of tokens to receive from the LLM per task. Defaults to LLM_MAX_OUTPUT_TOKENS.
-            custom_llm_provider (str, optional): A custom LLM provider. Defaults to LLM_CUSTOM_LLM_PROVIDER.
-            llm_timeout (int, optional): The maximum time to wait for a response in seconds. Defaults to LLM_TIMEOUT.
-            llm_temperature (float, optional): The temperature for LLM sampling. Defaults to LLM_TEMPERATURE.
-            metrics (Metrics, optional): The metrics object to use. Defaults to None.
-            cost_metric_supported (bool, optional): Whether the cost metric is supported. Defaults to True.
-            input_cost_per_token (float, optional): The cost per input token.
-            output_cost_per_token (float, optional): The cost per output token.
+            config: The LLM configuration
         """
-        if llm_config is None:
-            llm_config = config.get_llm_config()
-        model = model if model is not None else llm_config.model
-        api_key = api_key if api_key is not None else llm_config.api_key
-        base_url = base_url if base_url is not None else llm_config.base_url
-        api_version = api_version if api_version is not None else llm_config.api_version
-        num_retries = num_retries if num_retries is not None else llm_config.num_retries
-        retry_min_wait = (
-            retry_min_wait if retry_min_wait is not None else llm_config.retry_min_wait
-        )
-        retry_max_wait = (
-            retry_max_wait if retry_max_wait is not None else llm_config.retry_max_wait
-        )
-        llm_timeout = llm_timeout if llm_timeout is not None else llm_config.timeout
-        llm_temperature = (
-            llm_temperature if llm_temperature is not None else llm_config.temperature
-        )
-        llm_top_p = llm_top_p if llm_top_p is not None else llm_config.top_p
-        custom_llm_provider = (
-            custom_llm_provider
-            if custom_llm_provider is not None
-            else llm_config.custom_llm_provider
-        )
-        max_input_tokens = (
-            max_input_tokens
-            if max_input_tokens is not None
-            else llm_config.max_input_tokens
-        )
-        max_output_tokens = (
-            max_output_tokens
-            if max_output_tokens is not None
-            else llm_config.max_output_tokens
-        )
-        input_cost_per_token = (
-            input_cost_per_token
-            if input_cost_per_token is not None
-            else llm_config.input_cost_per_token
-        )
-        output_cost_per_token = (
-            output_cost_per_token
-            if output_cost_per_token is not None
-            else llm_config.output_cost_per_token
-        )
-        metrics = metrics if metrics is not None else Metrics()
+        self.config = copy.deepcopy(config)
+        self.metrics = metrics if metrics is not None else Metrics()
+        self.cost_metric_supported = True
 
-        logger.info(f'Initializing LLM with model: {model}')
-        self.model_name = model
-        self.api_key = api_key
-        self.base_url = base_url
-        self.api_version = api_version
-        self.max_input_tokens = max_input_tokens
-        self.max_output_tokens = max_output_tokens
-        self.input_cost_per_token = input_cost_per_token
-        self.output_cost_per_token = output_cost_per_token
-        self.llm_timeout = llm_timeout
-        self.custom_llm_provider = custom_llm_provider
-        self.metrics = metrics
-        self.cost_metric_supported = cost_metric_supported
+        # Set up config attributes with default values to prevent AttributeError
+        LLMConfig.set_missing_attributes(self.config)
 
         # litellm actually uses base Exception here for unknown model
         self.model_info = None
         try:
-            if not self.model_name.startswith('openrouter'):
-                self.model_info = litellm.get_model_info(self.model_name.split(':')[0])
+            if self.config.model.startswith('openrouter'):
+                self.model_info = litellm.get_model_info(self.config.model)
             else:
-                self.model_info = litellm.get_model_info(self.model_name)
+                self.model_info = litellm.get_model_info(
+                    self.config.model.split(':')[0]
+                )
         # noinspection PyBroadException
         except Exception:
-            logger.warning(f'Could not get model info for {self.model_name}')
+            logger.warning(f'Could not get model info for {config.model}')
 
-        if self.max_input_tokens is None:
-            if self.model_info is not None and 'max_input_tokens' in self.model_info:
-                self.max_input_tokens = self.model_info['max_input_tokens']
+        # Set the max tokens in an LM-specific way if not set
+        if config.max_input_tokens is None:
+            if (
+                self.model_info is not None
+                and 'max_input_tokens' in self.model_info
+                and isinstance(self.model_info['max_input_tokens'], int)
+            ):
+                self.config.max_input_tokens = self.model_info['max_input_tokens']
             else:
                 # Max input tokens for gpt3.5, so this is a safe fallback for any potentially viable model
-                self.max_input_tokens = 4096
-
-        if self.max_output_tokens is None:
-            if self.model_info is not None and 'max_output_tokens' in self.model_info:
-                self.max_output_tokens = self.model_info['max_output_tokens']
+                self.config.max_input_tokens = 4096
+        if config.max_output_tokens is None:
+            if (
+                self.model_info is not None
+                and 'max_output_tokens' in self.model_info
+                and isinstance(self.model_info['max_output_tokens'], int)
+            ):
+                self.config.max_output_tokens = self.model_info['max_output_tokens']
             else:
-                # Enough tokens for most output actions, and not too many for a bad llm to get carried away responding
-                # with thousands of unwanted tokens
-                self.max_output_tokens = 1024
+                # Max output tokens for gpt3.5, so this is a safe fallback for any potentially viable model
+                self.config.max_output_tokens = 1024
+
+        if self.config.drop_params:
+            litellm.drop_params = self.config.drop_params
+
+        if self.config.model.startswith('ollama'):
+            max_input_tokens = self.config.max_input_tokens
+            max_output_tokens = self.config.max_output_tokens
+            if max_input_tokens and max_output_tokens:
+                logger.info(f'{max_input_tokens=}, {max_output_tokens=}')
+                total = max_input_tokens + max_output_tokens
+                litellm.OllamaConfig.num_ctx = total
+                logger.info(f'Setting OllamaConfig.num_ctx to {total}')
 
         self._completion = partial(
             litellm_completion,
-            model=self.model_name,
-            api_key=self.api_key,
-            base_url=self.base_url,
-            api_version=self.api_version,
-            custom_llm_provider=custom_llm_provider,
-            max_tokens=self.max_output_tokens,
-            timeout=self.llm_timeout,
-            temperature=llm_temperature,
-            top_p=llm_top_p,
+            model=self.config.model,
+            api_key=self.config.api_key,
+            base_url=self.config.base_url,
+            api_version=self.config.api_version,
+            custom_llm_provider=self.config.custom_llm_provider,
+            max_tokens=self.config.max_output_tokens,
+            timeout=self.config.timeout,
+            temperature=self.config.temperature,
+            top_p=self.config.top_p,
         )
 
-        completion_unwrapped = self._completion
+        self.completion_unwrapped = self._completion
 
         def attempt_on_error(retry_state):
             logger.error(
@@ -197,8 +138,12 @@ class LLM:
 
         @retry(
             reraise=True,
-            stop=stop_after_attempt(num_retries),
-            wait=wait_random_exponential(min=retry_min_wait, max=retry_max_wait),
+            stop=stop_after_attempt(config.num_retries),
+            wait=wait_random_exponential(
+                multiplier=config.retry_multiplier,
+                min=config.retry_min_wait,
+                max=config.retry_max_wait,
+            ),
             retry=retry_if_exception_type(
                 (
                     RateLimitError,
@@ -218,14 +163,55 @@ class LLM:
             else:
                 messages = args[1]
 
+            try:
+                if self.is_over_token_limit(messages):
+                    raise TokenLimitExceededError()
+            except TokenLimitExceededError:
+                # If we got a context alert, try trimming the messages length, then try again
+                if kwargs['condense'] and self.is_over_token_limit(messages):
+                    # A separate call to run a summarizer
+                    summary_action = self.condense(messages=messages)
+                    return summary_action
+                else:
+                    print('step() failed with an unrecognized exception:')
+                    raise ContextWindowLimitExceededError()
+
+            kwargs.pop('condense', None)
+            if isinstance(messages[0], Message):
+                messages = [message.model_dump() for message in messages]
+                kwargs['messages'] = messages
+
             # log the prompt
             debug_message = ''
             for message in messages:
-                debug_message += message_separator + message['content']
+                content = message['content']
+
+                if isinstance(content, list):
+                    for element in content:
+                        if isinstance(element, dict):
+                            if 'text' in element:
+                                content_str = element['text'].strip()
+                            elif (
+                                'image_url' in element and 'url' in element['image_url']
+                            ):
+                                content_str = element['image_url']['url']
+                            else:
+                                content_str = str(element)
+                        else:
+                            content_str = str(element)
+
+                        debug_message += message_separator + content_str
+                else:
+                    content_str = str(content)
+                    debug_message += message_separator + content_str
+
             llm_prompt_logger.debug(debug_message)
 
-            # call the completion function
-            resp = completion_unwrapped(*args, **kwargs)
+            # skip if messages is empty (thus debug_message is empty)
+            if debug_message:
+                resp = self.completion_unwrapped(*args, **kwargs)
+            else:
+                resp = {'choices': [{'message': {'content': ''}}]}
 
             # log the response
             message_back = resp['choices'][0]['message']['content']
@@ -237,6 +223,207 @@ class LLM:
 
         self._completion = wrapper  # type: ignore
 
+        # Async version
+        self._async_completion = partial(
+            self._call_acompletion,
+            model=self.config.model,
+            api_key=self.config.api_key,
+            base_url=self.config.base_url,
+            api_version=self.config.api_version,
+            custom_llm_provider=self.config.custom_llm_provider,
+            max_tokens=self.config.max_output_tokens,
+            timeout=self.config.timeout,
+            temperature=self.config.temperature,
+            top_p=self.config.top_p,
+            drop_params=True,
+        )
+
+        async_completion_unwrapped = self._async_completion
+
+        @retry(
+            reraise=True,
+            stop=stop_after_attempt(self.config.num_retries),
+            wait=wait_random_exponential(
+                multiplier=self.config.retry_multiplier,
+                min=self.config.retry_min_wait,
+                max=self.config.retry_max_wait,
+            ),
+            retry=retry_if_exception_type(
+                (
+                    RateLimitError,
+                    APIConnectionError,
+                    ServiceUnavailableError,
+                    InternalServerError,
+                    ContentPolicyViolationError,
+                )
+            ),
+            after=attempt_on_error,
+        )
+        async def async_completion_wrapper(*args, **kwargs):
+            """Async wrapper for the litellm acompletion function."""
+            # some callers might just send the messages directly
+            if 'messages' in kwargs:
+                messages = kwargs['messages']
+            else:
+                messages = args[1]
+
+            # log the prompt
+            debug_message = ''
+            for message in messages:
+                content = message['content']
+
+                if isinstance(content, list):
+                    for element in content:
+                        if isinstance(element, dict):
+                            if 'text' in element:
+                                content_str = element['text']
+                            elif (
+                                'image_url' in element and 'url' in element['image_url']
+                            ):
+                                content_str = element['image_url']['url']
+                            else:
+                                content_str = str(element)
+                        else:
+                            content_str = str(element)
+
+                        debug_message += message_separator + content_str
+                else:
+                    content_str = str(content)
+
+                debug_message += message_separator + content_str
+
+            llm_prompt_logger.debug(debug_message)
+
+            async def check_stopped():
+                while True:
+                    if (
+                        hasattr(self.config, 'on_cancel_requested_fn')
+                        and self.config.on_cancel_requested_fn is not None
+                        and await self.config.on_cancel_requested_fn()
+                    ):
+                        raise UserCancelledError('LLM request cancelled by user')
+                    await asyncio.sleep(0.1)
+
+            stop_check_task = asyncio.create_task(check_stopped())
+
+            try:
+                # Directly call and await litellm_acompletion
+                resp = await async_completion_unwrapped(*args, **kwargs)
+
+                # skip if messages is empty (thus debug_message is empty)
+                if debug_message:
+                    message_back = resp['choices'][0]['message']['content']
+                    llm_response_logger.debug(message_back)
+                else:
+                    resp = {'choices': [{'message': {'content': ''}}]}
+                self._post_completion(resp)
+
+                # We do not support streaming in this method, thus return resp
+                return resp
+
+            except UserCancelledError:
+                logger.info('LLM request cancelled by user.')
+                raise
+            except OpenAIError as e:
+                logger.error(f'OpenAIError occurred:\n{e}')
+                raise
+            except (
+                RateLimitError,
+                APIConnectionError,
+                ServiceUnavailableError,
+                InternalServerError,
+            ) as e:
+                logger.error(f'Completion Error occurred:\n{e}')
+                raise
+
+            finally:
+                await asyncio.sleep(0.1)
+                stop_check_task.cancel()
+                try:
+                    await stop_check_task
+                except asyncio.CancelledError:
+                    pass
+
+        @retry(
+            reraise=True,
+            stop=stop_after_attempt(self.config.num_retries),
+            wait=wait_random_exponential(
+                multiplier=self.config.retry_multiplier,
+                min=self.config.retry_min_wait,
+                max=self.config.retry_max_wait,
+            ),
+            retry=retry_if_exception_type(
+                (
+                    RateLimitError,
+                    APIConnectionError,
+                    ServiceUnavailableError,
+                    InternalServerError,
+                    ContentPolicyViolationError,
+                )
+            ),
+            after=attempt_on_error,
+        )
+        async def async_acompletion_stream_wrapper(*args, **kwargs):
+            """Async wrapper for the litellm acompletion with streaming function."""
+            # some callers might just send the messages directly
+            if 'messages' in kwargs:
+                messages = kwargs['messages']
+            else:
+                messages = args[1]
+
+            # log the prompt
+            debug_message = ''
+            for message in messages:
+                debug_message += message_separator + message['content']
+            llm_prompt_logger.debug(debug_message)
+
+            try:
+                # Directly call and await litellm_acompletion
+                resp = await async_completion_unwrapped(*args, **kwargs)
+
+                # For streaming we iterate over the chunks
+                async for chunk in resp:
+                    # Check for cancellation before yielding the chunk
+                    if (
+                        hasattr(self.config, 'on_cancel_requested_fn')
+                        and self.config.on_cancel_requested_fn is not None
+                        and await self.config.on_cancel_requested_fn()
+                    ):
+                        raise UserCancelledError(
+                            'LLM request cancelled due to CANCELLED state'
+                        )
+                    # with streaming, it is "delta", not "message"!
+                    message_back = chunk['choices'][0]['delta']['content']
+                    llm_response_logger.debug(message_back)
+                    self._post_completion(chunk)
+
+                    yield chunk
+
+            except UserCancelledError:
+                logger.info('LLM request cancelled by user.')
+                raise
+            except OpenAIError as e:
+                logger.error(f'OpenAIError occurred:\n{e}')
+                raise
+            except (
+                RateLimitError,
+                APIConnectionError,
+                ServiceUnavailableError,
+                InternalServerError,
+            ) as e:
+                logger.error(f'Completion Error occurred:\n{e}')
+                raise
+
+            finally:
+                if kwargs.get('stream', False):
+                    await asyncio.sleep(0.1)
+
+        self._async_completion = async_completion_wrapper  # type: ignore
+        self._async_streaming_completion = async_acompletion_stream_wrapper  # type: ignore
+
+    async def _call_acompletion(self, *args, **kwargs):
+        return await litellm.acompletion(*args, **kwargs)
+
     @property
     def completion(self):
         """Decorator for the litellm completion function.
@@ -244,6 +431,25 @@ class LLM:
         Check the complete documentation at https://litellm.vercel.app/docs/completion
         """
         return self._completion
+
+    @property
+    def async_completion(self):
+        """Decorator for the async litellm acompletion function.
+
+        Check the complete documentation at https://litellm.vercel.app/docs/providers/ollama#example-usage---streaming--acompletion
+        """
+        return self._async_completion
+
+    @property
+    def async_streaming_completion(self):
+        """Decorator for the async litellm acompletion function with streaming.
+
+        Check the complete documentation at https://litellm.vercel.app/docs/providers/ollama#example-usage---streaming--acompletion
+        """
+        return self._async_streaming_completion
+
+    def supports_vision(self):
+        return litellm.supports_vision(self.config.model)
 
     def _post_completion(self, response: str) -> None:
         """Post-process the completion response."""
@@ -258,7 +464,9 @@ class LLM:
                 self.metrics.accumulated_cost,
             )
 
-    def get_token_count(self, messages):
+    def get_token_count(
+        self, messages: Optional[list[Message]] = None, text: Optional[str] = None
+    ) -> int:
         """Get the number of tokens in a list of messages.
 
         Args:
@@ -267,7 +475,11 @@ class LLM:
         Returns:
             int: The number of tokens.
         """
-        return litellm.token_counter(model=self.model_name, messages=messages)
+        if messages and isinstance(messages[0], Message):
+            messages = [m.model_dump() for m in messages]
+        return litellm.token_counter(
+            model=self.config.model, messages=messages, text=text
+        )
 
     def is_local(self):
         """Determines if the system is using a locally running LLM.
@@ -275,12 +487,12 @@ class LLM:
         Returns:
             boolean: True if executing a local model.
         """
-        if self.base_url is not None:
+        if self.config.base_url is not None:
             for substring in ['localhost', '127.0.0.1' '0.0.0.0']:
-                if substring in self.base_url:
+                if substring in self.config.base_url:
                     return True
-        elif self.model_name is not None:
-            if self.model_name.startswith('ollama'):
+        elif self.config.model is not None:
+            if self.config.model.startswith('ollama'):
                 return True
         return False
 
@@ -299,12 +511,12 @@ class LLM:
 
         extra_kwargs = {}
         if (
-            self.input_cost_per_token is not None
-            and self.output_cost_per_token is not None
+            self.config.input_cost_per_token is not None
+            and self.config.output_cost_per_token is not None
         ):
             cost_per_token = CostPerToken(
-                input_cost_per_token=self.input_cost_per_token,
-                output_cost_per_token=self.output_cost_per_token,
+                input_cost_per_token=self.config.input_cost_per_token,
+                output_cost_per_token=self.config.output_cost_per_token,
             )
             logger.info(f'Using custom cost per token: {cost_per_token}')
             extra_kwargs['custom_cost_per_token'] = cost_per_token
@@ -322,11 +534,39 @@ class LLM:
         return 0.0
 
     def __str__(self):
-        if self.api_version:
-            return f'LLM(model={self.model_name}, api_version={self.api_version}, base_url={self.base_url})'
-        elif self.base_url:
-            return f'LLM(model={self.model_name}, base_url={self.base_url})'
-        return f'LLM(model={self.model_name})'
+        if self.config.api_version:
+            return f'LLM(model={self.config.model}, api_version={self.config.api_version}, base_url={self.config.base_url})'
+        elif self.config.base_url:
+            return f'LLM(model={self.config.model}, base_url={self.config.base_url})'
+        return f'LLM(model={self.config.model})'
 
     def __repr__(self):
         return str(self)
+
+    def reset(self):
+        self.metrics = Metrics()
+
+    def is_over_token_limit(self, messages: list[Message]) -> bool:
+        """
+        Estimates the token count of the given events using litellm tokenizer and returns True if over the max_input_tokens value.
+
+        Parameters:
+        - messages: List of messages to estimate the token count for.
+
+        Returns:
+        - Estimated token count.
+        """
+        # max_input_tokens will always be set in init to some sensible default
+        # 0 in config.llm disables the check
+        MAX_TOKEN_COUNT_PADDING = 512
+        if not self.config.max_input_tokens:
+            return False
+        token_count = self.get_token_count(messages=messages) + MAX_TOKEN_COUNT_PADDING
+        logger.debug(f'Token count: {token_count}')
+        return token_count >= self.config.max_input_tokens
+
+    def get_text_messages(self, messages: list[Message]) -> list[dict]:
+        text_messages = []
+        for message in messages:
+            text_messages.append(message.model_dump())
+        return text_messages

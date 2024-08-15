@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any
 
 from opendevin.core.schema import ActionType
 
@@ -20,22 +21,41 @@ class ChangeAgentStateAction(Action):
 
 @dataclass
 class AgentSummarizeAction(Action):
-    summary: str
+    """
+    Action to summarize a list of events.
+
+    Attributes:
+    - summarized_actions: A sentence summarizing all the actions.
+    - summarized_observations: A few sentences summarizing all the observations.
+    """
+
+    summarized_actions: str = ''
+    summarized_observations: str = ''
     action: str = ActionType.SUMMARIZE
+    last_summarized_event_id = -1
 
     @property
     def message(self) -> str:
-        return self.summary
+        return self.summarized_observations
 
     def __str__(self) -> str:
         ret = '**AgentSummarizeAction**\n'
-        ret += f'SUMMARY: {self.summary}'
+        ret += f'SUMMARIZED ACTIONS: {self.summarized_actions}\n'
+        ret += f'SUMMARIZED OBSERVATIONS: {self.summarized_observations}\n'
         return ret
 
 
 @dataclass
 class AgentFinishAction(Action):
-    outputs: dict = field(default_factory=dict)
+    """An action where the agent finishes the task.
+
+    Attributes:
+        outputs (dict): The outputs of the agent, for instance "content".
+        thought (str): The agent's explanation of its actions.
+        action (str): The action type, namely ActionType.FINISH.
+    """
+
+    outputs: dict[str, Any] = field(default_factory=dict)
     thought: str = ''
     action: str = ActionType.FINISH
 

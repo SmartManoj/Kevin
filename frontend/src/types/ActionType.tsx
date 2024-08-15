@@ -5,6 +5,9 @@ enum ActionType {
   // Represents a message from the user or agent.
   MESSAGE = "message",
 
+  // Regenerates the last message from the agent.
+  REGENERATE = "regenerate",
+
   // Reads the contents of a file.
   READ = "read",
 

@@ -1,4 +1,3 @@
-from opendevin.core.config import config
 from opendevin.events.action import (
     Action,
     AddTaskAction,
@@ -20,7 +19,9 @@ from opendevin.events.serialization import (
 )
 
 
-def serialization_deserialization(original_action_dict, cls):
+def serialization_deserialization(
+    original_action_dict, cls, max_message_chars: int = 10000
+):
     action_instance = event_from_dict(original_action_dict)
     assert isinstance(
         action_instance, Action
@@ -29,9 +30,7 @@ def serialization_deserialization(original_action_dict, cls):
         action_instance, cls
     ), f'The action instance should be an instance of {cls.__name__}.'
     serialized_action_dict = event_to_dict(action_instance)
-    serialized_action_memory = event_to_memory(
-        action_instance, config.get_llm_config().max_message_chars
-    )
+    serialized_action_memory = event_to_memory(action_instance, max_message_chars)
     serialized_action_dict.pop('message')
     assert (
         serialized_action_dict == original_action_dict
@@ -52,6 +51,7 @@ def test_event_props_serialization_deserialization():
         'action': 'message',
         'args': {
             'content': 'This is a test.',
+            'images_urls': None,
             'wait_for_response': False,
         },
     }
@@ -63,6 +63,7 @@ def test_message_action_serialization_deserialization():
         'action': 'message',
         'args': {
             'content': 'This is a test.',
+            'images_urls': None,
             'wait_for_response': False,
         },
     }
@@ -85,6 +86,7 @@ def test_cmd_run_action_serialization_deserialization():
         'args': {
             'command': 'echo "Hello world"',
             'thought': '',
+            'keep_prompt': True,
             'is_confirmed': ActionConfirmationStatus.CONFIRMED,
         },
     }

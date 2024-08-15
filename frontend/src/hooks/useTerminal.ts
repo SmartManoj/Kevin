@@ -28,13 +28,21 @@ export const useTerminal = (commands: Command[] = []) => {
 
     let resizeObserver: ResizeObserver;
     let commandBuffer = "";
+    const terminalElement = terminal.current?.element;
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      navigator.clipboard.readText().then((text) => {
+        terminal.current?.write(text);
+        commandBuffer += text;
+      });
+    };
 
     if (ref.current) {
       /* Initialize the terminal in the DOM */
       terminal.current.loadAddon(fitAddon.current);
       terminal.current.open(ref.current);
 
-      terminal.current.write("$ ");
+      terminal.current.write("opendevin@docker-desktop:/workspace $ ");
       terminal.current.onKey(({ key, domEvent }) => {
         if (domEvent.key === "Enter") {
           terminal.current?.write("\r\n");
@@ -74,6 +82,11 @@ export const useTerminal = (commands: Command[] = []) => {
         return true;
       });
 
+      if (terminalElement) {
+        // right click to paste
+        terminalElement.addEventListener("contextmenu", handleContextMenu);
+      }
+
       /* Listen for resize events */
       resizeObserver = new ResizeObserver(() => {
         fitAddon.current?.fit();
@@ -82,6 +95,9 @@ export const useTerminal = (commands: Command[] = []) => {
     }
 
     return () => {
+      if (terminalElement) {
+        terminalElement.removeEventListener("contextmenu", handleContextMenu);
+      }
       terminal.current?.dispose();
       resizeObserver.disconnect();
     };
@@ -95,13 +111,13 @@ export const useTerminal = (commands: Command[] = []) => {
         const command = commands[i];
         const lines = command.content.split("\n");
 
-        lines.forEach((line: string) => {
-          terminal.current?.writeln(line);
+        lines.forEach((line, index) => {
+          if (index < lines.length - 1 || command.type === "input") {
+            terminal.current?.writeln(line);
+          } else {
+            terminal.current?.write(line);
+          }
         });
-
-        if (command.type === "output") {
-          terminal.current.write("\n$ ");
-        }
       }
 
       lastCommandIndex.current = commands.length; // Update the position of the last command
