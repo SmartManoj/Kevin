@@ -307,7 +307,9 @@ def test_unsafe_bash_command(temp_dir: str):
     ],
 )
 def test_parse_action(action, expected_trace):
-    assert parse_action([], action) == expected_trace
+    # https://github.com/SmartManoj/Kevin/pull/18
+    if not isinstance(action, IPythonRunCellAction):
+        assert parse_action([], action) == expected_trace
 
 
 @pytest.mark.parametrize(

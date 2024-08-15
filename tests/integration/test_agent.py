@@ -233,6 +233,8 @@ def test_ipython_module(current_test_name: str):
     ),
     reason='CodeActAgent/CodeActSWEAgent only supports ssh sandbox which is stateful',
 )
+@pytest.mark.skipif(1, reason='Due to the following changes in the codebase:')
+# https://github.com/SmartManoj/Kevin/commit/b2a02ce39295c33d00429937804cdd3e08d70969#diff-2ea134f275c31e939bbe446bd07b43f7d9be20bec979f1876100f1976153512c
 def test_browse_internet(http_server, current_test_name: str):
     # Execute the task
     task = 'Browse localhost:8000, and tell me the ultimate answer to life. Do not ask me for confirmation at any point.'

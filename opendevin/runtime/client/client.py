@@ -251,6 +251,22 @@ class RuntimeClient:
         self, command: str, timeout: int | None, keep_prompt: bool = True
     ) -> tuple[str, int]:
         logger.debug(f'Executing command: {command}')
+        aws_cmd = 'aws configure'
+        if command.startswith(aws_cmd):
+            if command == aws_cmd:
+                path = Path.home() / '.aws'
+                if os.path.exists(path):
+                    output, exit_code = '[AWS already configured]', 0
+                else:
+                    output, exit_code = (
+                        '[Interactive AWS configuration is not supported]',
+                        1,
+                    )
+
+                if keep_prompt:
+                    output += '\r\n' + self._get_bash_prompt_and_update_pwd()
+                return output, exit_code
+
         self.shell.sendline(command)
 
         prompts = [

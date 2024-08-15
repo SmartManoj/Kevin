@@ -6,4 +6,6 @@ diffs = r"""
 test_patces = {'': ''}
 for i in range(0, len(diffs), 2):
     test_patces[diffs[i][1:]] = diffs[i + 1][1:]
-print(test_patces)
+
+if __name__ == '__main__':
+    print(test_patces)
