@@ -207,13 +207,17 @@ jobs:
             --issue-number ${{ env.ISSUE_NUMBER }} \
             --issue-type ${{ env.ISSUE_TYPE }} \
             --max-iterations ${{ env.MAX_ITERATIONS }} \
-            --comment-id ${{ env.COMMENT_ID }}
+            --comment-id ${{ env.COMMENT_ID }} \
+            --target-branch ${{ env.TARGET_BRANCH }}
 
       - name: Check resolution result
         id: check_result
         run: |
           if cd /tmp && grep -q '"success":true' output/output.jsonl; then
             echo "RESOLUTION_SUCCESS=true" >> $GITHUB_OUTPUT
+          elif cd /tmp && grep -q '"error":"40k tps limit exceeded"' output/output.jsonl; then
+            echo "RESOLUTION_SUCCESS=false" >> $GITHUB_OUTPUT
+            echo "ERROR_MESSAGE=40k tps limit exceeded" >> $GITHUB_OUTPUT
           else
             echo "RESOLUTION_SUCCESS=false" >> $GITHUB_OUTPUT
           fi
@@ -258,6 +262,7 @@ jobs:
             const fs = require('fs');
             const issueNumber = ${{ env.ISSUE_NUMBER }};
             const success = ${{ steps.check_result.outputs.RESOLUTION_SUCCESS }};
+            const errorMessage = ${{ steps.check_result.outputs.ERROR_MESSAGE || '' }};
 
             let prNumber = '';
             let branchName = '';
@@ -291,6 +296,13 @@ jobs:
                 repo: context.repo.repo,
                 body: `The workflow to fix this issue encountered an error. Openhands failed to create any code changes.`
               });
+            } else if (errorMessage === '40k tps limit exceeded') {
+              github.rest.issues.createComment({
+                issue_number: issueNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `The workflow to fix this issue encountered a 40k tps limit error. Please try again later or contact support.`
+              });
             } else if (success && prNumber) {
               github.rest.issues.createComment({
                 issue_number: issueNumber,
@@ -310,6 +322,6 @@ jobs:
                 issue_number: issueNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `The workflow to fix this issue encountered an error. Please check the [workflow logs](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for more information.`
+                body: `The workflow to fix this issue encountered an error. Please check the [workflow logs](https://github.com/${context.repo.owner}/${context.repo.repo/actions/runs/${context.runId}) for more information.`
               });
             }
