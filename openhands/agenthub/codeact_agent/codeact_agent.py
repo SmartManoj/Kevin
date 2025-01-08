@@ -104,6 +104,9 @@ class CodeActAgent(Agent):
             )
             self.mock_function_calling = True
 
+        self.condenser = Condenser.from_config(self.config.condenser)
+        logger.debug(f'Using condenser: {self.condenser}')
+
         if not self.config.function_calling:
             self.action_parser = CodeActResponseParser()
             self.prompt_manager = PromptManager(
@@ -136,9 +139,6 @@ class CodeActAgent(Agent):
             prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
             disabled_microagents=self.config.disabled_microagents,
         )
-
-        self.condenser = Condenser.from_config(self.config.condenser)
-        logger.debug(f'Using condenser: {self.condenser}')
 
     def get_action_message(
         self,
