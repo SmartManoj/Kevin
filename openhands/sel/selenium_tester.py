@@ -1,14 +1,3 @@
-import os
-
-try:
-    import selenium
-
-    selenium
-except ImportError:
-    cmd = 'pip install selenium'
-    print(cmd)
-    os.system(cmd)
-
 from selenium import webdriver
 from selenium.webdriver.remote import remote_connection
 from selenium.webdriver.remote.command import Command
