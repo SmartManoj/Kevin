@@ -19,6 +19,7 @@ from evaluation.utils.shared import (
     EvalOutput,
     assert_and_raise,
     codeact_user_response,
+    get_metrics,
     is_fatal_evaluation_error,
     make_metadata,
     prepare_dataset,
@@ -58,7 +59,7 @@ def _get_swebench_workspace_dir_name(instance: pd.Series) -> str:
 
 
 def get_instruction(instance: pd.Series, metadata: EvalMetadata):
-    workspace_dir_name = _get_swebench_workspace_dir_name(instance)
+    # workspace_dir_name = _get_swebench_workspace_dir_name(instance)
     instance.problem_statement = update_issue_description(
         instance.problem_statement, instance.instance_id
     )
@@ -183,6 +184,7 @@ def get_config(
         codeact_enable_jupyter=False,
         codeact_enable_browsing=RUN_WITH_BROWSING,
         codeact_enable_llm_editor=False,
+        condenser=metadata.condenser_config,
     )
     config.set_agent_config(agent_config)
     return config
@@ -480,7 +482,6 @@ def process_instance(
     else:
         logger.info(f'Starting evaluation for instance {instance.instance_id}.')
 
-    
     # Increase resource_factor with increasing attempt_id
     if runtime_failure_count > 0:
         config.sandbox.remote_runtime_resource_factor = min(
@@ -542,7 +543,7 @@ def process_instance(
 
     # NOTE: this is NO LONGER the event stream, but an agent history that includes delegate agent's events
     histories = [event_to_dict(event) for event in state.history]
-    metrics = state.metrics.get() if state.metrics else None
+    metrics = get_metrics(state)
 
     # Save the output
     output = EvalOutput(

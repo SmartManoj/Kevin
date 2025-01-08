@@ -1,5 +1,6 @@
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 
+from openhands.core.config.condenser_config import CondenserConfig, NoOpCondenserConfig
 from openhands.core.config.config_utils import get_field_info
 
 
@@ -20,6 +21,7 @@ class AgentConfig:
         disabled_microagents: A list of microagents to disable. Default is None.
         mind_voice: Voice for the mind.
         mind_voice_language: Language for the mind voice.
+        condenser: Configuration for the memory condenser. Default is NoOpCondenserConfig.
     """
 
     function_calling: bool = False
@@ -34,6 +36,7 @@ class AgentConfig:
     disabled_microagents: list[str] | None = None
     mind_voice: str | None = None
     mind_voice_language: str = 'English'
+    condenser: CondenserConfig = field(default_factory=NoOpCondenserConfig)  # type: ignore
 
     def defaults_to_dict(self) -> dict:
         """Serialize fields to a dict for the frontend, including type hints, defaults, and whether it's optional."""

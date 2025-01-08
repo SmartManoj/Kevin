@@ -2,7 +2,7 @@ Vision of this fork: Leverage SLMs effectively.
 
 The easiest way to run Kevin is to press comma (,) to [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/SmartManoj/Kevin) [120 hours free / month]
 
---- 
+---
 
 ### [Refined SWE Bench Verified Lite](evaluation/benchmarks/swe_bench/Refined_SWE_BENCH.md)
 
@@ -137,17 +137,17 @@ See the [Installation](https://docs.all-hands.dev/modules/usage/installation) gu
 system requirements and more information.
 
 ```bash
-docker pull docker.all-hands.dev/all-hands-ai/runtime:0.18-nikolaik
+docker pull docker.all-hands.dev/all-hands-ai/runtime:0.19-nikolaik
 
 docker run -it --rm --pull=always \
-    -e SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.18-nikolaik \
+    -e SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.19-nikolaik \
     -e LOG_ALL_EVENTS=true \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v ~/.openhands-state:/.openhands-state \
     -p 3000:3000 \
     --add-host host.docker.internal:host-gateway \
     --name openhands-app \
-    docker.all-hands.dev/all-hands-ai/openhands:0.18
+    docker.all-hands.dev/all-hands-ai/openhands:0.19
 ```
 
 You'll find OpenHands running at [http://localhost:3000](http://localhost:3000)!

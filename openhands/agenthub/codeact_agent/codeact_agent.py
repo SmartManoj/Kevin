@@ -29,6 +29,7 @@ from openhands.events.action import (
 )
 from openhands.events.event import AudioEvent, EventSource, LogEvent
 from openhands.events.observation import (
+    AgentCondensationObservation,
     AgentDelegateObservation,
     BrowserOutputObservation,
     CmdOutputObservation,
@@ -41,6 +42,7 @@ from openhands.events.observation.error import ErrorObservation
 from openhands.events.observation.observation import Observation
 from openhands.events.serialization.event import truncate_content
 from openhands.llm.llm import LLM
+from openhands.memory.condenser import Condenser
 from openhands.runtime.plugins import (
     AgentSkillsRequirement,
     JupyterRequirement,
@@ -134,6 +136,9 @@ class CodeActAgent(Agent):
             prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
             disabled_microagents=self.config.disabled_microagents,
         )
+
+        self.condenser = Condenser.from_config(self.config.condenser)
+        logger.debug(f'Using condenser: {self.condenser}')
 
     def get_action_message(
         self,
@@ -351,6 +356,8 @@ class CodeActAgent(Agent):
         elif isinstance(obs, UserRejectObservation):
             text = obs_prefix + truncate_content(obs.content, max_message_chars)
             text += '\n[Last action has been rejected by the user]'
+        elif isinstance(obs, AgentCondensationObservation):
+            text = truncate_content(obs.content, max_message_chars)
         else:
             # If an observation message is not returned, it will cause an error
             # when the LLM tries to return the next message
@@ -598,7 +605,10 @@ display.Image(dss())
 
         pending_tool_call_action_messages: dict[str, Message] = {}
         tool_call_id_to_message: dict[str, Message] = {}
-        events = list(state.history)
+
+        # Condense the events from the state.
+        events = self.condenser.condensed_history(state)
+
         for k, event in enumerate(events):
             # create a regular message from an event
             if isinstance(event, Action):
