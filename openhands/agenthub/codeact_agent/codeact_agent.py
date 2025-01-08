@@ -201,7 +201,7 @@ class CodeActAgent(Agent):
                     )
                 ]
             tool_metadata = action.tool_call_metadata
-            llm_response: ModelResponse = tool_metadata.model_response  # type: ignore
+            llm_response: ModelResponse = tool_metadata._model_response  # type: ignore
             assistant_msg = llm_response.choices[0].message
 
             # Add the LLM message (assistant) that initiated the tool calls
@@ -234,7 +234,7 @@ class CodeActAgent(Agent):
             tool_metadata = action.tool_call_metadata
             if tool_metadata is not None:
                 # take the response message from the tool call
-                assistant_msg = tool_metadata.model_response.choices[0].message  # type: ignore
+                assistant_msg = tool_metadata._model_response.choices[0].message  # type: ignore
                 content = assistant_msg.content or ''  # type: ignore
 
                 # save content if any, to thought

@@ -238,7 +238,7 @@ def test_function_calling_observation_message(agent: CodeActAgent):
     obs.tool_call_metadata = ToolCallMetadata(
         tool_call_id='123',
         function_name='execute_bash',
-        model_response=mock_response,
+        _model_response=mock_response,
         total_calls_in_response=1,
     )
 
@@ -294,7 +294,7 @@ def test_agent_finish_action_with_tool_metadata(agent: CodeActAgent):
     action.tool_call_metadata = ToolCallMetadata(
         tool_call_id='123',
         function_name='finish',
-        model_response=mock_response,
+        _model_response=mock_response,
         total_calls_in_response=1,
     )
 
@@ -532,8 +532,8 @@ def test_mismatched_tool_call_events(mock_state: State):
 
     tool_call_metadata = Mock(
         spec=ToolCallMetadata,
-        model_response=Mock(
-            id='model_response_0',
+        _model_response=Mock(
+            id='_model_response',
             choices=[
                 Mock(
                     message=Mock(
