@@ -102,7 +102,7 @@ def apply_patch(repo_dir: str, patch: str) -> None:
             print(f'Warning: No changes to apply for {old_path}')
             continue
 
-        new_content = apply_diff(diff, split_content)
+        new_content = apply_diff(diff, split_content, use_patch=True)
 
         # Ensure the directory exists before writing the file
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
