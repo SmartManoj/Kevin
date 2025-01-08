@@ -11,6 +11,5 @@ debug = 1
 [sandbox]
 use_host_network = 1
 persist_sandbox = 1
-fast_boot = 1
 user_id = 1001
 EOF

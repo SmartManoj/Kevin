@@ -72,7 +72,6 @@ class DockerRuntime(ActionExecutionClient):
         self.persist_sandbox_for_each_conversation = (
             self.config.sandbox.persist_sandbox_for_each_conversation
         )
-        self.fast_boot = self.config.sandbox.fast_boot
         if self.persist_sandbox:
             # odd port number will be used for vscode
             if sys.argv[1:] and 'resolve_issue' in sys.argv[1]:
