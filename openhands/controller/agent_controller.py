@@ -3,8 +3,11 @@ import copy
 import os
 import traceback
 from typing import Callable, ClassVar, Type
+import warnings
 
-import litellm
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import litellm
 from litellm.exceptions import (
     BadRequestError,
     ContextWindowExceededError,

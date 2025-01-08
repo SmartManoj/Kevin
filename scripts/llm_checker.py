@@ -1,5 +1,8 @@
 import os
-import litellm
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import litellm
 import tomllib
 from dotenv import load_dotenv
 
