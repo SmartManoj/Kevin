@@ -57,6 +57,7 @@ async def connect(connection_id: str, environ, auth):
     settings = await settings_store.load()
 
     if not settings:
+        logger.error('Settings not found')
         raise ConnectionRefusedError('Settings not found')
 
     try:
