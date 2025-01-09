@@ -270,7 +270,8 @@ class EventStream:
             logger.warning(f'Callback not found during unsubscribe: {callback_id}')
             return
 
-        self._clean_up_subscriber(subscriber_id, callback_id)
+        del self._subscribers[subscriber_id][callback_id]
+        # self._clean_up_subscriber(subscriber_id, callback_id)
 
     def add_event(self, event: Event, source: EventSource):
         if hasattr(event, '_id') and event.id is not None:

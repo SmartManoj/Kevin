@@ -552,8 +552,12 @@ class AgentController:
             assert self.delegate != self
             # TODO this conditional will always be false, because the parent controllers are unsubscribed
             # remove if it's still useless when delegation is reworked
-            if self.delegate.get_agent_state() != AgentState.PAUSED:
-                await self._delegate_step()
+            while self.delegate:
+                if self.delegate.get_agent_state() in (AgentState.PAUSED, AgentState.AWAITING_USER_INPUT):
+                    await asyncio.sleep(1)
+                else:
+                    await self._delegate_step()
+                
             return
 
         step_log = f'{self.agent.name} LEVEL {self.state.delegate_level} LOCAL STEP {self.state.local_iteration} GLOBAL STEP {self.state.iteration}'
