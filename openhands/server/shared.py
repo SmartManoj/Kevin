@@ -24,7 +24,7 @@ if redis_host:
 
 
 sio = socketio.AsyncServer(
-    async_mode='asgi', cors_allowed_origins='*', client_manager=client_manager
+    async_mode='asgi', cors_allowed_origins='*', client_manager=client_manager, max_http_buffer_size=1e7
 )
 
 session_manager = SessionManager(sio, config, file_store)
