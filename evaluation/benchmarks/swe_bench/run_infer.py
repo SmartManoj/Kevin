@@ -609,7 +609,7 @@ if __name__ == '__main__':
         llm_config.modify_params = False
 
     if llm_config is None:
-        raise ValueError(f'Could not find LLM config: --llm_config {args.llm_config}')
+        raise ValueError(f'Could not find LLM config: --llm-config {args.llm_config}')
 
     details = {}
     _agent_cls = openhands.agenthub.Agent.get_cls(args.agent_cls)
