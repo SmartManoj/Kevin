@@ -158,7 +158,6 @@ class BashCommandStatus(Enum):
     CONTINUE = 'continue'
     COMPLETED = 'completed'
     NO_CHANGE_TIMEOUT = 'no_change_timeout'
-    HARD_TIMEOUT = 'hard_timeout'
 
 
 def _remove_command_prefix(command_output: str, command: str) -> str:
@@ -381,42 +380,6 @@ class BashSession:
             metadata=metadata,
         )
 
-    def _handle_hard_timeout_command(
-        self,
-        command: str,
-        pane_content: str,
-        ps1_matches: list[re.Match],
-        timeout: float,
-    ) -> CmdOutputObservation:
-        self.prev_status = BashCommandStatus.HARD_TIMEOUT
-        if len(ps1_matches) != 1:
-            logger.warning(
-                'Expected exactly one PS1 metadata block BEFORE the execution of a command, '
-                f'but got {len(ps1_matches)} PS1 metadata blocks:\n---\n{pane_content!r}\n---'
-            )
-        raw_command_output = self._combine_outputs_between_matches(
-            pane_content, ps1_matches
-        )
-        metadata = CmdOutputMetadata()  # No metadata available
-        metadata.suffix = (
-            f'\n[The command timed out after {timeout} seconds. '
-            "You may wait longer to see additional output by sending empty command '', "
-            'send other commands to interact with the current process, '
-            'or send keys to interrupt/kill the command.]'
-        )
-        command_output = self._get_command_output(
-            command,
-            raw_command_output,
-            metadata,
-            continue_prefix='[Command output continued from previous command]\n',
-        )
-
-        return CmdOutputObservation(
-            command=command,
-            content=command_output,
-            metadata=metadata,
-        )
-
     def _ready_for_next_command(self):
         """Reset the content buffer for a new command."""
         # Clear the current content
@@ -495,7 +458,6 @@ class BashSession:
         if command == '' and self.prev_status not in {
             BashCommandStatus.CONTINUE,
             BashCommandStatus.NO_CHANGE_TIMEOUT,
-            BashCommandStatus.HARD_TIMEOUT,
         }:
             return CmdOutputObservation(
                 content='ERROR: No previous command to continue from. '
@@ -579,18 +541,6 @@ class BashSession:
                     command,
                     pane_content=cur_pane_output,
                     ps1_matches=ps1_matches,
-                )
-
-            # 3) Execution timed out due to hard timeout
-            logger.debug(
-                f'CHECKING HARD TIMEOUT ({action.timeout}s): elapsed {time.time() - start_time}'
-            )
-            if action.timeout and time.time() - start_time >= action.timeout:
-                return self._handle_hard_timeout_command(
-                    command,
-                    pane_content=cur_pane_output,
-                    ps1_matches=ps1_matches,
-                    timeout=action.timeout,
                 )
 
             logger.debug(f'SLEEPING for {self.POLL_INTERVAL} seconds for next poll')
