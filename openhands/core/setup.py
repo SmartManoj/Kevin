@@ -91,6 +91,9 @@ def create_controller(
         )
     except Exception as e:
         logger.debug(f'Cannot restore agent state: {e}')
+    
+    if config.dont_restore_state:
+        initial_state = None
 
     controller = AgentController(
         agent=agent,

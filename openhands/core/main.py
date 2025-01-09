@@ -98,24 +98,10 @@ async def run_controller(
 
     event_stream = runtime.event_stream
 
-    # restore cli session if available
-    initial_state = None
-    if not config.dont_restore_state:
-        try:
-            logger.debug(
-                f'Trying to restore agent state from cli session {event_stream.sid} if available'
-            )
-            initial_state = State.restore_from_session(
-                event_stream.sid, event_stream.file_store
-            )
-        except Exception as e:
-            logger.debug(f'Cannot restore agent state: {e}')
     if agent is None:
         agent = create_agent(runtime, config)
 
     controller, initial_state = create_controller(agent, runtime, config)
-    if config.dont_restore_state:
-        initial_state = None
     
     assert isinstance(
         initial_user_action, Action
