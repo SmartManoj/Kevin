@@ -690,7 +690,7 @@ class AgentController:
             self.delegate = None
             self.delegateAction = None
 
-        elif delegate_state in (AgentState.FINISHED, AgentState.REJECTED):
+        elif delegate_state in (AgentState.FINISHED, AgentState.REJECTED, AgentState.STOPPED):
             self.log('debug', 'Delegate agent has finished execution')
             # retrieve delegate result
             outputs = self.delegate.state.outputs if self.delegate.state else {}
