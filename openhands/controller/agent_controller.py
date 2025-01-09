@@ -574,14 +574,15 @@ class AgentController:
             stop_step = await self._handle_traffic_control(
                 'iteration', self.state.iteration, self.state.max_iterations
             )
+            logger.warning(f'Stopping agent due to iteration limit: {self.state.iteration} > {self.state.max_iterations}')
         if self.max_budget_per_task is not None:
             current_cost = self.state.metrics.accumulated_cost
             if current_cost > self.max_budget_per_task:
                 stop_step = await self._handle_traffic_control(
                     'budget', current_cost, self.max_budget_per_task
                 )
+                logger.warning(f'Stopping agent due to budget limit: {current_cost} > {self.max_budget_per_task}')
         if stop_step:
-            logger.warning('Stopping agent due to traffic control')
             return
 
         # check if agent got stuck before taking any action
