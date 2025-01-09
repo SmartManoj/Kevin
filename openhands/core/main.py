@@ -114,7 +114,9 @@ async def run_controller(
         agent = create_agent(runtime, config)
 
     controller, initial_state = create_controller(agent, runtime, config)
-
+    if config.dont_restore_state:
+        initial_state = None
+    
     assert isinstance(
         initial_user_action, Action
     ), f'initial user actions must be an Action, got {type(initial_user_action)}'
