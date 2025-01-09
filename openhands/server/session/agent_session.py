@@ -181,6 +181,13 @@ class AgentSession:
 
         logger.debug(f'Initializing runtime `{runtime_name}` now...')
         runtime_cls = get_runtime_cls(runtime_name)
+        env_vars = (
+            {
+                'GITHUB_TOKEN': github_token,
+            }
+            if github_token
+            else None
+        )
         self.runtime = runtime_cls(
             config=config,
             event_stream=self.event_stream,
@@ -188,6 +195,7 @@ class AgentSession:
             plugins=agent.sandbox_plugins,
             status_callback=self._status_callback,
             headless_mode=False,
+            env_vars=env_vars,
         )
         try:
             llm_prompt_logger.handlers[0].reset_counter()
