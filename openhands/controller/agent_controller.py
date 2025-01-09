@@ -238,7 +238,7 @@ class AgentController:
                 return True
             return False
         if isinstance(event, Observation):
-            if isinstance(event, NullObservation) or isinstance(
+            if isinstance(event, NullObservation) and event.source == EventSource.USER or isinstance(
                 event, AgentStateChangedObservation
             ):
                 return False
