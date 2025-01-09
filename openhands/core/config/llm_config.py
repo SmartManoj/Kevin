@@ -1,4 +1,5 @@
 import os
+import inspect
 from dataclasses import dataclass, fields
 from typing import Optional
 
@@ -144,7 +145,7 @@ class LLMConfig:
         This function is used to create an LLMConfig object from a dictionary,
         with the exception of the 'draft_editor' key, which is a nested LLMConfig object.
         """
-        args = {k: v for k, v in llm_config_dict.items() if not isinstance(v, dict)}
+        args = {k: v for k, v in llm_config_dict.items() if not isinstance(v, dict) and k in inspect.signature(cls).parameters}
         if 'draft_editor' in llm_config_dict:
             draft_editor_config = LLMConfig(**llm_config_dict['draft_editor'])
             args['draft_editor'] = draft_editor_config

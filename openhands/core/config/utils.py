@@ -128,14 +128,14 @@ def load_from_toml(cfg: AppConfig, toml_file: str = 'config.toml'):
                     non_dict_fields = {
                         k: v for k, v in value.items() if not isinstance(v, dict)
                     }
-                    agent_config = AgentConfig(**non_dict_fields)
+                    agent_config = AgentConfig.from_dict(non_dict_fields)
                     cfg.set_agent_config(agent_config, 'agent')
                     for nested_key, nested_value in value.items():
                         if isinstance(nested_value, dict):
                             logger.openhands_logger.debug(
                                 f'Attempt to load group {nested_key} from config toml as agent config'
                             )
-                            agent_config = AgentConfig(**nested_value)
+                            agent_config = AgentConfig.from_dict(nested_value)
                             cfg.set_agent_config(agent_config, nested_key)
                 elif key is not None and key.lower() == 'llm':
                     # logger.openhands_logger.debug(
@@ -186,7 +186,7 @@ def load_from_toml(cfg: AppConfig, toml_file: str = 'config.toml'):
 
         # the new style values override the old style values
         if 'sandbox' in toml_config:
-            sandbox_config = SandboxConfig(**toml_config['sandbox'])
+            sandbox_config = SandboxConfig.from_dict(toml_config['sandbox'])
 
         # update the config object with the new values
         cfg.sandbox = sandbox_config

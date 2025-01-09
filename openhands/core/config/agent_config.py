@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, fields
-
+import inspect
 from openhands.core.config.condenser_config import CondenserConfig, NoOpCondenserConfig
 from openhands.core.config.config_utils import get_field_info
 
@@ -44,3 +44,10 @@ class AgentConfig:
         for f in fields(self):
             result[f.name] = get_field_info(f)
         return result
+
+    @classmethod
+    def from_dict(cls, env):      
+        return cls(**{
+            k: v for k, v in env.items() 
+            if k in inspect.signature(cls).parameters
+        })

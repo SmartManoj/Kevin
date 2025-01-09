@@ -1,5 +1,5 @@
 from typing import Literal
-
+import inspect
 from pydantic import BaseModel, Field
 
 from openhands.core.config.llm_config import LLMConfig
@@ -79,6 +79,12 @@ class LLMAttentionCondenserConfig(BaseModel):
         ge=0,
     )
 
+    @classmethod
+    def from_dict(cls, env):      
+        return cls(**{
+            k: v for k, v in env.items() 
+            if k in inspect.signature(cls).parameters
+        })
 
 CondenserConfig = (
     NoOpCondenserConfig

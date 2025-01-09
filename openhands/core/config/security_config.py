@@ -1,5 +1,5 @@
 from dataclasses import dataclass, fields
-
+import inspect
 from openhands.core.config.config_utils import get_field_info
 
 
@@ -34,7 +34,11 @@ class SecurityConfig:
 
     @classmethod
     def from_dict(cls, security_config_dict: dict) -> 'SecurityConfig':
-        return cls(**security_config_dict)
+        return cls(**{
+            k: v for k, v in security_config_dict.items() 
+            if k in inspect.signature(cls).parameters
+        })
 
     def __repr__(self):
         return self.__str__()
+    

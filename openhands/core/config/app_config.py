@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, fields, is_dataclass
 from typing import ClassVar
-
+import inspect
 from openhands.core import logger
 from openhands.core.config.agent_config import AgentConfig
 from openhands.core.config.config_utils import (
@@ -165,3 +165,10 @@ class AppConfig:
 
     def __repr__(self):
         return self.__str__()
+
+    @classmethod
+    def from_dict(cls, env):      
+        return cls(**{
+            k: v for k, v in env.items() 
+            if k in inspect.signature(cls).parameters
+        })
