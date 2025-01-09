@@ -662,7 +662,6 @@ class AgentController:
 
     async def _delegate_step(self) -> None:
         """Executes a single step of the delegate agent."""
-        await self.delegate._step()  # type: ignore[union-attr]
         assert self.delegate is not None
         delegate_state = self.delegate.get_agent_state()
         self.log('debug', f'Delegate state: {delegate_state}')
@@ -720,6 +719,7 @@ class AgentController:
             self.delegate = None
             self.delegateAction = None
             self.event_stream.add_event(obs, EventSource.AGENT)
+        await self.delegate._step()  # type: ignore[union-attr]
         return
 
     async def _handle_traffic_control(
