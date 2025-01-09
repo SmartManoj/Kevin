@@ -213,7 +213,7 @@ def initialize_runtime(
 
     # Set instance id
     action = CmdRunAction(
-        command=f"""echo 'export SWE_INSTANCE_ID={instance['instance_id']}' >> ~/.bashrc && echo 'export PIP_CACHE_DIR=~/.cache/pip' >> ~/.bashrc && echo "alias git='git --no-pager'" >> ~/.bashrc"""
+        command=f"""echo 'export SWE_INSTANCE_ID={instance['instance_id']}' > ~/.bashrc && echo 'export PIP_CACHE_DIR=~/.cache/pip' >> ~/.bashrc && echo "alias git='git --no-pager'" >> ~/.bashrc"""
     )
     action.timeout = 600
     logger.info(action, extra={'msg_type': 'ACTION'})
