@@ -419,14 +419,14 @@ class AgentController:
         Args:
             new_state (AgentState): The new state to set for the agent.
         """
-        self.log(
-            'info',
-            f'Setting agent({self.agent.name}) state from {self.state.agent_state} to {new_state}',
-        )
 
         if new_state == self.state.agent_state:
             return
 
+        self.log(
+            'info',
+            f'Setting agent({self.agent.name}) state from {self.state.agent_state} to {new_state}',
+        )
         if new_state in (AgentState.STOPPED, AgentState.ERROR):
             # sync existing metrics BEFORE resetting the agent
             await self.update_state_after_step()
