@@ -69,9 +69,6 @@ class DockerRuntime(ActionExecutionClient):
 
         self.config = config
         self.persist_sandbox = self.config.sandbox.persist_sandbox
-        self.persist_sandbox_for_each_conversation = (
-            self.config.sandbox.persist_sandbox_for_each_conversation
-        )
         if self.persist_sandbox:
             # odd port number will be used for vscode
             if sys.argv[1:] and 'resolve_issue' in sys.argv[1]:
@@ -82,11 +79,7 @@ class DockerRuntime(ActionExecutionClient):
             else:
                 user = 'root'
                 self._container_port = 63712
-            if self.persist_sandbox_for_each_conversation:
-                path = '_'.join([config.workspace_mount_path or '', sid])
-                self._container_port = find_available_tcp_port()
-            else:
-                path = config.workspace_mount_path or sid
+            path = config.workspace_mount_path or sid
             os.environ['selection_id'] = path
             path = ''.join(c if c.isalnum() else '_' for c in path)  # type: ignore
             self.instance_id = f'persisted-{user}-{path}'

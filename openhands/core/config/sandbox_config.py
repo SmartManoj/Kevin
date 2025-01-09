@@ -32,7 +32,6 @@ class SandboxConfig:
         browsergym_eval_env: The BrowserGym environment to use for evaluation.
             Default is None for general purpose browsing. Check evaluation/miniwob and evaluation/webarena for examples.
         persist_sandbox: Whether to persist the sandbox after the task is done.
-        persist_sandbox_for_each_conversation: Whether to persist the sandbox for each conversation.
         port: The port to use for the sandbox.
         platform: The platform on which the image should be built. Default is None.
         remote_runtime_resource_factor: Factor to scale the resource allocation for remote runtime.
@@ -63,7 +62,6 @@ class SandboxConfig:
     runtime_startup_env_vars: dict[str, str] = field(default_factory=dict)
     browsergym_eval_env: str | None = None
     persist_sandbox: bool = True
-    persist_sandbox_for_each_conversation: bool = False
     port: int = 63710
     platform: str | None = None
     close_delay: int = 900
