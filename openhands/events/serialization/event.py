@@ -52,7 +52,7 @@ def event_from_dict(data) -> 'Event':
     elif 'text_for_audio' in data:
         evt = AudioEvent(text_for_audio=data['text_for_audio'])
     else:
-        raise ValueError(f'Unknown event: {data}')
+        raise ValueError(f'Unknown event type: {data}')
     for key in UNDERSCORE_KEYS:
         if key in data:
             value = data[key]
