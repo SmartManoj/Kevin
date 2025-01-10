@@ -12,10 +12,6 @@ import { SettingsButton } from "#/components/shared/buttons/settings-button";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { AccountSettingsModal } from "#/components/shared/modals/account-settings/account-settings-modal";
 import { SettingsModal } from "#/components/shared/modals/settings/settings-modal";
-import { AgentState } from "#/types/agent-state";
-import { useDispatch } from "react-redux";
-import { useEndSession } from "#/hooks/use-end-session";
-import { setCurrentAgentState } from "#/state/agent-slice";
 import { useSettingsUpToDate } from "#/context/settings-up-to-date-context";
 import { useSettings } from "#/hooks/query/use-settings";
 import { ConversationPanel } from "../conversation-panel/conversation-panel";
@@ -42,13 +38,7 @@ export function Sidebar() {
   const [conversationPanelIsOpen, setConversationPanelIsOpen] =
     React.useState(false);
 
-  const dispatch = useDispatch();
-  const endSession = useEndSession();
 
-  const handleEndSession = () => {
-    dispatch(setCurrentAgentState(AgentState.LOADING));
-    endSession();
-  };
   React.useEffect(() => {
     // If the github token is invalid, open the account settings modal again
     if (user.isError) {
