@@ -104,7 +104,7 @@ class DockerRuntime(ActionExecutionClient):
         self._runtime_initialized: bool = False
         self.status_callback = status_callback
         self._host_port = self._container_port
-
+        self._vscode_port = -1
         self._app_ports: list[int] = []
 
 
