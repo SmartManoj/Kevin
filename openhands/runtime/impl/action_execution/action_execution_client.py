@@ -100,7 +100,7 @@ class ActionExecutionClient(Runtime):
         with self._send_action_server_request(
             'GET',
             f'{self._get_action_execution_server_host()}/alive',
-            timeout=60,
+            timeout=5,
         ):
             pass
 
