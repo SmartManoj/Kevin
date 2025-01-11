@@ -139,14 +139,14 @@ export const useTerminal = ({
         secrets.forEach((secret) => {
           content = content.replaceAll(secret, "*".repeat(10));
         });
-        const lines = content.split("\n");
-        lines.forEach((line, index) => {
-          if (index < lines.length - 1 || type === "input") {
-            terminal.current?.writeln(line);
-          } else {
-            terminal.current?.write(line);
-          }
-        });
+
+        terminal.current?.writeln(
+          parseTerminalOutput(content.replaceAll("\n", "\r\n").trim()),
+        );
+
+        if (type === "output") {
+          terminal.current.write(`\n$ `);
+        }
       }
 
       lastCommandIndex.current = commands.length; // Update the position of the last command
