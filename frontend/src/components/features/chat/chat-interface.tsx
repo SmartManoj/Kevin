@@ -18,7 +18,10 @@ import { ChatSuggestions } from "./chat-suggestions";
 import { ActionSuggestions } from "./action-suggestions";
 import { ContinueButton } from "#/components/shared/buttons/continue-button";
 import { ScrollToBottomButton } from "#/components/shared/buttons/scroll-to-bottom-button";
+import { playAudio } from "#/utils/play-audio";
+import { VolumeIcon } from "#/components/shared/buttons/volume-icon";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
+import { IoMdChatbubbles } from "react-icons/io";
 
 function getEntryPoint(
   hasRepository: boolean | null,
@@ -90,11 +93,21 @@ export function ChatInterface() {
     setFeedbackPolarity(polarity);
   };
 
+  React.useEffect(() => {
+    if (
+      (curAgentState === AgentState.AWAITING_USER_INPUT) ||
+      curAgentState === AgentState.ERROR ||
+      curAgentState === AgentState.FINISHED
+    ) {
+      if (localStorage["is_muted"] !== "true") playAudio("beep.wav");
+    }
+  }, [curAgentState]);
+
   const isWaitingForUserInput =
     curAgentState === AgentState.AWAITING_USER_INPUT ||
     curAgentState === AgentState.FINISHED;
 
-  return (
+  let chatInterface = (
     <div className="h-full flex flex-col justify-between">
       {messages.length === 0 && (
         <ChatSuggestions onSuggestionsClick={setMessageToSend} />
@@ -170,4 +183,23 @@ export function ChatInterface() {
       />
     </div>
   );
+  chatInterface = (
+    <div className="flex flex-col h-full bg-neutral-800">
+      <div className="flex items-center gap-2 border-b border-neutral-600 text-sm px-4 py-2"
+        style={{
+          position: "sticky",
+          top: "0px",
+          zIndex: "10",
+          background: "rgb(38 38 38 / var(--tw-bg-opacity))",
+        }}
+      >
+        <IoMdChatbubbles />
+        Chat
+        <VolumeIcon />
+
+      </div>
+      {chatInterface}
+    </div>
+  );
+  return chatInterface;
 }
