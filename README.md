@@ -1,3 +1,10 @@
+### 📢 Announcement
+Checkout [Konwinski Prize](https://www.konwinski.com/prize)
+
+$1M for the AI that can close 90% of new GitHub issues
+
+---
+
 Vision of this fork: Leverage SLMs effectively.
 
 The easiest way to run Kevin is to press comma (,) to [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/SmartManoj/Kevin) [120 hours free / month]
