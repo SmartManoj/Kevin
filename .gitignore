@@ -235,15 +235,10 @@ containers/runtime/project.tar.gz
 /workspace3
 trajectory.json
 event_history.json
-sc.py
 t.py
 containers/runtime/code
-api_keys.py
-llm_debugger.py
 **/node_modules/
 evaluation/benchmarks/swe_bench/*.json
-evaluation/benchmarks/swe_bench/swe_verified_lite.py
-evaluation/benchmarks/swe_bench/results.py
 openhands/sel/downloaded_files/driver_fixing.lock
 openhands/sel/downloaded_files/pyautogui.lock
 /downloaded_files
