@@ -1,6 +1,6 @@
 import React from "react";
 import { IoMdVolumeHigh, IoMdVolumeOff } from "react-icons/io";
-import { playAudio } from "#/utils/playAudio";
+import { playAudio } from "#/utils/play-audio";
 
 export function VolumeIcon() {
   const [isMuted, setIsMuted] = React.useState(

@@ -19,10 +19,10 @@ import { ActionSuggestions } from "./action-suggestions";
 import { ContinueButton } from "#/components/shared/buttons/continue-button";
 import { ScrollToBottomButton } from "#/components/shared/buttons/scroll-to-bottom-button";
 import { IoMdChatbubbles } from "react-icons/io";
-import { playAudio } from "#/utils/playAudio";
+import { playAudio } from "#/utils/play-audio";
 import { I18nKey } from "#/i18n/declaration";
 import { useTranslation } from "react-i18next";
-import { VolumeIcon } from "#/components/VolumeIcon";
+import { VolumeIcon } from "#/components/shared/buttons/volume-icon";
 import { FaSyncAlt } from "react-icons/fa";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 
