@@ -18,7 +18,7 @@ import {
 } from "#/types/message";
 import { handleObservationMessage } from "./observations";
 import { appendInput } from "#/state/command-slice";
-import { generateAudio } from "#/utils/playAudio";
+import { generateAudio } from "#/utils/play-audio";
 
 const messageActions = {
   [ActionType.BROWSE]: (message: ActionMessage) => {
