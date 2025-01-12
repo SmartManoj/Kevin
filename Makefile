@@ -295,11 +295,10 @@ _run_check:
 # Run the app in standard mode for end-users
 run:
 	@$(MAKE) -s kill
+	@clear
 	@echo "$(YELLOW)Running the app...$(RESET)"
 	@$(MAKE) -s _run_check
-	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT) &
-	@echo "$(YELLOW)Waiting for the app to start...$(RESET)"
-	@until nc -z localhost $(BACKEND_PORT); do sleep 0.1; done
+	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT)
 	@echo "$(GREEN)Application started successfully.$(RESET)"
 
 # Start both backend and frontend servers
