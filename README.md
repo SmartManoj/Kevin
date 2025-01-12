@@ -1,5 +1,5 @@
 ### 📢 Announcement
-Checkout [Konwinski Prize](https://www.konwinski.com/prize)
+Checkout [Konwinski Prize](https://kprize.ai)
 
 $1M for the AI that can close 90% of new GitHub issues
 
