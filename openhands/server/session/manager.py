@@ -431,6 +431,8 @@ class SessionManager:
             await self._on_close_session(sid)
 
     async def _cleanup_session_later(self, sid: str):
+        # buggy 
+        return
         # Once there have been no connections to a session for a reasonable period, we close it
         try:
             await asyncio.sleep(self.config.sandbox.close_delay)
