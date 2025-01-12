@@ -350,6 +350,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                                 print('Error in changing API key', e)
                                 pass
                             os.environ['attempt_number'] = '-1'
+                    logger.debug(f'Calling LLM ...')
                     resp = self._completion_unwrapped(*args, **kwargs)
                     # non_fncall_response = copy.deepcopy(resp)
                     if mock_function_calling:
