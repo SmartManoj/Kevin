@@ -820,7 +820,7 @@ class AgentController:
             )
 
         # Always load from the event stream to avoid losing history
-        self._init_history()
+        # self._init_history()
 
     def _init_history(self) -> None:
         """Initializes the agent's history from the event stream.

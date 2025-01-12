@@ -132,9 +132,9 @@ class State:
         return state
 
     def __getstate__(self):
-        # don't pickle history, it will be restored from the event stream
+        # don't pickle history, it will be restored from the event stream ; seems not
         state = self.__dict__.copy()
-        state['history'] = []
+        # state['history'] = []
         return state
 
     def __setstate__(self, state):
