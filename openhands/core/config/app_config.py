@@ -60,7 +60,7 @@ class AppConfig:
     file_store: str = 'local'
     file_store_path: str = '/tmp/openhands_file_store'
     trajectories_path: str | None = None
-    workspace_base: str | None = None
+    workspace_base: str  = './workspace'
     workspace_mount_path: str | None = None
     workspace_mount_path_in_sandbox: str = '/workspace'
     workspace_mount_rewrite: str | None = None
