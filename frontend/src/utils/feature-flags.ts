@@ -1,6 +1,6 @@
 function loadFeatureFlag(
   flagName: string,
-  defaultValue: boolean = false,
+  defaultValue: boolean = true,
 ): boolean {
   try {
     const stringValue =
