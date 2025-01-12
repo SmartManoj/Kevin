@@ -28,6 +28,8 @@ build:
 	@$(MAKE) -s install-pre-commit-hooks
 	@$(MAKE) -s build-frontend
 	@echo "$(GREEN)Build completed successfully.$(RESET)"
+	@echo "$(YELLOW)Running ..$(RESET)"
+	@$(MAKE) -s run
 
 check-dependencies:
 	@echo "$(YELLOW)Checking dependencies...$(RESET)"
