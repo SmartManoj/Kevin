@@ -370,11 +370,6 @@ class SessionManager:
         if session:
             logger.info(f'found_local_agent_loop:{sid}')
             return session.agent_session.event_stream
-        else:
-            try:
-                return EventStream(sid, self.file_store)
-            except Exception:
-                pass
 
         if await self.is_agent_loop_running_in_cluster(sid):
             logger.info(f'found_remote_agent_loop:{sid}')
