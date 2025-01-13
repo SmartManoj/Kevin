@@ -3,7 +3,7 @@ from time import sleep
 
 import requests
 
-
+sandbox_port = 63710
 def run_ipython(code):
     return {
         'action': {
@@ -31,10 +31,10 @@ def run(command):
 
 def execute_action(data):
     data = json.dumps(data)
-    for timeout in range(1, 2):
+    for timeout in [600,]:
         try:
             response = requests.post(
-                'http://localhost:63712/execute_action', data=data, timeout=timeout
+                f'http://localhost:{sandbox_port}/execute_action', data=data, timeout=timeout
             )
             print(response.json()['content'].replace('\r', ''))
             break
