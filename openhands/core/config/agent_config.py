@@ -1,11 +1,9 @@
-from dataclasses import dataclass, field, fields
-import inspect
+from pydantic import BaseModel, Field
+
 from openhands.core.config.condenser_config import CondenserConfig, NoOpCondenserConfig
-from openhands.core.config.config_utils import get_field_info
 
 
-@dataclass
-class AgentConfig:
+class AgentConfig(BaseModel):
     """Configuration for the agent.
 
     Attributes:
@@ -24,30 +22,18 @@ class AgentConfig:
         condenser: Configuration for the memory condenser. Default is NoOpCondenserConfig.
     """
 
-    function_calling: bool = False
-    codeact_enable_browsing: bool = True
-    codeact_enable_llm_editor: bool = False
-    codeact_enable_jupyter: bool = True
-    micro_agent_name: str | None = None
-    memory_enabled: bool = False
-    memory_max_threads: int = 3
-    llm_config: str | None = None
-    use_microagents: bool = True
-    disabled_microagents: list[str] | None = None
-    mind_voice: str | None = None
-    mind_voice_language: str = 'English'
-    condenser: CondenserConfig = field(default_factory=NoOpCondenserConfig)  # type: ignore
+    codeact_enable_browsing: bool = Field(default=True)
+    codeact_enable_llm_editor: bool = Field(default=False)
+    codeact_enable_jupyter: bool = Field(default=True)
+    micro_agent_name: str | None = Field(default=None)
+    memory_enabled: bool = Field(default=False)
+    memory_max_threads: int = Field(default=3)
+    llm_config: str | None = Field(default=None)
+    use_microagents: bool = Field(default=True)
+    disabled_microagents: list[str] | None = Field(default=None)
+    condenser: CondenserConfig = Field(default_factory=NoOpCondenserConfig)
+    
+    function_calling: bool = Field(default=True)
+    mind_voice: str | None = Field(default=None)
+    mind_voice_language: str = Field(default='English')
 
-    def defaults_to_dict(self) -> dict:
-        """Serialize fields to a dict for the frontend, including type hints, defaults, and whether it's optional."""
-        result = {}
-        for f in fields(self):
-            result[f.name] = get_field_info(f)
-        return result
-
-    @classmethod
-    def from_dict(cls, env):      
-        return cls(**{
-            k: v for k, v in env.items() 
-            if k in inspect.signature(cls).parameters
-        })
