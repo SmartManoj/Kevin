@@ -203,7 +203,7 @@ def load_from_toml(cfg: AppConfig, toml_file: str = 'config.toml'):
 
         # the new style values override the old style values
         if 'sandbox' in toml_config:
-            sandbox_config = SandboxConfig.from_dict(toml_config['sandbox'])
+            sandbox_config = SandboxConfig(**toml_config['sandbox'])
 
         # update the config object with the new values
         cfg.sandbox = sandbox_config
