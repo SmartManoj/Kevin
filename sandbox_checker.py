@@ -29,17 +29,27 @@ def run(command):
     }
 
 
-def execute_action(data):
+def read_file(path):
+    return {
+        'action': {
+            'action': 'read',
+            'args': {'path': path},
+        }
+    }
+
+def execute_action(data, timeout=5):
     data = json.dumps(data)
-    for timeout in [600,]:
+    for k in [1, 2]:
         try:
-            response = requests.post(
-                f'http://localhost:{sandbox_port}/execute_action', data=data, timeout=timeout
-            )
-            print(response.json()['content'].replace('\r', ''))
+            url = f'http://localhost:{sandbox_port}/execute_action'
+            response = requests.post(url, data=data, timeout=timeout)
+            rj = response.json()
+            print(rj['content'].replace('\r', ''))
+            if rj.get('suffix'):
+                print(rj['suffix'])
             break
         except requests.exceptions.Timeout:
-            if timeout == 2:
+            if k == 2:
                 print('Timeout')
             # sleep(1)
             pass
@@ -67,3 +77,4 @@ if __name__ == '__main__':
         )
     # execute_action(run_ipython('open_file'))
     execute_action(run('pwd'))
+    execute_action(read_file('.openhands_instructions'))
