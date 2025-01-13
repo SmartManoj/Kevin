@@ -8,6 +8,7 @@ from zipfile import ZipFile
 
 import requests
 
+from openhands.core import logger
 from openhands.core.config import AppConfig
 from openhands.core.exceptions import (
     AgentRuntimeTimeoutError,
@@ -93,6 +94,7 @@ class ActionExecutionClient(Runtime):
         Raises:
             AgentRuntimeError: If the request fails
         """
+        logger.openhands_logger.debug(f'Sending request: {method} {url} {kwargs}')
         return send_request(self.session, method, url, **kwargs)
 
     def check_if_alive(self) -> None:
