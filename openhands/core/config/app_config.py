@@ -79,7 +79,7 @@ class AppConfig(BaseModel):
     file_uploads_allowed_extensions: list[str] = Field(default_factory=lambda: ['.*'])
     runloop_api_key: SecretStr | None = Field(default=None)
     cli_multiline_input: bool = Field(default=False)
-    
+
     show_workspace_contents: bool = Field(default=True)
     override_UI_settings: bool = Field(default=False)
     custom_instructions: str = Field(default='')
@@ -88,7 +88,6 @@ class AppConfig(BaseModel):
 
     defaults_dict: ClassVar[dict] = {}
 
-    model_config = {'extra': 'forbid'}
 
     def get_llm_config(self, name='llm') -> LLMConfig:
         """'llm' is the name for default config (for backward compatibility prior to 0.8)."""

@@ -94,7 +94,6 @@ class LLMConfig(BaseModel):
     
     use_group: str | None = Field(default=None)
 
-    model_config = {'extra': 'forbid'}
 
     def model_post_init(self, __context: Any):
         """Post-initialization hook to assign OpenRouter-related variables to environment variables.

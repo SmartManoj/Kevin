@@ -70,4 +70,3 @@ class SandboxConfig(BaseModel):
     persist_sandbox: bool = True
     port: int = 63710
 
-    model_config = {'extra': 'forbid'}
