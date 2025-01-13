@@ -173,7 +173,7 @@ class BashSession:
         self,
         work_dir: str,
         username: str | None = None,
-        no_change_timeout_seconds: float = 30.0,
+        no_change_timeout_seconds: float = 10.0,
     ):
         self.NO_CHANGE_TIMEOUT_SECONDS = no_change_timeout_seconds
         self.work_dir = work_dir
