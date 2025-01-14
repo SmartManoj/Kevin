@@ -508,7 +508,7 @@ def response_to_actions(response: ModelResponse) -> list[Action]:
                     f'TOOL CALL: str_replace_editor -> file_editor with code: {code}'
                 )
 
-                if arguments['command'] == 'view':
+                if arguments.get('command') == 'view':
                     action = FileReadAction(
                         path=arguments['path'],
                         translated_ipython_code=code,
