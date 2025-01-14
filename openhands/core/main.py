@@ -74,7 +74,7 @@ async def run_controller(
     exit_on_message: bool = False,
     fake_user_response_fn: FakeUserResponseFunc | None = None,
     headless_mode: bool = True,
-) -> State | None:
+) -> State:
     """Main coroutine to run the agent controller with task input flexibility.
     It's only used when you launch openhands backend directly via cmdline.
 
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     session_name = args.name
     sid = generate_sid(config, session_name)
 
-    asyncio.run(
+    final_state = asyncio.run(
         run_controller(
             config=config,
             initial_user_action=initial_user_action,
@@ -224,3 +224,6 @@ if __name__ == '__main__':
             else auto_continue_response,
         )
     )
+
+    if final_state.last_error:
+        sys.exit(1)
