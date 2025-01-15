@@ -92,9 +92,9 @@ For Ollama, Visit [Local LLMs](https://docs.all-hands.dev/modules/usage/llms/loc
 
 FAQs:
 
-How to set config variables when using docker?
+How should one set config variables when using docker?
 
-It can be set using env variables in the format of `<GROUP_NAME>_<VARIABLE_NAME>` in uppercase.
+It can be set using env variables in the <GROUP_NAME>_<VARIABLE_NAME> format in uppercase.
 
 ---
 
