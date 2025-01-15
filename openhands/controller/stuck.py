@@ -30,8 +30,9 @@ class StuckDetector:
         'SyntaxError: incomplete input',
     ]
 
-    def __init__(self, state: State):
+    def __init__(self, state: State, agent: CodeActAgent):
         self.state = state
+        self.agent = agent
 
     def generate_resolution(self, actions, observations):
         #
@@ -39,11 +40,10 @@ class StuckDetector:
         # stuck input
         stuck_input = 'Aanalyze the history'
         for index, (action, observation) in enumerate(zip(actions, observations), 1):
-            agent = CodeActAgent(llm=LLM(LLMConfig()), config=AgentConfig())
-            action = agent.get_action_message(
+            action = self.agent.get_action_message(
                 action, pending_tool_call_action_messages={}
             )
-            observation = agent.get_observation_message(
+            observation = self.agent.get_observation_message(
                 observation, tool_call_id_to_message={}
             )
             stuck_input += f'\n{index = }. {action = }\n{observation = }'
