@@ -81,7 +81,7 @@ export function ChatInterface() {
 
     send(createChatMessage(content, imageUrls, timestamp));
     if (content == t(I18nKey.CHAT_INTERFACE$AUTO_MESSAGE)) {
-      content = t(I18nKey.CHAT_INTERFACE$INPUT_AUTO_MESSAGE);
+      content = t(I18nKey.CHAT_INTERFACE$AUTO_MESSAGE_SENT);
     }
     dispatch(addUserMessage({ content, imageUrls, timestamp, pending }));
     setMessageToSend(null);
