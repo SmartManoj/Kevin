@@ -4,6 +4,7 @@ from typing import Any
 import requests
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
+from openhands.utils.http_session import HttpSession
 from openhands.utils.tenacity_stop import stop_if_should_exit
 
 
@@ -34,7 +35,7 @@ def is_retryable_error(exception):
     wait=wait_exponential(multiplier=1, min=4, max=60),
 )
 def send_request(
-    session: requests.Session,
+    session: HttpSession,
     method: str,
     url: str,
     timeout: int = 10,
@@ -53,4 +54,6 @@ def send_request(
             response=e.response,
             detail=_json.get('detail') if _json is not None else None,
         ) from e
+    finally:
+        response.close()
     return response

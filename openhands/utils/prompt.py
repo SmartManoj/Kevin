@@ -20,6 +20,14 @@ class RuntimeInfo:
     available_hosts: dict[str, int]
 
 
+@dataclass
+class RepositoryInfo:
+    """Information about a GitHub repository that has been cloned."""
+
+    repo_name: str | None = None
+    repo_directory: str | None = None
+
+
 class PromptManager:
     """
     Manages prompt templates and micro-agents for AI interactions.
@@ -44,6 +52,7 @@ class PromptManager:
         self.disabled_microagents: list[str] = disabled_microagents or []
         self.prompt_dir: str = prompt_dir
         self.agent_skills_docs: str = agent_skills_docs
+        self.repository_info: RepositoryInfo | None = None
         self.system_template: Template = self._load_template('system_prompt')
         self.user_template: Template = self._load_template('user_prompt')
         self.runtime_info = RuntimeInfo(available_hosts={})
@@ -81,9 +90,6 @@ class PromptManager:
             elif isinstance(microagent, RepoMicroAgent):
                 self.repo_microagents[microagent.name] = microagent
 
-    def set_runtime_info(self, runtime: Runtime):
-        self.runtime_info.available_hosts = runtime.web_hosts
-
     def _load_template(self, template_name: str) -> Template:
         if self.prompt_dir is None:
             raise ValueError('Prompt directory is not set')
@@ -94,9 +100,40 @@ class PromptManager:
             return Template(file.read())
 
     def get_system_message(self) -> str:
+        repo_instructions = ''
+        assert (
+            len(self.repo_microagents) <= 1
+        ), f'Expecting at most one repo microagent, but found {len(self.repo_microagents)}: {self.repo_microagents.keys()}'
+        for microagent in self.repo_microagents.values():
+            # We assume these are the repo instructions
+            if repo_instructions:
+                repo_instructions += '\n\n'
+            repo_instructions += microagent.content
+
         return self.system_template.render(
             agent_skills_docs=self.agent_skills_docs
+            repository_instructions=repo_instructions,
+            repository_info=self.repository_info,
+            runtime_info=self.runtime_info,
         ).strip()
+
+    def set_runtime_info(self, runtime: Runtime):
+        self.runtime_info.available_hosts = runtime.web_hosts
+
+    def set_repository_info(
+        self,
+        repo_name: str,
+        repo_directory: str,
+    ) -> None:
+        """Sets information about the GitHub repository that has been cloned.
+
+        Args:
+            repo_name: The name of the GitHub repository (e.g. 'owner/repo')
+            repo_directory: The directory where the repository has been cloned
+        """
+        self.repository_info = RepositoryInfo(
+            repo_name=repo_name, repo_directory=repo_directory
+        )
 
     def get_example_user_message(self) -> str:
         """This is the initial user message provided to the agent
