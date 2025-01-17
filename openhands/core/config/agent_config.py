@@ -17,7 +17,7 @@ class AgentConfig:
         memory_enabled: Whether long-term memory (embeddings) is enabled.
         memory_max_threads: The maximum number of threads indexing at the same time for embeddings.
         llm_config: The name of the llm config to use. If specified, this will override global llm config.
-        use_microagents: Whether to use microagents at all. Default is True.
+        enable_prompt_extensions: Whether to use prompt extensions (e.g., microagents, inject runtime info). Default is True.
         disabled_microagents: A list of microagents to disable. Default is None.
         mind_voice: Voice for the mind.
         mind_voice_language: Language for the mind voice.
@@ -31,7 +31,7 @@ class AgentConfig:
     memory_enabled: bool = False
     memory_max_threads: int = 3
     llm_config: str | None = None
-    use_microagents: bool = True
+    enable_prompt_extensions: bool = True
     disabled_microagents: list[str] | None = None
     condenser: CondenserConfig = field(default_factory=NoOpCondenserConfig)  # type: ignore
 

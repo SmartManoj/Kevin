@@ -13,6 +13,9 @@ import openhands.agenthub
 from evaluation.benchmarks.swe_bench.infer_checker import check_if_resolved
 from evaluation.benchmarks.swe_bench.swe_bench2 import update_issue_description
 from evaluation.benchmarks.swe_bench.test_codes import get_test_code
+from evaluation.benchmarks.swe_bench.resource.mapping import (
+    get_instance_resource_factor,
+)
 from evaluation.utils.shared import (
     EvalException,
     EvalMetadata,
@@ -46,8 +49,9 @@ from openhands.utils.shutdown_listener import sleep_if_should_continue
 
 check_if_resolved()
 USE_HINT_TEXT = os.environ.get('USE_HINT_TEXT', 'false').lower() == 'true'
-USE_INSTANCE_IMAGE = os.environ.get('USE_INSTANCE_IMAGE', 'false').lower() == 'true'
+USE_INSTANCE_IMAGE = os.environ.get('USE_INSTANCE_IMAGE', 'true').lower() == 'true'
 RUN_WITH_BROWSING = os.environ.get('RUN_WITH_BROWSING', 'false').lower() == 'true'
+
 
 AGENT_CLS_TO_FAKE_USER_RESPONSE_FN = {
     'CodeActAgent': codeact_user_response,
@@ -169,6 +173,10 @@ def get_config(
             remote_runtime_api_url=os.environ.get('SANDBOX_REMOTE_RUNTIME_API_URL'),
             keep_runtime_alive=False,
             remote_runtime_init_timeout=3600,
+            remote_runtime_resource_factor=get_instance_resource_factor(
+                dataset_name=metadata.dataset,
+                instance_id=instance['instance_id'],
+            ),
         ),
         # do not mount workspace
         workspace_base=None,
@@ -215,7 +223,7 @@ def initialize_runtime(
     action = CmdRunAction(
         command=f"""echo 'export SWE_INSTANCE_ID={instance['instance_id']}' > ~/.bashrc && echo 'export PIP_CACHE_DIR=~/.cache/pip' >> ~/.bashrc && echo "alias git='git --no-pager'" >> ~/.bashrc"""
     )
-    action.timeout = 600
+    action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -224,7 +232,7 @@ def initialize_runtime(
     )
 
     action = CmdRunAction(command="""export USER=$(whoami); echo USER=${USER} """)
-    action.timeout = 600
+    action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -236,7 +244,7 @@ def initialize_runtime(
 
         # inject the instance info
         action = CmdRunAction(command='mkdir -p /swe_util/eval_data/instances')
-        action.timeout = 600
+        action.set_hard_timeout(600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -267,14 +275,14 @@ def initialize_runtime(
             '/swe_util/',
         )
         action = CmdRunAction(command='cat ~/.bashrc')
-        action.timeout = 600
+        action.set_hard_timeout(600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert_and_raise(obs.exit_code == 0, f'Failed to cat ~/.bashrc: {str(obs)}')
 
         action = CmdRunAction(command='source ~/.bashrc')
-        action.timeout = 600
+        action.set_hard_timeout(600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -283,7 +291,7 @@ def initialize_runtime(
         assert_and_raise(obs.exit_code == 0, f'Failed to source ~/.bashrc: {str(obs)}')
 
         action = CmdRunAction(command='source /swe_util/instance_swe_entry.sh')
-        action.timeout = 3600
+        action.set_hard_timeout(600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -293,7 +301,7 @@ def initialize_runtime(
         )
     else:
         action = CmdRunAction(command='source /swe_util/swe_entry.sh')
-        action.timeout = 1800
+        action.set_hard_timeout(1800)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -303,7 +311,7 @@ def initialize_runtime(
         )
 
     action = CmdRunAction(command='cd /testbed')
-    action.timeout = 600
+    action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -322,7 +330,7 @@ def initialize_runtime(
     ]
     for command in commands:
         action = CmdRunAction(command=command)
-        action.timeout = 600
+        action.set_hard_timeout(600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -333,7 +341,7 @@ def initialize_runtime(
     action = CmdRunAction(
         command='for remote_name in $(git remote); do git remote remove "${remote_name}"; done'
     )
-    action.timeout = 600
+    action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -403,7 +411,7 @@ def complete_runtime(
     # workspace_dir_name = _get_swebench_workspace_dir_name(instance)
 
     action = CmdRunAction(command='cd /testbed')
-    action.timeout = 600
+    action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -413,7 +421,7 @@ def complete_runtime(
     )
 
     action = CmdRunAction(command='git config --global core.pager ""')
-    action.timeout = 600
+    action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -423,7 +431,7 @@ def complete_runtime(
     )
 
     action = CmdRunAction(command='git add -A')
-    action.timeout = 600
+    action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -439,7 +447,7 @@ def complete_runtime(
             command=f"""git diff --cached {instance["base_commit"]} '*.py' ':(exclude)setup.py' ':(exclude)*/tests/*' ':(exclude)tests/*' ':(exclude)*/testing/*' ':(exclude)testing/*' ':(exclude)testproject/*' ':(exclude)testapp/*' """,
             # command=f'git diff --no-color --cached {instance["base_commit"]}',
         )
-        action.timeout = 10 * n_retries
+        action.timeout = max(300 + 100 * n_retries, 600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -489,7 +497,7 @@ def process_instance(
             8,
         )
         logger.warning(
-            f'This is the second attempt for instance {instance.instance_id}, setting resource factor to {config.sandbox.remote_runtime_resource_factor}'
+            f'This is the {runtime_failure_count + 1}th attempt for instance {instance.instance_id}, setting resource factor to {config.sandbox.remote_runtime_resource_factor}'
         )
     if os.environ.get('RUNTIME') != 'remote':
         runtime = create_runtime(config, sid=instance.instance_id)
@@ -572,6 +580,10 @@ def filter_dataset(dataset: pd.DataFrame, filter_column: str) -> pd.DataFrame:
                 subset = dataset[dataset[filter_column].isin(selected_ids)]
                 logger.info(f'Retained {subset.shape[0]} tasks after filtering')
                 return subset
+    skip_ids = os.environ.get('SKIP_IDS', '').split(',')
+    if len(skip_ids) > 0:
+        logger.info(f'Filtering {len(skip_ids)} tasks from "SKIP_IDS"...')
+        return dataset[~dataset[filter_column].isin(skip_ids)]
     return dataset
 
 
@@ -600,6 +612,9 @@ if __name__ == '__main__':
 
     logger.info(f'Loaded dataset {args.dataset} with split {args.split}')
     swe_bench_tests = filter_dataset(dataset.to_pandas(), 'instance_id')
+    logger.info(
+        f'Loaded dataset {args.dataset} with split {args.split}: {len(swe_bench_tests)} tasks'
+    )
 
     llm_config = None
     if args.llm_config:
@@ -628,6 +643,7 @@ if __name__ == '__main__':
     )
 
     output_file = os.path.join(metadata.eval_output_dir, 'output.jsonl')
+    print(f'### OUTPUT FILE: {output_file} ###')
     instances = prepare_dataset(swe_bench_tests, output_file, args.eval_n_limit)
 
     if len(instances) > 0 and not isinstance(

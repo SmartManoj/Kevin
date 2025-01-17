@@ -8,6 +8,7 @@ from openhands.core.schema import ActionType
 from openhands.events.action import BrowseInteractiveAction, BrowseURLAction
 from openhands.events.observation import BrowserOutputObservation
 from openhands.runtime.browser.browser_env import BrowserEnv
+from openhands.utils.async_utils import call_sync_from_async
 
 
 async def browse(
@@ -38,7 +39,7 @@ async def browse(
         # obs provided by BrowserGym:
         # https://github.com/ServiceNow/BrowserGym/blob/main/browsergym/core/src/browsergym/core/env.py#L521
         # https://github.com/ServiceNow/BrowserGym/blob/418421abdc5da4d77dc71d3b82a9e5e931be0c4f/browsergym/core/src/browsergym/core/env.py#L521
-        obs = browser.step(action_str)
+        obs = await call_sync_from_async(browser.step, action_str)
         try:
             axtree_txt = flatten_axtree_to_str(
                 obs['axtree_object'],  # accessibility tree object

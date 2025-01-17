@@ -134,7 +134,7 @@ class CodeActAgent(Agent):
                 os.path.dirname(os.path.dirname(openhands.__file__)),
                 'microagents',
             )
-            if self.config.use_microagents
+            if self.config.enable_prompt_extensions
             else None,
             prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
             disabled_microagents=self.config.disabled_microagents,
@@ -602,6 +602,16 @@ display.Image(dss())
 
         if task := state.inputs.get('task'):
             messages.append(Message(role='user', content=[TextContent(text=task)]))
+        # Repository and runtime info
+        additional_info = self.prompt_manager.get_additional_info()
+        if self.config.enable_prompt_extensions and additional_info:
+            # only add these if prompt extension is enabled
+            messages.append(
+                Message(
+                    role='user',
+                    content=[TextContent(text=additional_info)],
+                )
+            )
 
         pending_tool_call_action_messages: dict[str, Message] = {}
         tool_call_id_to_message: dict[str, Message] = {}
