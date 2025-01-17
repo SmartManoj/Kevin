@@ -7,8 +7,11 @@ import traceback
 from datetime import datetime
 from types import TracebackType
 from typing import Any, Literal, Mapping
+import warnings
 
-import litellm
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import litellm
 from termcolor import colored
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
