@@ -409,6 +409,7 @@ class DockerRuntime(ActionExecutionClient):
             if container.status != 'running':
                 container.start()
                 logger.info('Container started')
+                self.setup_initial_env(force=True)
             elapsed = 0
             while container.status != 'running':
                 time.sleep(1)
