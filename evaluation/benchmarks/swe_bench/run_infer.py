@@ -213,7 +213,6 @@ def initialize_runtime(
     obs: CmdOutputObservation
     # empty ~/.bashrc else timeout exception occurs when source ~/.bashrc may be PS1 changes
     action = CmdRunAction(command='echo "" > ~/.bashrc')
-    action.timeout = 600
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -372,7 +371,6 @@ create_file('/tmp/test_task.py', FILE_CONTENT, overwrite=True)
 
     # set SWE_BENCH=1 env
     action = CmdRunAction(command='export SWE_BENCH=1')
-    action.timeout = 600
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
@@ -447,7 +445,6 @@ def complete_runtime(
             command=f"""git diff --cached {instance["base_commit"]} '*.py' ':(exclude)setup.py' ':(exclude)*/tests/*' ':(exclude)tests/*' ':(exclude)*/testing/*' ':(exclude)testing/*' ':(exclude)testproject/*' ':(exclude)testapp/*' """,
             # command=f'git diff --no-color --cached {instance["base_commit"]}',
         )
-        action.timeout = max(300 + 100 * n_retries, 600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})

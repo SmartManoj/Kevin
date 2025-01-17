@@ -314,6 +314,7 @@ LOG_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     'logs',
 )
+LOG_TO_FILE = True
 
 if LOG_TO_FILE:
     openhands_logger.addHandler(

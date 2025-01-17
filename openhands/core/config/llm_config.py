@@ -48,8 +48,9 @@ class LLMConfig:
         log_completions_folder: The folder to log LLM completions to. Required if log_completions is True.
         draft_editor: A more efficient LLM to use for file editing. Introduced in [PR 3985](https://github.com/All-Hands-AI/OpenHands/pull/3985).
         custom_tokenizer: A custom tokenizer to use for token counting.
-        use_group: The group to use for the LLM.
         native_tool_calling: Whether to use native tool calling if supported by the model. Can be True, False, or not set.
+
+        use_group: The group to use for the LLM.
     """
 
     model: str = 'claude-3-5-sonnet-20241022'
@@ -90,6 +91,10 @@ class LLMConfig:
     draft_editor: Optional['LLMConfig'] = None
     custom_tokenizer: str | None = None
     native_tool_calling: bool | None = None
+
+    # custom configs
+    use_group: str | None = None
+    enable_cache: bool = False
 
     def defaults_to_dict(self) -> dict:
         """Serialize fields to a dict for the frontend, including type hints, defaults, and whether it's optional."""
