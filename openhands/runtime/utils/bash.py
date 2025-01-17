@@ -489,34 +489,7 @@ class BashSession:
         if command != '' and is_special_key:
             logger.debug(f'SENDING SPECIAL KEY: {command!r}')
             self.pane.send_keys(command, enter=False)
-        # When prev command is hard timeout, and we are trying to execute new command
-        elif self.prev_status == BashCommandStatus.HARD_TIMEOUT and command != '':
-            if not last_pane_output.endswith(CMD_OUTPUT_PS1_END):
-                _ps1_matches = CmdOutputMetadata.matches_ps1_metadata(last_pane_output)
-                raw_command_output = self._combine_outputs_between_matches(
-                    last_pane_output, _ps1_matches
-                )
-                metadata = CmdOutputMetadata()  # No metadata available
-                metadata.suffix = (
-                    f'\n[Your command "{command}" is NOT executed. '
-                    f'The previous command was timed out but still running. Above is the output of the previous command. '
-                    "You may wait longer to see additional output of the previous command by sending empty command '', "
-                    'send other commands to interact with the current process, '
-                    'or send keys ("C-c", "C-z", "C-d") to interrupt/kill the previous command before sending your new command.]'
-                )
-                command_output = self._get_command_output(
-                    command,
-                    raw_command_output,
-                    metadata,
-                    continue_prefix='[Below is the output of the previous command.]\n',
-                )
-                return CmdOutputObservation(
-                    command=command,
-                    content=command_output,
-                    metadata=metadata,
-                )
         # Only send the command to the pane if it's not a special key and it's not empty
-        # AND previous hard timeout command is resolved
         elif command != '' and not is_special_key:
             # convert command to raw string
             command = escape_bash_special_chars(command)
