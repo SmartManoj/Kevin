@@ -11,6 +11,8 @@ full_file_names = [
     'openhands/runtime/plugins/agent_skills/file_ops/file_utils.py',
     'openhands/runtime/plugins/agent_skills/file_ops/so.py',
     'openhands/runtime/plugins/jupyter/execute_server.py',
+    'openhands/runtime/plugins/jupyter/execute_server.py',
+    'openhands/runtime/plugins/jupyter/__init__.py',
     'openhands/runtime/plugins/vscode/__init__.py',
     'openhands/runtime/utils/bash.py',
     'openhands/runtime/action_execution_server.py',
@@ -36,6 +38,6 @@ for c in client.containers.list():
             if 'root' in c.name:
                 break
         # restart the container
-print('Restarting the container')
-c.restart()
-print(datetime.now())
+        print('Restarting the container')
+        c.restart()
+        print(datetime.now())
