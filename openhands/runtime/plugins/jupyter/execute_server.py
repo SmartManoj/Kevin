@@ -267,9 +267,9 @@ class ExecuteHandler(tornado.web.RequestHandler):
         self.write(output)
 
 
-def make_app():
+def make_app(url='localhost'):
     jupyter_kernel = JupyterKernel(
-        f"localhost:{os.environ.get('JUPYTER_GATEWAY_PORT')}",
+        f"{url}:{os.environ.get('JUPYTER_GATEWAY_PORT')}",
         os.environ.get('JUPYTER_GATEWAY_KERNEL_ID'),
     )
     asyncio.get_event_loop().run_until_complete(jupyter_kernel.initialize())
@@ -282,6 +282,6 @@ def make_app():
 
 
 if __name__ == '__main__':
-    app = make_app()
+    app = make_app(os.environ.get('JUPYTER_URL'))
     app.listen(os.environ.get('JUPYTER_EXEC_SERVER_PORT'))
     tornado.ioloop.IOLoop.current().start()
