@@ -51,8 +51,12 @@ def strip_ansi(o: str) -> str:
 
 class JupyterKernel:
     def __init__(self, url_suffix, convid, lang='python'):
-        self.base_url = f'http://{url_suffix}'
-        self.base_ws_url = f'ws://{url_suffix}'
+        if 'localhost' in url_suffix:
+            self.base_url = f'http://{url_suffix}'
+            self.base_ws_url = f'ws://{url_suffix}'
+        else:
+            self.base_url = f'https://{url_suffix}'
+            self.base_ws_url = f'wss://{url_suffix}'
         self.lang = lang
         self.kernel_id = None
         self.ws = None
@@ -115,7 +119,7 @@ class JupyterKernel:
                     await asyncio.sleep(1)
 
             if n_tries == 0:
-                raise ConnectionRefusedError('Failed to connect to kernel')
+                raise ConnectionRefusedError(f'Failed to connect to kernel at {self.base_url}')
 
         ws_req = HTTPRequest(
             url='{}/api/kernels/{}/channels'.format(
@@ -282,6 +286,8 @@ def make_app(url='localhost'):
 
 
 if __name__ == '__main__':
+    from dotenv import load_dotenv
+    load_dotenv()
     app = make_app(os.environ.get('JUPYTER_URL'))
     app.listen(os.environ.get('JUPYTER_EXEC_SERVER_PORT'))
     tornado.ioloop.IOLoop.current().start()
