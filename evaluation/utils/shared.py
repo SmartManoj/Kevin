@@ -315,7 +315,13 @@ def update_progress(
     logger.info(
         f'Finished evaluation for instance {result.instance_id}: {str(result.test_result)[:300]}...\n'
     )
-    output_fp.write(json.dumps(result.model_dump()) + '\n')
+    # ERROR:root:<class 'TypeError'>: Object of type ndarray is not JSON serializable
+    class CustomEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return super().default(obj)
+    output_fp.write(json.dumps(result.model_dump(), cls=CustomEncoder) + '\n')
     output_fp.flush()
 
 
