@@ -38,6 +38,7 @@ class AgentConfig:
     function_calling: bool = True
     mind_voice: str | None = None
     mind_voice_language: str = 'English'
+    use_microagents: bool = True
 
     def defaults_to_dict(self) -> dict:
         """Serialize fields to a dict for the frontend, including type hints, defaults, and whether it's optional."""
