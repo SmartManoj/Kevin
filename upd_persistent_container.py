@@ -11,7 +11,6 @@ full_file_names = [
     'openhands/runtime/plugins/agent_skills/file_ops/file_utils.py',
     'openhands/runtime/plugins/agent_skills/file_ops/so.py',
     'openhands/runtime/plugins/jupyter/execute_server.py',
-    'openhands/runtime/plugins/jupyter/execute_server.py',
     'openhands/runtime/plugins/jupyter/__init__.py',
     'openhands/runtime/plugins/vscode/__init__.py',
     'openhands/runtime/utils/bash.py',
