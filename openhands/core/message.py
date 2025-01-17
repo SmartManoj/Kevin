@@ -149,12 +149,14 @@ class Message(BaseModel):
             message_dict['name'] = self.name
 
         return message_dict
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
 
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
 
 if __name__ == '__main__':
     message = Message(role='user', content=[TextContent(text='Hello, world!')])
     # append an image
-    message.content.append(ImageContent(image_urls=['https://example.com/image.jpg']))
-    print(message.serialize_model())
-    print(message.model_dump_json())
-    print(message.model_dump())
+    print(message['role'])
