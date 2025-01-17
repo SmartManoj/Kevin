@@ -82,3 +82,13 @@ class JupyterPlugin(Plugin):
     async def run(self, action: Action) -> IPythonRunCellObservation:
         obs = await self._run(action)
         return obs
+
+
+if __name__ == '__main__':
+    from dotenv import load_dotenv
+    load_dotenv()
+    jupyter = JupyterPlugin()
+    import asyncio
+    asyncio.run(jupyter.initialize('smart'))
+    print(jupyter.python_interpreter_path)
+    print(asyncio.run(jupyter.run(IPythonRunCellAction(code='!ls /kaggle/'))))
