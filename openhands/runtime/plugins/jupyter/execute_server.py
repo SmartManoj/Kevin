@@ -51,12 +51,12 @@ def strip_ansi(o: str) -> str:
 
 class JupyterKernel:
     def __init__(self, url_suffix, convid, lang='python'):
-        if 'localhost' in url_suffix:
+        if 'https' not in url_suffix:
             self.base_url = f'http://{url_suffix}'
             self.base_ws_url = f'ws://{url_suffix}'
         else:
-            self.base_url = f'https://{url_suffix}'
-            self.base_ws_url = f'wss://{url_suffix}'
+            self.base_url = url_suffix
+            self.base_ws_url = url_suffix.replace('https:', 'wss:')
         self.lang = lang
         self.kernel_id = None
         self.ws = None
