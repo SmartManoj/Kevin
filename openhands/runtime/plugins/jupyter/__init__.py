@@ -23,6 +23,7 @@ class JupyterPlugin(Plugin):
     async def initialize(self, username: str, kernel_id: str = 'openhands-default'):
         self.kernel_gateway_port = find_available_tcp_port(40000, 49999)
         self.kernel_id = kernel_id
+        logger.info(f'Jupyter URL: {os.environ.get("JUPYTER_URL")}')
         if not os.environ.get('JUPYTER_URL'):
             self.gateway_process = subprocess.Popen(
                 (
