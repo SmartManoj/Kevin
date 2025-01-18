@@ -170,7 +170,6 @@ class Runtime(FileEditRuntimeMixin):
         if not cmd:
             return
         cmd = cmd.strip()
-        logger.info(f'Adding env var: {cmd}')
         obs = self.run(CmdRunAction(cmd))
         if not isinstance(obs, CmdOutputObservation) or obs.exit_code != 0:
             raise RuntimeError(
