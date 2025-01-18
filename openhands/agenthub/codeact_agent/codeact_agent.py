@@ -48,6 +48,7 @@ from openhands.runtime.plugins import (
     JupyterRequirement,
     PluginRequirement,
 )
+from openhands.runtime.plugins.vscode import VSCodeRequirement
 from openhands.utils.prompt import PromptManager
 
 config = load_app_config()
@@ -80,6 +81,7 @@ class CodeActAgent(Agent):
         # and it needs to be initialized before Jupyter for Jupyter to use those functions.
         AgentSkillsRequirement(),
         JupyterRequirement(),
+        VSCodeRequirement(),
     ]
 
     def __init__(
