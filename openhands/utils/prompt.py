@@ -75,6 +75,7 @@ class PromptManager:
         microagent_dir: str | None = None,
         agent_skills_docs: str = '',
         disabled_microagents: list[str] | None = None,
+        use_bash: bool = True,
     ):
         self.disabled_microagents: list[str] = disabled_microagents or []
         self.prompt_dir: str = prompt_dir
@@ -86,6 +87,8 @@ class PromptManager:
 
         self.knowledge_microagents: dict[str, KnowledgeMicroAgent] = {}
         self.repo_microagents: dict[str, RepoMicroAgent] = {}
+
+        self.use_bash = use_bash
 
         if microagent_dir:
             # This loads micro-agents from the microagent_dir
@@ -134,7 +137,10 @@ class PromptManager:
             return Template(file.read())
 
     def get_system_message(self) -> str:
-        return self.system_template.render().strip()
+        return self.system_template.render(
+            agent_skills_docs=self.agent_skills_docs,
+            use_bash=self.use_bash,
+        ).strip()
 
     def get_additional_info(self) -> str:
         """Gets information about the repository and runtime.
@@ -152,7 +158,6 @@ class PromptManager:
             repo_instructions += microagent.content
 
         return self.system_template.render(
-            agent_skills_docs=self.agent_skills_docs,
             repository_instructions=repo_instructions,
             repository_info=self.repository_info,
             runtime_info=self.runtime_info,

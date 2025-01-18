@@ -38,3 +38,4 @@ class AgentConfig(BaseModel):
     mind_voice: str | None = None
     mind_voice_language: str = 'English'
     use_microagents: bool = True
+    codeact_enable_bash: bool = True
