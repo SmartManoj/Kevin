@@ -26,7 +26,7 @@ from openhands.storage.files import FileStore
 
 JWT_SECRET = '.jwt_secret'
 load_dotenv()
-
+load_dotenv('sandbox.env')
 
 def load_from_env(cfg: AppConfig, env_or_toml_dict: dict | MutableMapping[str, str]):
     """Reads the env-style vars and sets config attributes based on env vars or a config.toml dict.

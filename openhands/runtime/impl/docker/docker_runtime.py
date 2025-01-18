@@ -220,6 +220,10 @@ class DockerRuntime(ActionExecutionClient):
             logger.info('Copied selenium files to runtime')
         except Exception as e:
             logger.error(f'Error copying selenium files to runtime: {e}')
+        try:
+            self.copy_to('sandbox.env', '/openhands/code')
+        except Exception as e:
+            logger.error(f'Error copying sandbox.env to runtime: {e}')
 
     @staticmethod
     @lru_cache(maxsize=1)
