@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import asyncio
 import logging
 import os
@@ -55,6 +53,7 @@ class JupyterKernel:
             self.base_url = f'http://{url_suffix}'
             self.base_ws_url = f'ws://{url_suffix}'
         else:
+            url_suffix = url_suffix.rstrip('/')
             self.base_url = url_suffix
             self.base_ws_url = url_suffix.replace('https:', 'wss:')
         self.lang = lang
