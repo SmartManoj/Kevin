@@ -19,6 +19,7 @@ full_file_names = [
     'openhands/sel/selenium_tester.py',
     'openhands/sel/selenium_session_details.py',
     'openhands/events/event.py',
+    'sandbox.env'
 ]
 client = docker.from_env()
 for c in client.containers.list():
