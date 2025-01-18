@@ -445,6 +445,7 @@ def complete_runtime(
             command=f"""git diff --cached {instance["base_commit"]} '*.py' ':(exclude)setup.py' ':(exclude)*/tests/*' ':(exclude)tests/*' ':(exclude)*/testing/*' ':(exclude)testing/*' ':(exclude)testproject/*' ':(exclude)testapp/*' """,
             # command=f'git diff --no-color --cached {instance["base_commit"]}',
         )
+        action.set_hard_timeout(max(300 + 100 * n_retries, 600))
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})

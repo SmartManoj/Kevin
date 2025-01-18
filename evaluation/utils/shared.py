@@ -53,30 +53,6 @@ class EvalMetadata(BaseModel):
     details: dict[str, Any] | None = None
     condenser_config: CondenserConfig | None = None
 
-    def model_dump(self, *args, **kwargs):
-        dumped_dict = super().model_dump(*args, **kwargs)
-        # avoid leaking sensitive information
-        dumped_dict['llm_config'] = self.llm_config.to_safe_dict()
-        if hasattr(self.condenser_config, 'llm_config'):
-            dumped_dict['condenser_config']['llm_config'] = (
-                self.condenser_config.llm_config.to_safe_dict()
-            )
-
-        return dumped_dict
-
-    def model_dump_json(self, *args, **kwargs):
-        dumped = super().model_dump_json(*args, **kwargs)
-        dumped_dict = json.loads(dumped)
-        # avoid leaking sensitive information
-        dumped_dict['llm_config'] = self.llm_config.to_safe_dict()
-        if hasattr(self.condenser_config, 'llm_config'):
-            dumped_dict['condenser_config']['llm_config'] = (
-                self.condenser_config.llm_config.to_safe_dict()
-            )
-
-        logger.debug(f'Dumped metadata: {dumped_dict}')
-        return json.dumps(dumped_dict)
-
 
 class EvalOutput(BaseModel):
     # NOTE: User-specified
@@ -98,23 +74,6 @@ class EvalOutput(BaseModel):
 
     # Optionally save the input test instance
     instance: dict[str, Any] | None = None
-
-    def model_dump(self, *args, **kwargs):
-        dumped_dict = super().model_dump(*args, **kwargs)
-        # Remove None values
-        dumped_dict = {k: v for k, v in dumped_dict.items() if v is not None}
-        # Apply custom serialization for metadata (to avoid leaking sensitive information)
-        if self.metadata is not None:
-            dumped_dict['metadata'] = self.metadata.model_dump()
-        return dumped_dict
-
-    def model_dump_json(self, *args, **kwargs):
-        dumped = super().model_dump_json(*args, **kwargs)
-        dumped_dict = json.loads(dumped)
-        # Apply custom serialization for metadata (to avoid leaking sensitive information)
-        if 'metadata' in dumped_dict:
-            dumped_dict['metadata'] = json.loads(self.metadata.model_dump_json())
-        return json.dumps(dumped_dict)
 
 
 class EvalException(Exception):
@@ -315,13 +274,7 @@ def update_progress(
     logger.info(
         f'Finished evaluation for instance {result.instance_id}: {str(result.test_result)[:300]}...\n'
     )
-    # ERROR:root:<class 'TypeError'>: Object of type ndarray is not JSON serializable
-    class CustomEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, np.ndarray):
-                return obj.tolist()
-            return super().default(obj)
-    output_fp.write(json.dumps(result.model_dump(), cls=CustomEncoder) + '\n')
+    output_fp.write(result.model_dump_json() + '\n')
     output_fp.flush()
 
 
@@ -378,7 +331,6 @@ def _process_instance_wrapper(
             error = str(e)
             stacktrace = traceback.format_exc()
             if attempt == max_retries:
-                logger.exception(e)
                 msg = (
                     '-' * 10
                     + '\n'
@@ -401,19 +353,13 @@ def _process_instance_wrapper(
                 + '-' * 10
                 + '\n'
             )
-            if isinstance(
-                e,
-                (
-                    AgentRuntimeDisconnectedError,
-                    AgentRuntimeUnavailableError,
-                    AgentRuntimeNotFoundError,
-                ),
-            ):
+            # e is likely an EvalException, so we can't directly infer it from type
+            # but rather check if it's a fatal error
+            if is_fatal_runtime_error(str(e)):
                 runtime_failure_count += 1
                 msg += f'Runtime disconnected error detected for instance {instance.instance_id}, runtime failure count: {runtime_failure_count}'
+                msg += '\n' + '-' * 10 + '\n'
             logger.error(msg)
-            if use_mp:
-                print(msg)  # use print to directly print to console
             time.sleep(5)
 
 
@@ -573,10 +519,28 @@ def is_fatal_evaluation_error(error: str | None) -> bool:
         AgentRuntimeNotReadyError,
         AgentRuntimeDisconnectedError,
         AgentRuntimeNotFoundError,
+        ConnectionError,
     ]
 
     if any(exception.__name__ in error for exception in FATAL_EXCEPTIONS):
         logger.error(f'Fatal evaluation error detected: {error}')
+        return True
+
+    return False
+
+
+def is_fatal_runtime_error(error: str | None) -> bool:
+    if not error:
+        return False
+
+    FATAL_RUNTIME_ERRORS = [
+        AgentRuntimeUnavailableError,
+        AgentRuntimeDisconnectedError,
+        AgentRuntimeNotFoundError,
+    ]
+
+    if any(exception.__name__ in error for exception in FATAL_RUNTIME_ERRORS):
+        logger.error(f'Fatal runtime error detected: {error}')
         return True
 
     return False
