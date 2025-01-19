@@ -76,12 +76,12 @@ RUN \
     /openhands/micromamba/bin/micromamba run -n openhands poetry config virtualenvs.path /openhands/poetry && \
     /openhands/micromamba/bin/micromamba run -n openhands poetry env use python3.12 && \
     # Install project dependencies
-    {% if 'smartmanoj' in base_image %}
+    {%- if 'smartmanoj' in base_image %}
     /openhands/micromamba/bin/micromamba run -n openhands poetry run pip install https://github.com/SmartManoj/Kevin/raw/924cad563282c3c054c2eae365c1d2091742db0f/pylcs-0.1.1-cp312-cp312-linux_x86_64.whl && \
     # remove pylcs = "^0.1.1" from pyproject.toml
     sed -i '/pylcs = "^0.1.1"/d' /openhands/code/pyproject.toml && \
     /openhands/micromamba/bin/micromamba run -n openhands poetry lock --no-update && \
-    {% endif %}
+    {%- endif %}
     /openhands/micromamba/bin/micromamba run -n openhands poetry install --only main,runtime --no-interaction --no-root && \
     # Update and install additional tools
     apt-get update && \
