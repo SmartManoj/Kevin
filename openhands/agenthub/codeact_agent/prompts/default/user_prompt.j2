@@ -1,23 +1,16 @@
 {% set DEFAULT_EXAMPLE %}
 --- START OF EXAMPLE ---
 
-USER: create a python file that prints hello world
+USER: print 2
 
 ASSISTANT:
 <execute_ipython>
-full_content='''
-print("hello world")
-'''
-create_file('hello.py', full_content)
+print(2)
 </execute_ipython>
 
 USER:
 OBSERVATION:
-(this is the beginning of the file)
-1 | string = "hello world"
-2 | print(string)
-(this is the end of the file)
-[File updated (edited at line 1). Please review the changes and make sure they are correct (correct indentation, no duplicate lines, etc). Edit the file again if necessary.]
+2
 
 ASSISTANT:
 The task is completed.
