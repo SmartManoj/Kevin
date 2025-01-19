@@ -37,6 +37,14 @@ class TextContent(Content):
             data['cache_control'] = {'type': 'ephemeral'}
         return data
 
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
 class ImageContent(Content):
     type: str = ContentType.IMAGE_URL.value
@@ -50,6 +58,15 @@ class ImageContent(Content):
         if self.cache_prompt and images:
             images[-1]['cache_control'] = {'type': 'ephemeral'}
         return images
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
 
 class Message(BaseModel):
@@ -156,7 +173,13 @@ class Message(BaseModel):
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
 if __name__ == '__main__':
     message = Message(role='user', content=[TextContent(text='Hello, world!')])
     # append an image
-    print(message['role'])
+    message.content.append(ImageContent(image_urls=['https://example.com/image.jpg']))
+    print(message.serialize_model())
+    print(message.model_dump_json())
+    print(message.model_dump())
