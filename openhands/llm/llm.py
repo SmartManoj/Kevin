@@ -259,6 +259,8 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
 
             # ensure we work with a list of messages
             messages = messages if isinstance(messages, list) else [messages]
+            if isinstance(messages[0], Message):
+                kwargs['messages'] = self.format_messages_for_llm(messages)
             # original_fncall_messages = copy.deepcopy(messages)
             mock_fncall_tools = None
             if mock_function_calling:
@@ -289,9 +291,6 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                 )
 
             kwargs.pop('condense', None)
-            if isinstance(messages[0], Message):
-                messages = [message.model_dump() for message in messages]
-                kwargs['messages'] = messages
 
             if not messages:
                 raise ValueError(
@@ -852,3 +851,13 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
 
         # let pydantic handle the serialization
         return [message.model_dump() for message in messages]
+
+
+if __name__ == '__main__':
+    from openhands.core.config.utils import get_llm_config_arg
+    config = get_llm_config_arg('hf')
+    llm = LLM(config=config)
+    from openhands.core.message import TextContent
+    from openhands.core.message import Message
+    messages = [Message(role='user', content=[TextContent(text='Hello, world!')])]
+    print(llm.format_messages_for_llm(messages))
