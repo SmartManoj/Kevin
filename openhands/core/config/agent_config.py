@@ -34,7 +34,7 @@ class AgentConfig(BaseModel):
     condenser: CondenserConfig = Field(default_factory=NoOpCondenserConfig)
 
     # custom configs
-    function_calling: bool = True
+    function_calling: bool = False
     mind_voice: str | None = None
     mind_voice_language: str = 'English'
     use_microagents: bool = True
