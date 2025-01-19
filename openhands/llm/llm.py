@@ -373,6 +373,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                                 pass
                             os.environ['attempt_number'] = '-1'
                     logger.debug(f'Calling LLM ...')
+                    self.log_first_request(*args, **kwargs)
                     resp = self._completion_unwrapped(*args, **kwargs)
                     # non_fncall_response = copy.deepcopy(resp)
                     if mock_function_calling:
