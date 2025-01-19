@@ -189,10 +189,9 @@ class JupyterKernel:
                 if parent_msg_id != msg_id:
                     continue
 
-                if os.environ.get('DEBUG'):
-                    logging.info(
-                        f"MSG TYPE: {msg_type.upper()} DONE:{execution_done}\nCONTENT: {msg['content']}"
-                    )
+                logging.debug(
+                    f"MSG TYPE: {msg_type.upper()} DONE:{execution_done}\nCONTENT: {msg['content']}"
+                )
 
                 if msg_type == 'error':
                     traceback = '\n'.join(msg['content']['traceback'])
