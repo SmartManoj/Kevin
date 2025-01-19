@@ -274,7 +274,12 @@ def update_progress(
     logger.info(
         f'Finished evaluation for instance {result.instance_id}: {str(result.test_result)[:300]}...\n'
     )
-    output_fp.write(result.model_dump_json() + '\n')
+    def numpy_json_encoder(obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable.")
+
+    output_fp.write(json.dumps(result.model_dump(), default=numpy_json_encoder) + '\n')
     output_fp.flush()
 
 
