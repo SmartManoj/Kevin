@@ -260,7 +260,8 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             # ensure we work with a list of messages
             messages = messages if isinstance(messages, list) else [messages]
             if isinstance(messages[0], Message):
-                kwargs['messages'] = self.format_messages_for_llm(messages)
+                messages = self.format_messages_for_llm(messages)
+                kwargs['messages'] = messages
             # original_fncall_messages = copy.deepcopy(messages)
             mock_fncall_tools = None
             if mock_function_calling:
