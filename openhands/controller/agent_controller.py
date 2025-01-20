@@ -530,9 +530,10 @@ class AgentController:
             self._pending_action._id = None  # type: ignore[attr-defined]
             self.event_stream.add_event(self._pending_action, EventSource.AGENT)
 
+        old_state = self.state.agent_state
         self.state.agent_state = new_state
         self.event_stream.add_event(
-            AgentStateChangedObservation('', self.state.agent_state),
+            AgentStateChangedObservation(f'From {old_state}', self.state.agent_state),
             EventSource.ENVIRONMENT,
         )
 
