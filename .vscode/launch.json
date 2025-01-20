@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "OpenHands CLI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "openhands.core.cli",
+            "justMyCode": false
+        },
+        {
+            "name": "OpenHands WebApp",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "openhands.server.listen:app",
+                "--reload",
+                "--reload-exclude",
+                "${workspaceFolder}/workspace",
+                "--port",
+                "3000"
+            ],
+            "justMyCode": false
+        }
+    ]
+}
