@@ -742,7 +742,10 @@ class AgentController:
                     # Save the ID of the first event in our truncated history for future reloading
                     if self.state.history:
                         self.state.start_id = self.state.history[0].id
-                    # Don't add error event - let the agent retry with reduced context
+                    # Add a NullObservation to the event stream to trigger the agent to retry
+                    self.event_stream.add_event(
+                        NullObservation(''),EventSource.AGENT,
+                    )
                     return
                 raise
 
