@@ -73,7 +73,7 @@ class Session:
             await self.sio.emit(
                 'oh_event',
                 event_to_dict(
-                    AgentStateChangedObservation('', AgentState.STOPPED.value)
+                    AgentStateChangedObservation('', AgentState.STOPPED)
                 ),
                 to=ROOM_KEY.format(sid=self.sid),
             )
