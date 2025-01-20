@@ -376,19 +376,18 @@ class LlmFileHandler(logging.FileHandler):
         if DEBUG:
             self.session = datetime.now().strftime('%y-%m-%d_%H-%M')
         else:
-            model_config = os.getenv('model_config')
-            if model_config is None:
-                self.session = 'default'
-            else:
-                with open('evaluation/benchmarks/swe_bench/config.toml', 'r') as f:
-                    environ = f.read()
-                    import toml
+            self.session = 'default'
+        model_config = os.getenv('model_config')
+        if model_config:
+            with open('evaluation/benchmarks/swe_bench/config.toml', 'r') as f:
+                environ = f.read()
+                import toml
 
-                    config = toml.loads(environ)
-                    selection_id = config['selected_ids'][0]
-                self.session = (
-                    model_config.split('.')[-1] + '_' + selection_id.split('-')[-1]
-                )
+                config = toml.loads(environ)
+                selection_id = config['selected_ids'][0]
+            self.session = (
+                model_config.split('.')[-1] + '_' + selection_id.split('-')[-1]
+            )
         self.log_directory = os.path.join(LOG_DIR, 'llm', self.session)
         os.makedirs(self.log_directory, exist_ok=True)
         # Clear the log directory if not in debug mode
