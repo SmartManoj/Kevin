@@ -74,10 +74,23 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
         f'Please address the following GitHub issue for the repository, where the source code is available in the /testbed directory, which I have access to.\n'
         '# Title\n'
         f'{instance.problem_statement}\n\n'
-        'The current working directory is /testbed.\n'
+        '\n$ pwd\n'
+        '/testbed\n'
     )
     if 1:
-        instruction += (
+        numbered_instructions = [
+            'Locate the actual relevant library file that raised this error in /testbed using `find_file`.'
+            'Inspect the function using `show_function_at_line`.'
+        ]
+        for k, inst in enumerate(numbered_instructions):
+            instruction += f'Step {k + 1}: {inst}\n'
+        important_instructions = [
+            'Only use one skill at a time.',
+        ]
+        instruction += '\nImportant Instructions:\n'
+        for inst in important_instructions:
+            instruction += f'{inst}\n'
+        instruction1 = (
             'Do not provide suggestions or workarounds. Directly fix the issue by modifying the source code.\n'
             'Plan:\n'
             # '*) Reproduce the issue in the test code before fixing it;\n'
