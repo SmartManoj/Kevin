@@ -2,8 +2,8 @@ import json
 from time import sleep
 
 import requests
-
-sandbox_port = 63710
+import os 
+sandbox_port = os.environ.get('SANDBOX_PORT', 63710)
 def run_ipython(code):
     return {
         'action': {
