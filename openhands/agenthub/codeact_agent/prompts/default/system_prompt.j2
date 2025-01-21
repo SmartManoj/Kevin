@@ -24,7 +24,11 @@ The assistant can browse the Internet with <execute_browse> and </execute_browse
 For example, <execute_browse> Tell me the usa's president using google search </execute_browse>.
 Or <execute_browse> Tell me what is in http://example.com </execute_browse>.
 {% endset %}
+{%- if use_browser %}
+{% set SYSTEM_PREFIX = MINIMAL_SYSTEM_PREFIX + BROWSING_PREFIX %}
+{%- else %}
 {% set SYSTEM_PREFIX = MINIMAL_SYSTEM_PREFIX %}
+{%- endif %}
 {% set COMMAND_DOCS %}
 Apart from the standard Python library, the assistant can also use the following functions (already imported) in <execute_ipython> environment:
 

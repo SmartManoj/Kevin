@@ -121,6 +121,7 @@ class CodeActAgent(Agent):
                 agent_skills_docs=AgentSkillsRequirement.documentation,
                 disabled_microagents=self.config.disabled_microagents,
                 use_bash=self.config.codeact_enable_bash,
+                use_browser=self.config.codeact_enable_browsing,
             )
             return
         # Function calling mode

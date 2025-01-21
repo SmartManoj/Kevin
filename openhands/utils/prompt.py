@@ -77,6 +77,7 @@ class PromptManager:
         agent_skills_docs: str = '',
         disabled_microagents: list[str] | None = None,
         use_bash: bool = True,
+        use_browser: bool = False,
     ):
         self.disabled_microagents: list[str] = disabled_microagents or []
         self.prompt_dir: str = prompt_dir
@@ -90,6 +91,7 @@ class PromptManager:
         self.repo_microagents: dict[str, RepoMicroAgent] = {}
 
         self.use_bash = use_bash
+        self.use_browser = use_browser
 
         if microagent_dir:
             # This loads micro-agents from the microagent_dir
@@ -141,6 +143,7 @@ class PromptManager:
         return self.system_template.render(
             agent_skills_docs=self.agent_skills_docs,
             use_bash=self.use_bash,
+            use_browser=self.use_browser,
         ).strip()
 
     def get_additional_info(self) -> str:
