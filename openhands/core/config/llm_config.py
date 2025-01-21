@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
-
 from typing import Any
+
 from pydantic import BaseModel, Field, SecretStr
 
 from openhands.core.logger import LOG_DIR
@@ -12,6 +12,10 @@ class LLMConfig(BaseModel):
     """Configuration for the LLM model.
 
     Attributes:
+        # custom configs
+        use_group: The group to use for the LLM.
+        enable_cache: Whether to enable caching.
+        # litellm configs
         model: The model to use.
         api_key: The API key to use.
         base_url: The base URL for the API. This is necessary for local LLMs. It is also used for Azure embeddings.
@@ -41,15 +45,16 @@ class LLMConfig(BaseModel):
         enable_cache: Whether to enable caching.
         modify_params: Modify params allows litellm to do transformations like adding a default message, when a message is empty.
         disable_vision: If model is vision capable, this option allows to disable image processing (useful for cost reduction).
-        reasoning_effort: The effort to put into reasoning. This is a string that can be one of 'low', 'medium', 'high', or 'none'. Exclusive for o1 models.
         caching_prompt: Use the prompt caching feature if provided by the LLM and supported by the provider.
         log_completions: Whether to log LLM completions to the state.
         log_completions_folder: The folder to log LLM completions to. Required if log_completions is True.
         custom_tokenizer: A custom tokenizer to use for token counting.
         native_tool_calling: Whether to use native tool calling if supported by the model. Can be True, False, or not set.
-
-        use_group: The group to use for the LLM.
+        reasoning_effort: The effort to put into reasoning. This is a string that can be one of 'low', 'medium', 'high', or 'none'. Exclusive for o1 models.
     """
+    # custom configs
+    use_group: str | None = None
+    enable_cache: bool = False
 
     model: str = Field(default='claude-3-5-sonnet-20241022')
     api_key: SecretStr | None = Field(default=None)
@@ -89,10 +94,8 @@ class LLMConfig(BaseModel):
     log_completions_folder: str = Field(default=os.path.join(LOG_DIR, 'completions'))
     custom_tokenizer: str | None = Field(default=None)
     native_tool_calling: bool | None = Field(default=None)
-    
-    # custom configs
-    use_group: str | None = None
-    enable_cache: bool = False
+    reasoning_effort: str | None = Field(default=None)
+
 
     def model_post_init(self, __context: Any):
         """Post-initialization hook to assign OpenRouter-related variables to environment variables.

@@ -210,6 +210,12 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             top_p=self.config.top_p,
             caching=self.config.enable_cache,
             drop_params=self.config.drop_params,
+            # add reasoning_effort, only if the model is supported
+            **(
+                {'reasoning_effort': self.config.reasoning_effort}
+                if self.config.model.lower() in REASONING_EFFORT_SUPPORTED_MODELS
+                else {}
+            ),
         )
 
         def is_hallucination(text) -> bool:
@@ -345,9 +351,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                         if message_back:
                             resp = {'choices': [{'message': {'content': message_back}}]}
                             
-            # Set reasoning effort for models that support it
-            if self.config.model.lower() in REASONING_EFFORT_SUPPORTED_MODELS:
-                kwargs['reasoning_effort'] = self.config.reasoning_effort
+           
 
             # set litellm modify_params to the configured value
             # True by default to allow litellm to do transformations like adding a default message, when a message is empty
