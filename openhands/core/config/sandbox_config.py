@@ -39,9 +39,12 @@ class SandboxConfig(BaseModel):
             This should be a JSON string that will be parsed into a dictionary.
     """
 
+    # modified configs
+    keep_runtime_alive: bool = Field(default=True)
     remote_runtime_api_url: str | None = Field(default=None)
+
+    # original configs
     local_runtime_url: str = Field(default='http://localhost')
-    keep_runtime_alive: bool = Field(default=False)
     rm_all_containers: bool = Field(default=False)
     api_key: str | None = Field(default=None)
     base_container_image: str = Field(
