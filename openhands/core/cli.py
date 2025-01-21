@@ -179,7 +179,7 @@ async def main(loop: asyncio.AbstractEventLoop):
         asyncio.create_task(prompt_for_next_task())
 
     await run_agent_until_done(
-        controller, runtime, [AgentState.STOPPED, AgentState.ERROR]
+        controller, runtime, [AgentState.STOPPED, AgentState.ERROR, AgentState.FINISHED]
     )
 
 
