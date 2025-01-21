@@ -29,8 +29,8 @@ build:
 	@$(MAKE) -s build-frontend
 	@echo "$(GREEN)Build completed successfully.$(RESET)"
 	@if [ -z "${BUILD_ONLY}" ]; then \
-		echo "$(YELLOW)Running ..$(RESET)"
-		$(MAKE) -s run
+		echo "$(YELLOW)Running ..$(RESET)"; \
+		$(MAKE) -s run; \
 	fi
 
 check-dependencies:
