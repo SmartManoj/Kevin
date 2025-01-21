@@ -190,7 +190,7 @@ class LocalRuntime(ActionExecutionClient):
             server_port=self._host_port,
             plugins=self.plugins,
             app_config=self.config,
-            python_prefix=[],
+            python_prefix=['poetry', 'run'],
             override_user_id=self._user_id,
             override_username=self._username,
         )
@@ -276,7 +276,7 @@ class LocalRuntime(ActionExecutionClient):
     def _wait_until_alive(self):
         """Wait until the server is ready to accept requests."""
         if self.server_process and self.server_process.poll() is not None:
-            raise RuntimeError('Server process died')
+            raise RuntimeError(f'Server process died with exit code {self.server_process.poll()}')
 
         try:
             response = self.session.get(f'{self.api_url}/alive')
