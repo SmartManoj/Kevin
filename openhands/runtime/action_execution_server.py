@@ -176,10 +176,10 @@ class ActionExecutor:
         INIT_COMMANDS += [
             'export TERM=xterm-256color',
             'set +H',
-            'cd /workspace',
         ]
         if not is_local_runtime:
             INIT_COMMANDS += [
+                'cd /workspace',
                 "export PATH=/openhands/poetry/$(ls /openhands/poetry | sed -n '2p')/bin:$PATH",
             ]
         logger.debug(f'Initializing by running {len(INIT_COMMANDS)} bash commands...')
