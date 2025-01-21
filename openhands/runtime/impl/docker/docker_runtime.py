@@ -223,7 +223,8 @@ class DockerRuntime(ActionExecutionClient):
         try:
             self.copy_to('sandbox.env', '/openhands/code')
         except Exception as e:
-            logger.error(f'Error copying sandbox.env to runtime: {e}')
+            # logger.error(f'Error copying sandbox.env to runtime: {e}')
+            pass
 
     @staticmethod
     @lru_cache(maxsize=1)
