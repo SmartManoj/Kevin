@@ -172,9 +172,9 @@ def load_from_toml(cfg: AppConfig, toml_file: str = 'config.toml'):
                     # Process custom named LLM configs
                     for nested_key, nested_value in value.items():
                         if isinstance(nested_value, dict):
-                            logger.openhands_logger.debug(
-                                f'Processing custom LLM config "{nested_key}":'
-                            )
+                            # logger.openhands_logger.debug(
+                            #     f'Processing custom LLM config "{nested_key}":'
+                            # )
                             # Apply generic LLM config with custom LLM overrides, e.g.
                             # [llm]
                             # model="..."
