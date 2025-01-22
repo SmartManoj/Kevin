@@ -320,16 +320,11 @@ class CodeActAgent(Agent):
             obs.content = ansi_color_escape.sub('', obs.content)
             if obs.tool_call_metadata is None:
                 text = truncate_content(
-                    f'\nObserved result of command executed by user:\n{obs.content}',
+                    f'\nObserved result of command executed by user:\n{obs.to_agent_observation()}',
                     max_message_chars,
                 )
             else:
-                text = truncate_content(
-                    obs.content,
-                    max_message_chars,
-                )
-            if obs.exit_code != 0:
-                text += f'\n[Command finished with exit code {obs.exit_code}. Why did you run this command?]'
+                text = truncate_content(obs.to_agent_observation(), max_message_chars)
         elif isinstance(obs, IPythonRunCellObservation):
             text = obs.content
             # replace base64 images with a placeholder

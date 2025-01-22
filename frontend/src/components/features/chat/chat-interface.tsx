@@ -1,8 +1,11 @@
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 import React from "react";
 import posthog from "posthog-js";
+import { useParams } from "react-router";
 import { convertImageToBase64 } from "#/utils/convert-image-to-base-64";
 import { FeedbackActions } from "../feedback/feedback-actions";
+import { ExportActions } from "../export/export-actions";
 import { createChatMessage, createRegenerateLastMessage } from "#/services/chat-service";
 import { InteractiveChatBox } from "./interactive-chat-box";
 import { addUserMessage, removeLastAssistantMessage } from "#/state/chat-slice";
@@ -25,6 +28,8 @@ import { useTranslation } from "react-i18next";
 import { VolumeIcon } from "#/components/shared/buttons/volume-icon";
 import { FaSyncAlt } from "react-icons/fa";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
+import { useGetTrajectory } from "#/hooks/mutation/use-get-trajectory";
+import { downloadTrajectory } from "#/utils/download-files";
 
 function getEntryPoint(
   hasRepository: boolean | null,
@@ -56,6 +61,8 @@ export function ChatInterface() {
   const { selectedRepository, importedProjectZip } = useSelector(
     (state: RootState) => state.initialQuery,
   );
+  const params = useParams();
+  const { mutate: getTrajectory } = useGetTrajectory();
 
   const handleSendMessage = async (content: string, files: File[]) => {
     if (messages.length === 0) {
@@ -130,6 +137,25 @@ export function ChatInterface() {
   }, [curAgentState]);
 
 
+  const onClickExportTrajectoryButton = () => {
+    if (!params.conversationId) {
+      toast.error("ConversationId unknown, cannot download trajectory");
+      return;
+    }
+
+    getTrajectory(params.conversationId, {
+      onSuccess: async (data) => {
+        await downloadTrajectory(
+          params.conversationId ?? "unknown",
+          data.trajectory,
+        );
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
+  };
+
   const isWaitingForUserInput =
     curAgentState === AgentState.AWAITING_USER_INPUT ||
     curAgentState === AgentState.FINISHED;
@@ -192,6 +218,9 @@ export function ChatInterface() {
                 {<FaSyncAlt className="inline mr-2 w-3 h-3" />}
               </div>
             </button>
+            <ExportActions
+            onExportTrajectory={() => onClickExportTrajectoryButton()}
+          />
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0">
             {messages.length > 2 &&
