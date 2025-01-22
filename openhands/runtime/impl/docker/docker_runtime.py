@@ -233,7 +233,7 @@ class DockerRuntime(ActionExecutionClient):
             return docker.from_env()
         except Exception as e:
             logger.error(
-                f'Is Docker Desktop running?\n{e}',
+                f'Is Docker Desktop running? If so, check `docker ps` output for errors.\n{e}',
             )
             os._exit(0)
 
