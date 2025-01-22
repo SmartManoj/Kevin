@@ -3,6 +3,7 @@ import base64
 import io
 import json
 import multiprocessing
+import os
 import time
 import uuid
 
@@ -25,6 +26,8 @@ BROWSER_EVAL_GET_REWARDS_ACTION = 'GET_EVAL_REWARDS'
 
 class BrowserEnv:
     def __init__(self, browsergym_eval_env: str | None = None):
+        if os.getenv('DISABLE_BROWSER') == '1':
+            return
         self.html_text_converter = self.get_html_text_converter()
         self.eval_mode = False
         self.eval_dir = ''
@@ -179,6 +182,8 @@ class BrowserEnv:
             logger.debug(f'Browser env is not alive. Response ID: {response_id}')
 
     def close(self):
+        if os.getenv('DISABLE_BROWSER') == '1':
+            return
         if not self.process.is_alive():
             return
         try:
