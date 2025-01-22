@@ -299,7 +299,6 @@ run:
 	@echo "$(YELLOW)Running the app...$(RESET)"
 	@$(MAKE) -s _run_check
 	@poetry run uvicorn openhands.server.listen:app --host $(BACKEND_HOST) --port $(BACKEND_PORT)
-	@echo "$(GREEN)Application started successfully.$(RESET)"
 
 # Start both backend and frontend servers
 start:
