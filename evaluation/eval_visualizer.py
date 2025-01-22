@@ -27,6 +27,8 @@ if 1 or sys.argv[1:]:
         null_observation = ', {"message": "No observation", "observation": "null", "content": "", "extras": {}}'
         data = [line.replace(null_observation, '') for line in data]
         data = [json.loads(line) for line in data]
+        # visualize particular instance
+        # data = [data[26]]
         history = []
         for d in data:
             history.extend(d['history'])
