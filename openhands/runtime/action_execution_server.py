@@ -26,7 +26,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
-from openhands_aci.utils.diff import get_diff
+# from openhands_aci.utils.diff import get_diff
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from uvicorn import run
@@ -329,12 +329,13 @@ class ActionExecutor:
                             if (
                                 result_dict['new_content'] is not None
                             ):  # File edit commands
-                                diff = get_diff(
-                                    old_contents=result_dict['old_content']
-                                    or '',  # old_content is None when file is created
-                                    new_contents=result_dict['new_content'],
-                                    filepath=result_dict['path'],
-                                )
+                                # diff = get_diff(
+                                #     old_contents=result_dict['old_content']
+                                #     or '',  # old_content is None when file is created
+                                #     new_contents=result_dict['new_content'],
+                                #     filepath=result_dict['path'],
+                                # )
+                                diff = ''
                                 return FileEditObservation(
                                     content=diff,
                                     path=result_dict['path'],

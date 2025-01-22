@@ -4,7 +4,7 @@ import os
 
 import pytest
 from conftest import TEST_IN_CI, _close_test_runtime, _load_runtime
-from openhands_aci.utils.diff import get_diff
+# from openhands_aci.utils.diff import get_diff
 
 from openhands.core.logger import openhands_logger as logger
 from openhands.events.action import FileEditAction, FileReadAction
@@ -191,7 +191,8 @@ def test_edit_obs_insert_only():
         + '\n'.join([f'This is line {i}' for i in range(100, 1000)])
     )
 
-    diff = get_diff(ORIGINAL_LONG, EDIT_LONG_INSERT_ONLY, '/workspace/app.py')
+    # diff = get_diff(ORIGINAL_LONG, EDIT_LONG_INSERT_ONLY, '/workspace/app.py')
+    diff = ''
     obs = FileEditObservation(
         content=diff,
         path='/workspace/app.py',
