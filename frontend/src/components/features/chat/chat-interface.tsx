@@ -4,8 +4,7 @@ import React from "react";
 import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { convertImageToBase64 } from "#/utils/convert-image-to-base-64";
-import { FeedbackActions } from "../feedback/feedback-actions";
-import { ExportActions } from "../export/export-actions";
+import { TrajectoryActions } from "../trajectory/trajectory-actions";
 import { createChatMessage, createRegenerateLastMessage } from "#/services/chat-service";
 import { InteractiveChatBox } from "./interactive-chat-box";
 import { addUserMessage, removeLastAssistantMessage } from "#/state/chat-slice";
@@ -198,15 +197,16 @@ export function ChatInterface() {
       <div className="flex flex-col gap-[6px] px-4 pb-4">
         <div className="flex justify-between relative">
           <div className="flex gap-1">
-            <FeedbackActions
-              onPositiveFeedback={() =>
-                onClickShareFeedbackActionButton("positive")
-              }
-              onNegativeFeedback={() =>
-                onClickShareFeedbackActionButton("negative")
-              }
-            />
-            <button
+          <TrajectoryActions
+            onPositiveFeedback={() =>
+              onClickShareFeedbackActionButton("positive")
+            }
+            onNegativeFeedback={() =>
+              onClickShareFeedbackActionButton("negative")
+            }
+            onExportTrajectory={() => onClickExportTrajectoryButton()}
+          />
+          <button
               style={{
                 width: "25%",
               }}
@@ -217,10 +217,7 @@ export function ChatInterface() {
               <div style={{ top: "-2px", position: "relative" }}>
                 {<FaSyncAlt className="inline mr-2 w-3 h-3" />}
               </div>
-            </button>
-            <ExportActions
-            onExportTrajectory={() => onClickExportTrajectoryButton()}
-          />
+          </button>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0">
             {messages.length > 2 &&
