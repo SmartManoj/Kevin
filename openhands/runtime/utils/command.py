@@ -1,3 +1,4 @@
+import os
 from openhands.core.config import AppConfig
 from openhands.runtime.plugins import PluginRequirement
 
@@ -59,7 +60,7 @@ def get_action_execution_server_startup_command(
         *browsergym_args,
     ]
 
-    if is_root and use_nice_for_root:
+    if is_root and use_nice_for_root and not os.environ.get('LOCAL_RUNTIME_MODE'):
         # If running as root, set highest priority and lowest OOM score
         cmd_str = ' '.join(base_cmd)
         return [
