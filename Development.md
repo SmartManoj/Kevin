@@ -94,7 +94,7 @@ poetry run pytest ./tests/unit/test_*.py
 
 ### 9. Add or update dependency
 1. Add your dependency in `pyproject.toml` or use `poetry add xxx`.
-2. Update the poetry.lock file via `poetry lock --no-update`.
+2. Update the poetry.lock file via `poetry lock`.
 
 ### 9. Use existing Docker image
 To reduce build time (e.g., if no changes were made to the client-runtime component), you can use an existing Docker container image by
