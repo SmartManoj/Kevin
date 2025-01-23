@@ -15,7 +15,7 @@ export IGNORE_COST=1
 export CONTINUE_ON_STEP=3
 max_iter=$((CONTINUE_ON_STEP + 15))
 num_workers=1
-dataset=princeton-nlp/SWE-bench_Verified
+dataset=princeton-nlp/SWE-bench
 split=test
 export SWE_BENCH=1
 ./evaluation/benchmarks/swe_bench/scripts/run_infer.sh $model_config $git_version $agent $eval_limit $max_iter $num_workers $dataset $split
