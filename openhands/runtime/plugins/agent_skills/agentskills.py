@@ -1,5 +1,5 @@
 from inspect import signature
-from openhands.sel.selenium_tester import driver, create_driver
+import os
 from openhands.runtime.plugins.agent_skills import file_ops, file_reader
 from openhands.runtime.plugins.agent_skills.utils.dependency import import_functions
 
@@ -32,11 +32,12 @@ for func_name in __all__:
 # from openhands.runtime.plugins.agent_skills.file_editor import file_editor  # noqa: E402
 
 # __all__ += ['file_editor']
+if not os.environ.get('DISABLE_BROWSER'):
+    from openhands.sel.selenium_tester import driver, create_driver
+    def dss():
+        '''
+        Alias to driver.get_screenshot_as_png()
+        '''
+        return driver.get_screenshot_as_png()
 
-def dss():
-    '''
-    Alias to driver.get_screenshot_as_png()
-    '''
-    return driver.get_screenshot_as_png()
-
-__all__ += ['driver', 'dss', 'create_driver']
+    __all__ += ['driver', 'dss', 'create_driver']
