@@ -412,6 +412,7 @@ class EventStreamRuntime(Runtime):
 
         try:
             containers = self.docker_client.containers.list(all=True)
+            return
             for container in containers:
                 try:
                     # If the app doesn't shut down properly, it can leave runtime containers on the system. This ensures
