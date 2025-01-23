@@ -23,7 +23,7 @@ class JupyterPlugin(Plugin):
     async def initialize(self, username: str, kernel_id: str = 'openhands-default'):
         self.kernel_gateway_port = find_available_tcp_port(40000, 49999)
         self.kernel_id = kernel_id
-        if username in ['root', 'openhands']:
+        if not os.environ.get('LOCAL_RUNTIME_MODE'):
             # Non-LocalRuntime
             prefix = f'su - {username} -s '
             # cd to code repo, setup all env vars and run micromamba
