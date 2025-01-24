@@ -555,19 +555,24 @@ display.Image(dss())
             ),
         ]
         example_message = self.prompt_manager.get_example_user_message()
+        user_contents = []
         if example_message:
-            messages.append(
-                Message(
-                    role='user',
-                    content=[
-                        TextContent(
-                            text=example_message,
-                        )
-                    ],
-                    condensable=False,
-                    cache_prompt=self.llm.is_caching_prompt_active(),
-                ),
+            user_contents.append(
+                TextContent(
+                    text=example_message,
+                )
             )
+        # Repository and runtime info
+        additional_info = self.prompt_manager.get_additional_info()
+        if self.config.enable_prompt_extensions and additional_info:
+            # only add these if prompt extension is enabled
+            user_contents.append(
+                TextContent(
+                    text=additional_info,
+                )
+            )
+        
+        
 
         if (
             len(state.history) == 1
@@ -576,21 +581,16 @@ display.Image(dss())
         ):
             workspace_contents = ', '.join(os.listdir(config.workspace_base))
             if workspace_contents:
-                messages.append(
-                    Message(
-                        role='user',
-                        content=[
-                            TextContent(
-                                text=f'WORKSPACE CONTENTS: {workspace_contents}\n\n----------\n'
-                            )
-                        ],
+                user_contents.append(
+                    TextContent(
+                        text=f'WORKSPACE CONTENTS: {workspace_contents}\n\n----------\n'
                     )
                 )
 
         custom_instructions = config.custom_instructions
         if custom_instructions:
-            messages.append(
-                Message(role='user', content=[TextContent(text=custom_instructions)])
+            user_contents.append(
+                TextContent(text=custom_instructions)
             )
         # if state.history.summary:
         #     summary_message = self.get_action_message(
@@ -600,18 +600,17 @@ display.Image(dss())
         #         messages.extend(summary_message)
 
         if task := state.inputs.get('task'):
-            messages.append(Message(role='user', content=[TextContent(text=task)]))
-        # Repository and runtime info
-        additional_info = self.prompt_manager.get_additional_info()
-        if self.config.enable_prompt_extensions and additional_info:
-            # only add these if prompt extension is enabled
+            user_contents.append(TextContent(text=task))
+        
+        if user_contents:
             messages.append(
                 Message(
                     role='user',
-                    content=[TextContent(text=additional_info)],
-                )
+                    content=user_contents,
+                    condensable=False,
+                    cache_prompt=self.llm.is_caching_prompt_active(),
+                ),
             )
-
         pending_tool_call_action_messages: dict[str, Message] = {}
         tool_call_id_to_message: dict[str, Message] = {}
 
