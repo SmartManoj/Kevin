@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, SecretStr, SerializationInfo, field_serializer
-from pydantic.json import pydantic_encoder
+from pydantic_core import to_jsonable_python
 
 from openhands.core.config.llm_config import LLMConfig
 from openhands.core.config.utils import load_app_config
@@ -32,7 +32,7 @@ class Settings(BaseModel):
         if context and context.get('expose_secrets', False):
             return llm_api_key.get_secret_value()
 
-        return pydantic_encoder(llm_api_key)
+        return to_jsonable_python(llm_api_key)
 
     @staticmethod
     def from_config() -> Settings | None:
