@@ -376,11 +376,11 @@ class ActionExecutor:
             self.last_code = action.code
             self.is_last_code_error = 'Traceback (most recent call last)' in obs.content
             # SLM_Tweak
-            if 'NameError:' in obs.content:
-                last_line = obs.content.split('\n')[-1]
-                variable_name = last_line.split("'")[1]
-                action.code = action.code.replace(variable_name, f"'{variable_name}'")
-                return await self.run_ipython(action)
+            # if 'NameError:' in obs.content:
+            #     last_line = obs.content.split('\n')[-1]
+            #     variable_name = last_line.split("'")[1]
+            #     action.code = action.code.replace(variable_name, f"'{variable_name}'")
+            #     return await self.run_ipython(action)
             if self.username != 'root':
                 if 'Traceback (most recent call last)' in obs.content:
                     obs.content += '\n\n[Hint: Use `search_in_stack_overflow(error_message)` to search for solutions.]'
