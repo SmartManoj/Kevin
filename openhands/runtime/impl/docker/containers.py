@@ -1,14 +1,15 @@
 import docker
 
 
-def remove_all_containers(prefix: str):
+def stop_all_containers(prefix: str):
     try:
         docker_client = docker.from_env()
         containers = docker_client.containers.list(all=True)
         for container in containers:
             try:
                 if container.name.startswith(prefix):
-                    # container.remove(force=True)
+                    # TODO: use config to stop containers
+                    # container.stop()
                     pass
             except docker.errors.APIError:
                 pass
@@ -16,3 +17,5 @@ def remove_all_containers(prefix: str):
                 pass
     except docker.errors.DockerException:
         pass
+    finally:
+        docker_client.close()
