@@ -175,6 +175,8 @@ class LocalRuntime(ActionExecutionClient):
 
     async def connect(self):
         """Start the action_execution_server on the local machine."""
+        if self._runtime_initialized:
+            return
         self.send_status_message('STATUS$STARTING_RUNTIME')
 
         self._host_port = self._find_available_port(EXECUTION_SERVER_PORT_RANGE)
