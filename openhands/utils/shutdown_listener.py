@@ -3,6 +3,7 @@ This module monitors the app for shutdown signals
 """
 
 import asyncio
+import os
 import signal
 import threading
 import time
@@ -39,8 +40,9 @@ def _register_signal_handlers():
     # Check if we're in the main thread of the main interpreter
     if threading.current_thread() is threading.main_thread():
         logger.debug('_register_signal_handlers:main_thread')
-        for sig in HANDLED_SIGNALS:
-            _register_signal_handler(sig)
+        if not os.environ.get('LOCAL_RUNTIME_MODE'):
+            for sig in HANDLED_SIGNALS:
+                _register_signal_handler(sig)
     else:
         logger.debug('_register_signal_handlers:not_main_thread')
 
