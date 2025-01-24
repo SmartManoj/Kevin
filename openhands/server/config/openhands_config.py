@@ -55,10 +55,10 @@ class OpenhandsConfig(OpenhandsConfigInterface):
         )
 
         api.add_middleware(CacheControlMiddleware)
-        api.add_middleware(
-            RateLimitMiddleware,
-            rate_limiter=InMemoryRateLimiter(requests=10, seconds=1),
-        )
+        # api.add_middleware(
+        #     RateLimitMiddleware,
+        #     rate_limiter=InMemoryRateLimiter(requests=10, seconds=1),
+        # )
         api.middleware('http')(AttachConversationMiddleware(api))
 
 
