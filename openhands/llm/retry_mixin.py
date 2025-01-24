@@ -66,7 +66,6 @@ class RetryMixin:
         else:
             logger.error(
                 f'{exception}. Attempt #{retry_state.attempt_number} | You can customize retry values in the configuration.',
-                exc_info=False,
             )
         import os
 

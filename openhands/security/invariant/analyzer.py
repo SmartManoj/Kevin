@@ -59,9 +59,8 @@ class InvariantAnalyzer(SecurityAnalyzer):
         try:
             self.docker_client = docker.from_env()
         except Exception as ex:
-            logger.exception(
+            logger.error(
                 'Error creating Invariant Security Analyzer container. Please check that Docker is running or disable the Security Analyzer in settings.',
-                exc_info=False,
             )
             raise ex
         running_containers = self.docker_client.containers.list(
