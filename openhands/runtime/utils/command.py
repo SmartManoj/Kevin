@@ -49,7 +49,7 @@ def get_action_execution_server_startup_command(
         '-u',
         '-m',
         'openhands.runtime.action_execution_server',
-        str(server_port), # Don't change port order
+        str(server_port),
         '--working-dir',
         app_config.workspace_mount_path_in_sandbox,
         *plugin_args,
