@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
     metadata = make_metadata(
         llm_config,
-        args.dataset_name,
+        'webarena',
         args.agent_cls,
         args.max_iterations,
         args.eval_note,
