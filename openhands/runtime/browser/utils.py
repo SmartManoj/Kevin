@@ -58,6 +58,10 @@ async def browse(
             content=obs['text_content'],  # text content of the page
             url=obs.get('url', ''),  # URL of the page
             screenshot=obs.get('screenshot', ''),  # base64-encoded screenshot, png
+            set_of_marks=obs.get(
+                'set_of_marks', ''
+            ),  # base64-encoded Set-of-Marks annotated screenshot, png,
+            goal_image_urls=obs.get('image_content', []),
             open_pages_urls=obs.get('open_pages_urls', []),  # list of open pages
             active_page_index=obs.get(
                 'active_page_index', -1
