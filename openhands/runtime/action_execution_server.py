@@ -155,9 +155,9 @@ class ActionExecutor:
 
     async def _init_plugin(self, plugin: Plugin):
         assert self.bash_session is not None
+        logger.debug(f'Initializing plugin: {plugin.name}')
         await plugin.initialize(self.username)
         self.plugins[plugin.name] = plugin
-        logger.debug(f'Initializing plugin: {plugin.name}')
 
         if isinstance(plugin, JupyterPlugin):
             await self.run_ipython(
