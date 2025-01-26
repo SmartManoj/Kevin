@@ -206,12 +206,12 @@ class BashSession:
         self.session.set_option('history-limit', str(self.HISTORY_LIMIT), _global=True)
         self.session.history_limit = self.HISTORY_LIMIT
         # We need to create a new pane because the initial pane's history limit is (default) 2000
-        _initial_window = self.session.attached_window
+        _initial_window = self.session.active_window
         self.window = self.session.new_window(
             window_shell=window_command,
             start_directory=self.work_dir,
         )
-        self.pane = self.window.attached_pane
+        self.pane = self.window.active_pane
         logger.debug(f'pane: {self.pane}; history_limit: {self.session.history_limit}')
         _initial_window.kill_window()
 
