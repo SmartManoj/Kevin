@@ -90,7 +90,6 @@ class AppConfig(BaseModel):
 
     defaults_dict: ClassVar[dict] = {}
 
-    model_config = {'extra': 'forbid'}
 
     def get_llm_config(self, name='llm') -> LLMConfig:
         """'llm' is the name for default config (for backward compatibility prior to 0.8)."""
