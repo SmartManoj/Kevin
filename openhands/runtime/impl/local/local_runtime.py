@@ -236,12 +236,12 @@ class LocalRuntime(ActionExecutionClient):
         def log_output():
             while (
                 self.server_process
-                and self.server_process.poll()
+                and self.server_process.poll() is None
                 and self.server_process.stdout
             ):
                 line = self.server_process.stdout.readline()
                 if not line:
-                    break
+                    continue
                 self.log('debug', f'Server: {line.strip()}')
 
         self._log_thread = threading.Thread(target=log_output, daemon=True)
