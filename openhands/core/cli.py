@@ -174,8 +174,9 @@ async def main(loop: asyncio.AbstractEventLoop):
     if not os.environ.get('DEBUG'):
         logger.setLevel(logging.WARNING)
 
-    if args.task:
-        action = MessageAction(content=args.task)
+    task = args.task or os.environ.get('OPENHANDS_TASK')
+    if task:
+        action = MessageAction(content=task)
         event_stream.add_event(action, EventSource.USER)
     else:
         asyncio.create_task(prompt_for_next_task())
