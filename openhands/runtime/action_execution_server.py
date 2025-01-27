@@ -117,6 +117,9 @@ class ActionExecutor:
 
     async def ainit(self):
         # bash needs to be initialized first
+        if os.environ.get('USE_PEXPECT') == '1':
+            from openhands.runtime.utils.bash_pexpect import BashSession
+
         self.bash_session = BashSession(
             work_dir=self._initial_cwd,
             username=self.username,
