@@ -220,7 +220,8 @@ class LocalRuntime(ActionExecutionClient):
         env['POETRY_VIRTUALENVS_PATH'] = poetry_venvs_path
         logger.debug(f'POETRY_VIRTUALENVS_PATH: {poetry_venvs_path}')
 
-        check_dependencies(code_repo_path, poetry_venvs_path)
+        if os.environ.get('SKIP_DEPENDENCY_CHECK') != '1':
+            check_dependencies(code_repo_path, poetry_venvs_path)
         self.server_process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
