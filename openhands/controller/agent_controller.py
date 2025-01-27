@@ -721,7 +721,7 @@ class AgentController:
                     EventSource.AGENT,
                 )
                 return
-            except (ContextWindowExceededError, BadRequestError) as e:
+            except Exception as e:
                 # FIXME: this is a hack until a litellm fix is confirmed
                 # Check if this is a nested context window error
                 error_str = str(e).lower()
