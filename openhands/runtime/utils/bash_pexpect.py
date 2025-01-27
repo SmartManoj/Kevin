@@ -171,15 +171,15 @@ class BashSession:
         self.child = pexpect.spawn('/bin/bash', encoding='utf-8', timeout=30)
         self.child.expect(r'\$')  # Wait for the shell prompt
 
-        # Set the working directory
-        self.child.sendline(f'cd {self.work_dir}')
-        self.child.expect(r'\$')
 
         logger.info(f'PS1: {self.PS1}')
         # Configure bash to use a simple PS1 prompt
         self.child.sendline(f'export PS1="{self.PS1}"')
         self.child.expect(self.bash_expect_regex)
 
+        # Set the working directory
+        self.child.sendline(f'cd {self.work_dir}')
+        self.child.expect(self.bash_expect_regex)
 
         logger.debug(f'Bash session initialized with work dir: {self.work_dir}')
 
