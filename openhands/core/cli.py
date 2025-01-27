@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import sys
 import traceback
 from uuid import uuid4
@@ -170,7 +171,8 @@ async def main(loop: asyncio.AbstractEventLoop):
 
     await runtime.connect()
 
-    logger.setLevel(logging.WARNING)
+    if not os.environ.get('DEBUG'):
+        logger.setLevel(logging.WARNING)
 
     if args.task:
         action = MessageAction(content=args.task)
