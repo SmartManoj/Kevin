@@ -76,10 +76,13 @@ LOG_COLORS: Mapping[str, ColorType] = {
 
 
 class StackInfoFilter(logging.Filter):
+    def __init__(self, logger: logging.Logger):
+        self.logger = logger
+
     def filter(self, record):
         if record.levelno >= logging.ERROR:
-            record.stack_info = True
-            record.exc_info = True
+            record.stack_info =  self.logger.findCaller(True, 2)[-1]
+            record.exc_info = sys.exc_info()
         return True
 
 
@@ -92,6 +95,9 @@ class NoColorFormatter(logging.Formatter):
         # Strip ANSI color codes from the message
         new_record.msg = strip_ansi(new_record.msg)
 
+        
+        if isinstance(new_record.exc_info, bool):
+            new_record.exc_info = None
         return super().format(new_record)
 
 
@@ -300,7 +306,7 @@ if LOG_LEVEL in logging.getLevelNamesMapping():
 openhands_logger.setLevel(current_log_level)
 
 if DEBUG:
-    openhands_logger.addFilter(StackInfoFilter())
+    openhands_logger.addFilter(StackInfoFilter(openhands_logger))
 
 if current_log_level == logging.DEBUG:
     LOG_TO_FILE = True
@@ -437,3 +443,7 @@ def _setup_llm_logger(name: str, log_level: int):
 
 llm_prompt_logger = _setup_llm_logger('prompt', logging.DEBUG)
 llm_response_logger = _setup_llm_logger('response', logging.DEBUG)
+
+
+if __name__ == '__main__':
+    openhands_logger.error('DEBUG mode enabled.',)
