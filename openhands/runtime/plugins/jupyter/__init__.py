@@ -51,10 +51,11 @@ class JupyterPlugin(Plugin):
                     'This is required for the jupyter plugin to work with LocalRuntime.'
                 )
             poetry_prefix = f'cd {code_repo_path}\n'
+        jupyter_prefix = 'poetry run ' if os.environ.get('SKIP_POETRY') != '1' else ''
         jupyter_launch_command = (
             f"{prefix}/bin/bash << 'EOF'\n"
             f'{poetry_prefix}'
-            'poetry run jupyter kernelgateway '
+            f'{jupyter_prefix}jupyter kernelgateway '
             '--KernelGatewayApp.ip=0.0.0.0 '
             f'--KernelGatewayApp.port={self.kernel_gateway_port}\n'
             'EOF'

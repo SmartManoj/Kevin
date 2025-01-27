@@ -53,8 +53,9 @@ def check_dependencies(code_repo_path: str, poetry_venvs_path: str):
         )
     # Check jupyter is installed
     logger.debug('Checking dependencies: Jupyter')
+    jupyter_prefix = 'poetry run ' if os.environ.get('SKIP_POETRY') != '1' else ''
     output = subprocess.check_output(
-        'poetry run jupyter --version',
+        f'{jupyter_prefix}jupyter --version',
         shell=True,
         text=True,
         cwd=code_repo_path,
@@ -192,7 +193,7 @@ class LocalRuntime(ActionExecutionClient):
             server_port=self._host_port,
             plugins=self.plugins,
             app_config=self.config,
-            python_prefix=['poetry', 'run'],
+            python_prefix=['poetry', 'run'] if os.environ.get('SKIP_POETRY') != '1' else [],
             override_user_id=self._user_id,
             override_username=self._username,
         )
@@ -216,7 +217,7 @@ class LocalRuntime(ActionExecutionClient):
             .splitlines()[0]
             .split(':')[1]
             .strip()
-        )
+        )  if os.environ.get('SKIP_POETRY') != '1' else 'DUMMY'
         env['POETRY_VIRTUALENVS_PATH'] = poetry_venvs_path
         logger.debug(f'POETRY_VIRTUALENVS_PATH: {poetry_venvs_path}')
 
