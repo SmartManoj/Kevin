@@ -116,7 +116,9 @@ class JupyterPlugin(Plugin):
 
 if __name__ == '__main__':
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv('sandbox.env')
+    import os
+    os.environ['DEBUG'] = '1'
     jupyter = JupyterPlugin()
     import asyncio
     asyncio.run(jupyter.initialize('smart'))
