@@ -379,7 +379,7 @@ class LlmFileHandler(logging.FileHandler):
         """
         self.filename = filename
         self.message_counter = 1
-        if DEBUG:
+        if DEBUG and not os.getenv('SINGLE_LOG_FOLDER'):
             self.session = datetime.now().strftime('%y-%m-%d_%H-%M')
         else:
             self.session = 'default'
