@@ -391,7 +391,6 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '-i',
         '--max-iterations',
-        default=OH_MAX_ITERATIONS,
         type=int,
         help='The maximum number of iterations to run the agent',
     )
@@ -517,3 +516,8 @@ def setup_config_from_args(args: argparse.Namespace) -> AppConfig:
         config.max_budget_per_task = args.max_budget_per_task
 
     return config
+
+if __name__ == '__main__':
+    args = parse_arguments()
+    config = setup_config_from_args(args)
+    print(f'Max iterations: {config.max_iterations}')
