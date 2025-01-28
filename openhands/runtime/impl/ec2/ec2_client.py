@@ -26,7 +26,7 @@ def execute():
         data = flask.request.json
         command = data.get('command')
         for editor in ['nano', 'vi', 'vim', 'pico', 'joe', 'emacs']:
-            if f'{editor} ' in command:
+            if command.startswith(f'{editor} '):
                 output = f'Use non interactive command to edit files'
                 break
         else:

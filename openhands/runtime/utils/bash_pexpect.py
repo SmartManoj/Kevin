@@ -213,7 +213,9 @@ class BashSession:
             if self.cwd == path:
                 output = '[You are already in this directory.]'
         elif self.username == 'root':
-            if command.startswith('git blame'):
+            if any(command.startswith(f'{editor} ') for editor in ['nano', 'vi', 'vim', 'pico', 'joe', 'emacs']):
+                output = f'Use non interactive command to edit files'
+            elif command.startswith('git blame'):
                 output = "[Don't use git commands. Just directly give the solution.]"
             elif 'pip install' in command and os.getenv('NO_PIP_INSTALL') == '1':
                 output = '[Use the current packages only.]'
