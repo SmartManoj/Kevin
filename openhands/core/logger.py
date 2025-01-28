@@ -15,8 +15,8 @@ with warnings.catch_warnings():
 from termcolor import colored
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
-DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
-DEBUG_LLM = os.getenv('DEBUG_LLM', 'False').lower() in ['true', '1', 'yes']
+DEBUG = os.getenv('DEBUG', '').lower() in ['true', '1']
+DEBUG_LLM = os.getenv('DEBUG_LLM', '').lower() in ['true', '1']
 
 # Configure litellm logging based on DEBUG_LLM
 if DEBUG_LLM:
@@ -81,7 +81,8 @@ class StackInfoFilter(logging.Filter):
 
     def filter(self, record):
         if record.levelno >= logging.ERROR:
-            record.stack_info =  self.logger.findCaller(True, 2)[-1]
+            if os.getenv('DEBUG') == '2':
+                record.stack_info =  self.logger.findCaller(True, 2)[-1]
             record.exc_info = sys.exc_info()
         return True
 
