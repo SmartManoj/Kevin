@@ -562,18 +562,8 @@ display.Image(dss())
                     text=example_message,
                 )
             )
-        # Repository and runtime info
-        additional_info = self.prompt_manager.get_additional_info()
-        if self.config.enable_prompt_extensions and additional_info:
-            # only add these if prompt extension is enabled
-            user_contents.append(
-                TextContent(
-                    text=additional_info,
-                )
-            )
         
         
-
         if (
             len(state.history) == 1
             and config.run_as_openhands
@@ -617,6 +607,7 @@ display.Image(dss())
         # Condense the events from the state.
         events = self.condenser.condensed_history(state)
 
+        is_first_message_handled = False
         for k, event in enumerate(events):
             # create a regular message from an event
             if isinstance(event, Action):
@@ -667,11 +658,22 @@ display.Image(dss())
             for response_id in _response_ids_to_remove:
                 pending_tool_call_action_messages.pop(response_id)
 
-            for message in messages_to_add:
-                if message:
-                    if message.role == 'user':
-                        self.prompt_manager.enhance_message(message)
-                    messages.append(message)
+            for msg in messages_to_add:
+                if msg:
+                    if msg.role == 'user' and not is_first_message_handled:
+                        is_first_message_handled = True
+                        # compose the first user message with examples
+                        self.prompt_manager.add_examples_to_initial_message(msg)
+
+                        # and/or repo/runtime info
+                        if self.config.enable_prompt_extensions:
+                            self.prompt_manager.add_info_to_initial_message(msg)
+
+                    # enhance the user message with additional context based on keywords matched
+                    if msg.role == 'user' and not os.environ.get('SWE_BENCH'):
+                        self.prompt_manager.enhance_message(msg)
+
+                    messages.append(msg)
 
         if self.llm.is_caching_prompt_active():
             # NOTE: this is only needed for anthropic
@@ -679,7 +681,7 @@ display.Image(dss())
             # https://github.com/anthropics/anthropic-quickstarts/blob/8f734fd08c425c6ec91ddd613af04ff87d70c5a0/computer-use-demo/computer_use_demo/loop.py#L241-L262
             breakpoints_remaining = 3  # remaining 1 for system/tool
             for message in reversed(messages):
-                if message.role == 'user' or message.role == 'tool':
+                if message.role in ('user', 'tool'):
                     if breakpoints_remaining > 0:
                         message.content[
                             -1

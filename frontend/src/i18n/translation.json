@@ -4511,6 +4511,9 @@
       "en": "You have full access to this system. Please continue working on the task on whatever approach you think is suitable.\nIf you think you have solved the task, you can give <finish> to end the interaction.\nIMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n"
     },
     "CHAT_INTERFACE$AUTO_MESSAGE_SENT":{
-      "en": "Sent the default Auto Msg 🤖"
+        "en": "Sent the default Auto Msg 🤖"
+    },
+    "SETTINGS_FORM$ENABLE_DEFAULT_CONDENSER_SWITCH_LABEL": {
+        "en": "Enable Memory Condenser"
     }
 }

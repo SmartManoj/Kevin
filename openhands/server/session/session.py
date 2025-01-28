@@ -10,6 +10,7 @@ import socketio
 import openhands.core.config2 as config2
 from openhands.controller.agent import Agent
 from openhands.core.config import AppConfig
+from openhands.core.config.condenser_config import AmortizedForgettingCondenserConfig
 from openhands.core.const.guide_url import TROUBLESHOOTING_URL
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.schema import AgentState
@@ -113,6 +114,14 @@ class Session:
 
         llm = LLM(config=self.config.get_llm_config_from_agent(agent_cls))
         agent_config = self.config.get_agent_config(agent_cls)
+
+        if settings.enable_default_condenser:
+            default_condenser_config = AmortizedForgettingCondenserConfig(
+                keep_first=3, max_size=20
+            )
+            logger.info(f'Enabling default condenser: {default_condenser_config}')
+            agent_config.condenser = default_condenser_config
+
         agent = Agent.get_cls(agent_cls)(llm, agent_config)
         # store agent, language, model in environmnet for feeedback
         os.environ['OPENHANDS_AGENT'] = agent_cls
