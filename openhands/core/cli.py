@@ -109,10 +109,10 @@ def read_input(config: AppConfig) -> str:
 async def main(loop: asyncio.AbstractEventLoop):
     """Runs the agent in CLI mode"""
 
-    args = parse_arguments()
+    args_ = parse_arguments()
 
 
-    config = setup_config_from_args(args)
+    config = setup_config_from_args(args_)
 
     sid = str(uuid4())
 
@@ -174,7 +174,7 @@ async def main(loop: asyncio.AbstractEventLoop):
     if not os.environ.get('DEBUG'):
         logger.setLevel(logging.WARNING)
 
-    task = args.task or os.environ.get('OPENHANDS_TASK')
+    task = args_.task or os.environ.get('OPENHANDS_TASK')
     if task:
         action = MessageAction(content=task)
         event_stream.add_event(action, EventSource.USER)
