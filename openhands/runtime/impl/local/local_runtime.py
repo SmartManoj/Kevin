@@ -2,6 +2,7 @@
 This runtime runs the action_execution_server directly on the local machine without Docker.
 """
 
+import logging
 import os
 import shutil
 import subprocess
@@ -232,6 +233,12 @@ class LocalRuntime(ActionExecutionClient):
             env=env,
         )
 
+        log_file = os.path.join(os.getcwd(), 'server.log')
+        server_logger = logging.getLogger('server')
+        server_logger.setLevel(logging.DEBUG)
+        server_logger.addHandler(logging.FileHandler(log_file))
+        with open(log_file, 'w') as f:
+            f.write('')
         # Start a thread to read and log server output
         def log_output():
             while (
@@ -242,7 +249,7 @@ class LocalRuntime(ActionExecutionClient):
                 line = self.server_process.stdout.readline()
                 if not line:
                     continue
-                self.log('debug', f'Server: {line.strip()}')
+                server_logger.debug(f'Server: {line.strip()}')
 
         self._log_thread = threading.Thread(target=log_output, daemon=True)
         self._log_thread.start()
