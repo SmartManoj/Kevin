@@ -54,6 +54,8 @@ class CodeActResponseParser(ResponseParser):
         if action is None:
             return ''
 
+        action = re.sub(r"<think>.*?</think>", "", action, flags=re.DOTALL)
+        
         action = action.replace(r'\_', '_')  # Mistral Large gives \_ instead of _
         three_backticks = '```'
         if action.count(three_backticks) % 2 == 1 and '<execute_' not in action:
