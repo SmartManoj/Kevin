@@ -47,6 +47,10 @@ else:
 if not sys.argv[1:] and 0:
     pprint(history)
     # exit()
+
+if not history:
+    print('No history found')
+    exit()
 json_data = {}
 git_hash = 'git rev-parse HEAD'
 
