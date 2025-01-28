@@ -457,8 +457,9 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
 
             # log the LLM response
             self.log_response(message_back)
-            # post-process to log costs
-            self._post_completion(resp)
+            if not os.environ.get('DISABLE_METRICS'):
+                # post-process to log costs
+                self._post_completion(resp)
             return resp
 
         self._completion = wrapper
