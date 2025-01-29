@@ -1,17 +1,20 @@
 #! /usr/bin/env python3.11
-import litellm
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import litellm
 import toml
 
 number = 1
 model = 'gemini_pro'
 model = 'gemini_flash'
 model = 'groq'
+model = 'ollama'
 with open('evaluation/benchmarks/swe_bench/config.toml', 'r') as f:
     environ = f.read()
     config = toml.loads(environ)
     selection_id = config['selected_ids'][0].split('-')[-1]
 folder = f'{model}_{selection_id}'
-# folder = 'default'
 prompt = f'logs/llm/{folder}/{number:03d}_prompt.log'
 response = f'logs/llm/{folder}/{number:03d}_response.log'
 
@@ -31,16 +34,16 @@ with open(config, 'r') as file:
 
 
 model = config_content['model']
-api_key = config_content['api_key']
-
+api_key = config_content.get('api_key')
+base_url = config_content.get('base_url')
 question = 'Why did you use insert content before line 60?'
 question = 'Why are you searching for header_rows?'
 question = 'Why did you search for header_rows in ui.py?'
 question = '''
-why not passed string to search_class?
+why searched for Myclass?
 '''
 inst = '\n\nJust tell only the reason for your action.'
-inst = f'give analysis; then give Step {number}: and produce the solution along with thought process.'
+# inst = f'give analysis; then give Step {number}: and produce the solution along with thought process.'
 question += inst
 new_prompt = f"""
 INITIAL PROMPT:
@@ -66,6 +69,7 @@ while True:
         model=model,
         messages=messages,
         api_key=api_key,
+        base_url=base_url,
     )
     resp = response['choices'][0]['message']['content']
     print(resp)
@@ -78,6 +82,7 @@ while True:
             model=model,
             messages=[{'role': 'user', 'content': prompt_content}],
             api_key=api_key,
+            base_url=base_url,
         )
         resp = response['choices'][0]['message']['content']
         print(resp)
