@@ -55,7 +55,10 @@ from openhands.events.serialization import event_from_dict, event_to_dict
 from openhands.runtime.browser import browse
 from openhands.runtime.browser.browser_env import BrowserEnv
 from openhands.runtime.plugins import ALL_PLUGINS, JupyterPlugin, Plugin, VSCodePlugin
-from openhands.runtime.utils.bash import BashSession
+if os.environ.get('USE_PEXPECT') == '1':
+    from openhands.runtime.utils.bash_pexpect import BashSession
+else:        
+    from openhands.runtime.utils.bash import BashSession
 from openhands.runtime.utils.files import insert_lines, read_lines
 from openhands.runtime.utils.runtime_init import init_user_and_working_directory
 from openhands.runtime.utils.system_stats import get_system_stats
@@ -117,8 +120,6 @@ class ActionExecutor:
 
     async def ainit(self):
         # bash needs to be initialized first
-        if os.environ.get('USE_PEXPECT') == '1':
-            from openhands.runtime.utils.bash_pexpect import BashSession
 
         self.bash_session = BashSession(
             work_dir=self._initial_cwd,
