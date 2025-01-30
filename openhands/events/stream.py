@@ -417,7 +417,7 @@ class EventStream:
         start_id: int = 0,
         limit: int = 100,
         reverse: bool = False,
-    ) -> list:
+    ) -> list[type[Event]]:
         """Get matching events from the event stream based on filters.
 
         Args:
@@ -447,7 +447,7 @@ class EventStream:
             ):
                 continue
 
-            matching_events.append(event_to_dict(event))
+            matching_events.append(event)
 
             # Stop if we have enough events
             if len(matching_events) >= limit:

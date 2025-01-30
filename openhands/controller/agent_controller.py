@@ -11,6 +11,7 @@ with warnings.catch_warnings():
 from litellm.exceptions import (
     BadRequestError,
     ContextWindowExceededError,
+    OpenAIError,
     RateLimitError,
 )
 
@@ -47,6 +48,7 @@ from openhands.events.action import (
 )
 from openhands.events.event import Event, LogEvent
 from openhands.events.observation import (
+    AgentCondensationObservation,
     AgentDelegateObservation,
     AgentStateChangedObservation,
     ErrorObservation,
@@ -738,12 +740,16 @@ class AgentController:
                     # Save the ID of the first event in our truncated history for future reloading
                     if self.state.history:
                         self.state.start_id = self.state.history[0].id
-                    # Add a NullObservation to the event stream to trigger the agent to retry
+
+                    # Add an error event to trigger another step by the agent
                     self.event_stream.add_event(
-                        NullObservation(''),EventSource.AGENT,
+                        AgentCondensationObservation(
+                            content='Trimming prompt to meet context window limitations'
+                        ),
+                        EventSource.AGENT,
                     )
                     return
-                raise
+                raise e
 
         if action.runnable:
             if self.state.confirmation_mode and (
