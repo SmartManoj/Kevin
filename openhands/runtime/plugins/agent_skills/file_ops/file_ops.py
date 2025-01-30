@@ -1302,6 +1302,20 @@ def show_function_at_line(file_path: str, line_number: int) -> None:
 
     print(f'No function found for line {line_number} in the file.')
 
+def indent_lines(text, level=1):
+    """
+    Indents each line of the given text by the specified number of indentation levels.
+
+    Args:
+        text (str): The input text to be indented.
+        level (int, optional): The number of indentation levels to apply (default is 1).
+
+    Returns:
+        str: The indented text.
+    """
+    return '\n'.join(['    ' * level + line for line in text.split('\n')])
+
+
 
 __all__ = [
     'search_function',
@@ -1316,6 +1330,7 @@ __all__ = [
     'goto_line',
     'scroll_down',
     'scroll_up',
+    'indent_lines',
     'create_file',
     'find_and_replace',
     'delete_line',
