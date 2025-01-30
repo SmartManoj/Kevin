@@ -251,6 +251,8 @@ if __name__ == '__main__':
         task_str = read_task_from_file(args.file)
     elif args.task:
         task_str = args.task
+    elif os.environ.get('OPENHANDS_TASK'):
+        task_str = os.environ.get('OPENHANDS_TASK')
     elif not sys.stdin.isatty():
         task_str = read_task_from_stdin()
 
