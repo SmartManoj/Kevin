@@ -15,6 +15,7 @@ from openhands.core.config import (
 )
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.loop import run_agent_until_done
+from openhands.core.main import auto_continue_response
 from openhands.core.schema import AgentState
 from openhands.core.setup import create_agent, create_controller, create_runtime
 from openhands.events import EventSource, EventStreamSubscriber
@@ -123,9 +124,14 @@ async def main(loop: asyncio.AbstractEventLoop):
 
     event_stream = runtime.event_stream
 
+    no_auto_continue = args_.no_auto_continue
+
     async def prompt_for_next_task():
         # Run input() in a thread pool to avoid blocking the event loop
-        next_message = await loop.run_in_executor(None, read_input, config)
+        if no_auto_continue:
+            next_message = await loop.run_in_executor(None, read_input, config)
+        else:
+            next_message = await loop.run_in_executor(None, auto_continue_response, config)
         if not next_message.strip():
             await prompt_for_next_task()
         if next_message == 'exit':
