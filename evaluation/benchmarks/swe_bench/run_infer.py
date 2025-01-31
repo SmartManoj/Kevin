@@ -70,22 +70,27 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
     # Prepare instruction
     # Instruction based on Anthropic's official trajectory
     # https://github.com/eschluntz/swe-bench-experiments/tree/main/evaluation/verified/20241022_tools_claude-3-5-sonnet-updated/trajs
+    repo_dir = '/testbed'
+    problem_statement = instance.problem_statement
     instruction = (
-        f'Please address the following GitHub issue for the repository, where the source code is available in the /testbed directory, which I have access to.\n'
+        f'Please address the following GitHub issue for the repository, where the source code is available in the {repo_dir} directory, which I have access to.\n'
         '# Title\n'
-        f'{instance.problem_statement}\n\n'
+        f'{problem_statement}\n\n'
         '\n$ pwd\n'
-        '/testbed\n'
+        f'{repo_dir}\n'
     )
     if 1:
         numbered_instructions = [
-            'Locate the actual relevant library file that raised this error in /testbed using `find_file`.'
-            'Inspect the function using `show_function_at_line`.'
+            f'Locate the actual relevant library file that raised this error in {repo_dir} using `find_file()` skill.',
+            'Inspect the function using `show_function_at_line()` skill.',
+            'Correctly fix the library source code using try-except, ensuring proper handling of exceptions (TypeError, ValueError) without altering the intended logic.',
+            'Test the fix by reproducing the MRE.',
         ]
         for k, inst in enumerate(numbered_instructions):
             instruction += f'Step {k + 1}: {inst}\n'
         important_instructions = [
             'Only use one skill at a time.',
+            'The traceback must be read from bottom to top, with the final entry showing where the error occurred.',
         ]
         instruction += '\nImportant Instructions:\n'
         for inst in important_instructions:
