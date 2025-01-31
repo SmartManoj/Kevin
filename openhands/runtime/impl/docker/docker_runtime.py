@@ -1,4 +1,5 @@
 from functools import lru_cache
+import os
 from typing import Callable
 from uuid import UUID
 
@@ -184,7 +185,10 @@ class DockerRuntime(ActionExecutionClient):
     def _init_container(self):
         self.log('debug', 'Preparing to start container...')
         self.send_status_message('STATUS$PREPARING_CONTAINER')
-        self._host_port = self._find_available_port(EXECUTION_SERVER_PORT_RANGE)
+        if os.environ.get(f'OPENHANDS_RUNTIME_PORT_{self.sid}'):
+            self._host_port = int(os.environ.get(f'OPENHANDS_RUNTIME_PORT_{self.sid}'))
+        else:
+            self._host_port = self._find_available_port(EXECUTION_SERVER_PORT_RANGE)
         self._container_port = self._host_port
         self._vscode_port = self._find_available_port(VSCODE_PORT_RANGE)
         self._app_ports = [

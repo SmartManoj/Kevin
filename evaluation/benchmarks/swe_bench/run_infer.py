@@ -411,7 +411,10 @@ def process_instance(
         logger.warning(
             f'This is the {runtime_failure_count + 1}th attempt for instance {instance.instance_id}, setting resource factor to {config.sandbox.remote_runtime_resource_factor}'
         )
-    runtime = create_runtime(config)
+    if os.environ.get('RUNTIME') != 'remote':
+        runtime = create_runtime(config, sid=instance.instance_id)
+    else:
+        runtime = create_runtime(config)
     call_async_from_sync(runtime.connect)
 
     try:

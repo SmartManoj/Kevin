@@ -396,6 +396,10 @@ def run_evaluation(
     pbar = tqdm(total=total_instances, desc='Instances processed')
     output_fp = open(output_file, 'a')
 
+    port_range = 64000
+    for i in range(len(dataset)):
+        os.environ[f'OPENHANDS_RUNTIME_PORT_{dataset.iloc[i]["instance_id"]}'] = str(port_range + i)
+
     try:
         if use_multiprocessing:
             with mp.Pool(num_workers) as pool:
