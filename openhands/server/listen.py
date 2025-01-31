@@ -24,10 +24,10 @@ base_app.add_middleware(
 )
 
 base_app.add_middleware(CacheControlMiddleware)
-base_app.add_middleware(
-    RateLimitMiddleware,
-    rate_limiter=InMemoryRateLimiter(requests=10, seconds=1),
-)
+# base_app.add_middleware(
+#     RateLimitMiddleware,
+#     rate_limiter=InMemoryRateLimiter(requests=10, seconds=1),
+# )
 base_app.middleware('http')(AttachConversationMiddleware(base_app))
 base_app.middleware('http')(GitHubTokenMiddleware(base_app))
 
