@@ -3,7 +3,7 @@ import os
 import warnings
 from functools import partial
 from time import sleep
-from typing import Union
+from typing import Union, Callable
 
 import requests
 
@@ -108,6 +108,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
         self,
         config: LLMConfig,
         metrics: Metrics | None = None,
+        retry_listener: Callable[[int, int], None] | None = None,
     ):
         """Initializes the LLM. If LLMConfig is passed, its values will be the fallback.
 
@@ -131,7 +132,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
         #     litellm.cache = Cache()
 
         self.model_info: ModelInfo | None = None
-
+        self.retry_listener = retry_listener
         if self.config.log_completions:
             if self.config.log_completions_folder is None:
                 raise RuntimeError(
@@ -241,6 +242,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             retry_min_wait=self.config.retry_min_wait,
             retry_max_wait=self.config.retry_max_wait,
             retry_multiplier=self.config.retry_multiplier,
+            retry_listener=self.retry_listener,
         )
         def wrapper(*args, **kwargs):
             """Wrapper for the litellm completion function. Logs the input and output of the completion function."""
