@@ -429,7 +429,8 @@ class CodeActAgent(Agent):
             if last_message_content.endswith('<end></end>'):
                 return AgentFinishAction(thought=os.getenv('finish_thought', ''))
         except Exception as e:
-            print(e)
+            # logger.debug(f'Error in step: {e}')
+            pass
 
         params: dict = {
             'messages': messages,
