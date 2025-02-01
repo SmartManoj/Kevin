@@ -235,6 +235,9 @@ class CodeActActionParserIPythonRunCell(ActionParser):
             return output_code
 
         code = convert_to_raw_string(code)
+        # convert wrapped code with triple backticks to triple double quotes
+        if '```' in code:
+            code = code.replace('"""', r'\"\"\"').replace('```', '"""')
         return IPythonRunCellAction(
             code=code,
             thought=thought,
