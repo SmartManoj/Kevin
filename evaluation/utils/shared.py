@@ -13,7 +13,7 @@ from typing import Any, Awaitable, Callable, TextIO
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from tqdm import tqdm
 
 from openhands.controller.state.state import State
@@ -277,6 +277,8 @@ def update_progress(
     def numpy_json_encoder(obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, SecretStr):
+            return '********'
         raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable.")
 
     output_fp.write(json.dumps(result.model_dump(), default=numpy_json_encoder) + '\n')
