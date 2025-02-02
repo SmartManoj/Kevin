@@ -513,6 +513,10 @@ def _edit_file_impl(
         _output_error('Cannot insert and append at the same time.')
         return None
 
+    with open(file_name, 'r') as file:
+        old_content = file.read()
+    content = indent_lines(content, level=get_indent_level(old_content, line_start=start))
+
     # Use a temporary file to write changes
     content = str(content or '')
     temp_file_path = ''
@@ -1313,9 +1317,23 @@ def indent_lines(text, level=1):
     Returns:
         str: The indented text.
     """
-    return '\n'.join(['    ' * level + line for line in text.split('\n')])
+    current_indent_level = get_indent_level(text)
+    level = level - current_indent_level
+    if level == 0:
+        return text
+    elif level > 0: 
+        return '\n'.join(['    ' * level + line for line in text.split('\n')])
+    else:
+        # remove indent
+        indent_str = '    ' * abs(level)
+        return re.sub(r'^' + indent_str, '', text, flags=re.MULTILINE)
 
 
+def get_indent_level(text: str, line_start: int | None = None) -> int:
+    for line in text.split('\n')[line_start:]:
+        if line.strip():
+            return line.count('    ')
+    return 0
 
 __all__ = [
     'search_function',
@@ -1330,7 +1348,6 @@ __all__ = [
     'goto_line',
     'scroll_down',
     'scroll_up',
-    'indent_lines',
     'create_file',
     'find_and_replace',
     'delete_line',
@@ -1370,7 +1387,8 @@ print("hello world")
     from datetime import datetime
 
     dt = datetime.now()
-    file_name = r'C:\Users\smart\Desktop\GD\astropy\astropy\io\ascii\rst.py'
+    file_name = r'../astroid/astroid/nodes/node_classes.py'
+    insert_content_after_line(file_name, 4302, "if isinstance(operand, objects.Property):\n    # Handle property inference for unary operations\n    yield operand.infer_unary_op(self.op)\n    continue\n")
     # add_param_to_init_in_subclass(file_name, 'RST', 'header_rows')
     new_content = 'dummy'
     replace_line_content(file_name, 1, new_content)
