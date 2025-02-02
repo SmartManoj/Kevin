@@ -32,12 +32,15 @@ for c in client.containers.list():
         # copy the file to the container
         container_id = c.id
         for full_file_name in full_file_names:
-            cmd = f'docker cp {full_file_name} {container_id}:/openhands/code/{full_file_name}'
-            os.system(cmd)
-        if 1:
-            if 'root' in c.name:
-                break
+            try:
+                cmd = f'docker cp {full_file_name} {container_id}:/openhands/code/{full_file_name}'
+                os.system(cmd)
+            except Exception as e:
+                print(e)
         # restart the container
         print('Restarting the container')
         c.restart()
         print(datetime.now())
+        if 1:
+            if 'root' in c.name:
+                break
