@@ -9,7 +9,7 @@
         }
     },
 	"onCreateCommand": "sh ./.devcontainer/on_create.sh",
-	"postCreateCommand": "ENV BUILD_ONLY=1 yes | make build",
+	"postCreateCommand": "BUILD_ONLY=1 yes | make build",
 	"postStartCommand": "nohup bash -c 'make run' &> output.log &"
 
 }
