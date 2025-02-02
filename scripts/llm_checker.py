@@ -17,6 +17,7 @@ with open('config.toml', 'rb') as f:
     group = 'or'
     group = 'groq'
     group = 'ollama'
+    group = 'nv'
     group = 'hv'
     # group = ''
     if group in config:
