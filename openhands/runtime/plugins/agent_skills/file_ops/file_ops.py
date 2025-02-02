@@ -515,7 +515,7 @@ def _edit_file_impl(
 
     with open(file_name, 'r') as file:
         old_content = file.read()
-    content = indent_lines(content, level=get_indent_level(old_content, line_start=start))
+    content = indent_lines(content, level=get_indent_level(old_content, line_start=start-1))
 
     # Use a temporary file to write changes
     content = str(content or '')
