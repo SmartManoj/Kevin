@@ -696,8 +696,6 @@ def _edit_file_impl(
             CURRENT_LINE = start or n_total_lines or 1
     # ret_str += f'[File: {os.path.abspath(file_name)} ({n_total_lines} lines total after edit)]\n'
     CURRENT_FILE = file_name
-    if enable_auto_lint:
-        os.remove(original_file_backup_path)
     ret_str += (
         _print_window(CURRENT_FILE, CURRENT_LINE, SMALL_WINDOW, return_str=True) + '\n'
     )
@@ -1374,7 +1372,7 @@ except ImportError:
     # pip install libcst
 
 if not getpass.getuser() == 'root':
-    from .so import search_in_stack_overflow  # noqa
+    from openhands.runtime.plugins.agent_skills.file_ops.so import search_in_stack_overflow  # noqa
     __all__.append('search_in_stack_overflow')
     if os.getenv('RESEARCH_AGENT') == '1':
         import openhands.runtime.plugins.agent_skills.file_ops.academic_utils as academic_utils
