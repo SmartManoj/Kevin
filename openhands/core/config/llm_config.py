@@ -15,6 +15,8 @@ class LLMConfig(BaseModel):
         # custom configs
         use_group: The group to use for the LLM.
         enable_cache: Whether to enable caching.
+        seed: The seed to use for the LLM.
+
         # litellm configs
         model: The model to use.
         api_key: The API key to use.
@@ -55,7 +57,9 @@ class LLMConfig(BaseModel):
     # custom configs
     use_group: str | None = None
     enable_cache: bool = False
+    seed: int | None = None
 
+    # litellm configs
     model: str = Field(default='claude-3-5-sonnet-20241022')
     api_key: SecretStr | None = Field(default=None)
     base_url: str | None = Field(default=None)

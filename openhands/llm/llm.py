@@ -242,6 +242,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             top_p=self.config.top_p,
             caching=self.config.enable_cache,
             drop_params=self.config.drop_params,
+            seed=self.config.seed,
             # add reasoning_effort, only if the model is supported
             **(
                 {'reasoning_effort': self.config.reasoning_effort}
