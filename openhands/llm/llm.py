@@ -9,6 +9,26 @@ import requests
 
 from openhands.core import config2
 from openhands.core.config import LLMConfig
+
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import litellm
+
+from litellm import ChatCompletionMessageToolCall, ModelInfo, PromptTokensDetails
+from litellm import Message as LiteLLMMessage
+from litellm import completion as litellm_completion
+from litellm import completion_cost as litellm_completion_cost
+from litellm.exceptions import (
+    APIConnectionError,
+    APIError,
+    InternalServerError,
+    RateLimitError,
+    ServiceUnavailableError,
+)
+from litellm.types.utils import CostPerToken, ModelResponse, Usage
+from litellm.utils import create_pretrained_tokenizer
+
+from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message
 from openhands.llm.fn_call_converter import (
     STOP_WORDS,
@@ -88,12 +108,23 @@ FUNCTION_CALLING_SUPPORTED_MODELS = [
     'o1-2024-12-17',
 ]
 
+# visual browsing tool supported models
+# This flag is needed since gpt-4o and gpt-4o-mini do not allow passing image_urls with role='tool'
+VISUAL_BROWSING_TOOL_SUPPORTED_MODELS = [
+    'claude-3-5-sonnet',
+    'claude-3-5-sonnet-20240620',
+    'claude-3-5-sonnet-20241022',
+    'o1-2024-12-17',
+]
+
+
 REASONING_EFFORT_SUPPORTED_MODELS = [
     'o1-2024-12-17',
 ]
 
 MODELS_WITHOUT_STOP_WORDS = [
     'o1-mini',
+    'o1-preview',
 ]
 
 
@@ -561,6 +592,25 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                 ):
                     self.config.max_output_tokens = self.model_info['max_tokens']
 
+        # Initialize function calling capability
+        # Check if model name is in our supported list
+        model_name_supported = (
+            self.config.model in FUNCTION_CALLING_SUPPORTED_MODELS
+            or self.config.model.split('/')[-1] in FUNCTION_CALLING_SUPPORTED_MODELS
+            or any(m in self.config.model for m in FUNCTION_CALLING_SUPPORTED_MODELS)
+        )
+
+        # Handle native_tool_calling user-defined configuration
+        if self.config.native_tool_calling is None:
+            self._function_calling_active = model_name_supported
+        elif self.config.native_tool_calling is False:
+            self._function_calling_active = False
+        else:
+            # try to enable native tool calling if supported by the model
+            self._function_calling_active = litellm.supports_function_calling(
+                model=self.config.model
+            )
+
     def vision_is_active(self) -> bool:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
@@ -605,24 +655,20 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
         )
 
     def is_function_calling_active(self) -> bool:
-        # Check if model name is in our supported list
-        model_name_supported = (
-            self.config.model in FUNCTION_CALLING_SUPPORTED_MODELS
-            or self.config.model.split('/')[-1] in FUNCTION_CALLING_SUPPORTED_MODELS
-            or any(m in self.config.model for m in FUNCTION_CALLING_SUPPORTED_MODELS)
-        )
+        """Returns whether function calling is supported and enabled for this LLM instance.
 
-        # Handle native_tool_calling user-defined configuration
-        if self.config.native_tool_calling is None:
-            return model_name_supported
-        elif self.config.native_tool_calling is False:
-            return False
-        else:
-            # try to enable native tool calling if supported by the model
-            supports_fn_call = litellm.supports_function_calling(
-                model=self.config.model
+        The result is cached during initialization for performance.
+        """
+        return self._function_calling_active
+
+    def is_visual_browser_tool_active(self) -> bool:
+        return (
+            self.config.model in VISUAL_BROWSING_TOOL_SUPPORTED_MODELS
+            or self.config.model.split('/')[-1] in VISUAL_BROWSING_TOOL_SUPPORTED_MODELS
+            or any(
+                m in self.config.model for m in VISUAL_BROWSING_TOOL_SUPPORTED_MODELS
             )
-            return supports_fn_call
+        )
 
     def _post_completion(self, response: ModelResponse) -> float:
         """Post-process the completion response.

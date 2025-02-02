@@ -14,6 +14,7 @@ from openhands.core import config2
 from openhands.core.config import AgentConfig, load_app_config
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import ImageContent, Message, TextContent
+from openhands.core.schema import ActionType
 from openhands.events.action import (
     Action,
     AgentDelegateAction,
@@ -340,7 +341,19 @@ class CodeActAgent(Agent):
         elif isinstance(obs, FileReadObservation):
             text = obs.content
         elif isinstance(obs, BrowserOutputObservation):
-            text = obs_prefix + obs.get_agent_obs_text()
+            text = obs.get_agent_obs_text()
+            if (
+                obs.trigger_by_action == ActionType.BROWSE_INTERACTIVE
+                and obs.set_of_marks is not None
+                and len(obs.set_of_marks) > 0
+                and self.config.enable_som_visual_browsing
+                and self.llm.vision_is_active()
+                and (
+                    self.mock_function_calling
+                    or self.llm.is_visual_browser_tool_active()
+                )
+            ):
+                text += 'Image: Current webpage screenshot (Note that only visible portion of webpage is present in the screenshot. You may need to scroll to view the remaining portion of the web-page.)\n'
         elif isinstance(obs, AgentDelegateObservation):
             text = truncate_content(
                 obs.outputs['content'] if 'content' in obs.outputs else '',
