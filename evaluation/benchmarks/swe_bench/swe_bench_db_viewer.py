@@ -6,6 +6,9 @@ import toml
 from datasets import load_dataset
 
 from evaluation.benchmarks.swe_bench.swe_bench2 import update_issue_description
+
+os.environ['SANDBOX_PORT'] = '63712'
+
 from sandbox_checker import execute_action, run, run_ipython
 
 with open(r'evaluation\benchmarks\swe_bench\config.toml', 'r') as f:
@@ -47,18 +50,23 @@ if go:
     webbrowser.open(url)
     exit()
 
+dataset_path='princeton-nlp/SWE-bench_Full'
+dataset_path='C:/Users/smart/Desktop/K/konwinski-prize/data/data.parquet'
 
 def get_instance(instance_id):
     force = 0
     for _ in range(2):
         if not os.path.exists('./cache/filtered_data.pkl') or force:
-            dataset = load_dataset(
-                'princeton-nlp/SWE-bench_Verified',
-                cache_dir='./cache',
-                verification_mode='no_checks',
-                num_proc=4,
-                split='test',
-            )
+            kwargs = {
+                'cache_dir': './cache',
+                'verification_mode': 'no_checks',
+                'num_proc': 4,
+            }
+            if 'parquet' in dataset_path:
+                dataset = load_dataset('parquet', data_files=dataset_path, split='train', ** kwargs)
+            else:
+                dataset = load_dataset(dataset_path, split='test', ** kwargs)
+
             # Serialize filtered dataset
             ins = dataset.filter(lambda x: x['instance_id'] == instance_id)
             with open('./cache/filtered_data.pkl', 'wb') as f:
@@ -95,8 +103,8 @@ else:
     ins = get_instance(instance_id)
 #
 print('base_commit', ins['base_commit'])
-print('environment_setup_commit', ins['environment_setup_commit'])
-print('Hints', ins['hints_text'])
+# print('environment_setup_commit', ins['environment_setup_commit'])
+# print('Hints', ins['hints_text'])
 
 print(['problem_statement'])
 # print(ins['problem_statement'][0])
@@ -104,10 +112,21 @@ a = update_issue_description(ins['problem_statement'][0], instance_id)
 print(a)
 if 1:
     print('-' * 100)
-    print(['test_patch'])
     test_patch = ins['test_patch'][0]
-    print(test_patch)
+    patch = ins['patch'][0]
     if 1:
+        print(patch)
+        code = rf"""
+code = r'''{patch}'''
+with open(f'/testbed/patch.diff', 'w') as f:
+    f.write(code)
+"""
+        execute_action(run_ipython(code))
+        cmd = 'git apply /testbed/patch.diff'
+        execute_action(run(cmd))
+
+    if 0:
+        print(test_patch)
         code = rf"""
 code = r'''{test_patch}'''
 with open(f'/testbed/test_patch.diff', 'w') as f:
