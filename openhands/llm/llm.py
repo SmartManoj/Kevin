@@ -171,14 +171,6 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                 )
             os.makedirs(self.config.log_completions_folder, exist_ok=True)
 
-        # Set the max tokens in an LM-specific way if not set
-        if config.max_input_tokens is None:
-            try:
-                self.config.max_input_tokens = self.model_info['max_input_tokens']  # type: ignore
-            except Exception:
-                # Safe fallback for any potentially viable model
-                self.config.max_input_tokens = 4096
-
         # call init_model_info to initialize config.max_output_tokens
         # which is used in partial function
         with warnings.catch_warnings():
@@ -588,10 +580,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             if self.model_info is not None:
                 # max_output_tokens has precedence over max_tokens, if either exists.
                 # litellm has models with both, one or none of these 2 parameters!
-                if 'max_tokens' in self.model_info and isinstance(
-                    self.model_info['max_tokens'], int
-                ):
-                    self.config.max_output_tokens = self.model_info['max_tokens']
+                self.config.max_output_tokens = self.model_info.get('max_output_tokens') or self.model_info.get('max_tokens')
 
         # Initialize function calling capability
         # Check if model name is in our supported list
