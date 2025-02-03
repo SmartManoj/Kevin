@@ -51,7 +51,10 @@ class AppConfig(BaseModel):
         cli_multiline_input: Whether to enable multiline input in CLI. When disabled,
             input is read line by line. When enabled, input continues until /exit command.
     """
+    # custom configs
+    workspace_base: str | None = './workspace'
 
+    # litellm configs
     llms: dict[str, LLMConfig] = Field(default_factory=dict)
     agents: dict = Field(default_factory=dict)
     default_agent: str = Field(default=OH_DEFAULT_AGENT)
@@ -62,7 +65,6 @@ class AppConfig(BaseModel):
     file_store_path: str = Field(default='/tmp/openhands_file_store')
     save_trajectory_path: str | None = Field(default=None)
     replay_trajectory_path: str | None = Field(default=None)
-    workspace_base: str | None = Field(default=None)
     workspace_mount_path: str | None = Field(default=None)
     workspace_mount_path_in_sandbox: str = Field(default='/workspace')
     workspace_mount_rewrite: str | None = Field(default=None)
