@@ -189,13 +189,14 @@ class CodeActActionParserIPythonRunCell(ActionParser):
         self.python_code = None
 
     def check_condition(self, action_str: str) -> bool:
+        # For Gemini: tool_code is not a valid tag and returns as code wrap in backticks
+        action_str = re.sub(r'^```(?:tool_code)(.*)```', r'\1', action_str, flags=re.DOTALL)
         self.python_code = re.search(
             r'<execute_ipython>(.*\S.*)</execute_ipython>', action_str, re.DOTALL
         )
         if self.python_code is None and '<execute_' not in action_str:
-            # For Gemini: tool_code is not a valid tag and returns as code wrap in backticks
             self.python_code = re.search(
-                r'^```(?:python|tool_code)(.*)```', action_str, re.DOTALL | re.MULTILINE
+                r'^```(?:python)(.*)```', action_str, re.DOTALL | re.MULTILINE
             )
         return self.python_code is not None
 
