@@ -2,6 +2,7 @@ from functools import lru_cache
 import os
 from typing import Callable
 from uuid import UUID
+import uuid
 
 import docker
 import requests
@@ -82,7 +83,7 @@ class DockerRuntime(ActionExecutionClient):
 
         self.base_container_image = self.config.sandbox.base_container_image
         self.runtime_container_image = self.config.sandbox.runtime_container_image
-        self.container_name = CONTAINER_NAME_PREFIX + sid
+        self.container_name = CONTAINER_NAME_PREFIX + sid + '-' + str(uuid.uuid4())[:8]
         self.container: Container | None = None
 
         self.runtime_builder = DockerRuntimeBuilder(self.docker_client)
