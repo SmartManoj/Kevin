@@ -27,6 +27,7 @@ model = config['model']
 print('Using model:', model)
 api_key = config.get('api_key')
 base_url = config.get('base_url')
+seed = config.get('seed')
 args = (
     {
         'base_url': base_url,
@@ -43,9 +44,10 @@ else:
     print('Model does not support vision')
 response = litellm.completion(
     model=model,
-    messages=[{'role': 'user', 'content': 'Hello, how are you?'}],
+    messages=[{'role': 'user', 'content': 'Tell a random number with 4 decimal places between 1 to 10.'}],
     api_key=api_key,
     **args,
+    seed=seed,
 )
 
 print(response.choices[0].message.content)

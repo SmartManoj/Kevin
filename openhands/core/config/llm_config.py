@@ -57,7 +57,7 @@ class LLMConfig(BaseModel):
     # custom configs
     use_group: str | None = None
     enable_cache: bool = False
-    seed: int | None = None
+    seed: int | None = 42
 
     # litellm configs
     model: str = Field(default='claude-3-5-sonnet-20241022')
