@@ -21,7 +21,7 @@ with open('config.toml', 'rb') as f:
     group = 'hv'
     # group = ''
     if group in config:
-        config = config[group]
+        config.update(config[group])
 
 model = config['model']
 print('Using model:', model)
