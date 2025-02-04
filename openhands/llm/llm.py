@@ -236,6 +236,9 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                 'temperature'
             )  # temperature is not supported for reasoning models
 
+        # if o3-mini or o3-mini-2025-01-31, add max_completion_tokens
+        if self.config.model.split('/')[-1] in ['o3-mini', 'o3-mini-2025-01-31']:
+            kwargs['max_completion_tokens'] = self.config.max_output_tokens
         self._completion = partial(
             litellm_completion,
             model=self.config.model,
@@ -245,7 +248,6 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             base_url=self.config.base_url,
             api_version=self.config.api_version,
             custom_llm_provider=self.config.custom_llm_provider,
-            max_completion_tokens=self.config.max_output_tokens,
             timeout=self.config.timeout,
             top_p=self.config.top_p,
             caching=self.config.enable_cache,
