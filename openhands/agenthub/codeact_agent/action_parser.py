@@ -157,7 +157,7 @@ class CodeActActionParserCmdRun(ActionParser):
 
     def check_condition(self, action_str: str) -> bool:
         self.bash_command = re.search(
-            r'<execute_bash>(.*\S.*)</execute_bash>', action_str, re.DOTALL
+            r'<execute_bash>(.*)</execute_bash>', action_str, re.DOTALL
         )
         if self.bash_command is None and '<execute_' not in action_str:
             # Gemini flash not providing the tag and returns as code wrap in backticks
