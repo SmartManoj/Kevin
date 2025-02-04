@@ -23,6 +23,9 @@ workspace_base = "./workspace"
 # Cache directory path
 #cache_dir = "/tmp/cache"
 
+# Custom instructions
+custom_instructions = ""
+
 # Reasoning effort for o1 models (low, medium, high, or not set)
 #reasoning_effort = "medium"
 

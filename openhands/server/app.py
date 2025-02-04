@@ -12,6 +12,7 @@ from fastapi import (
 
 import openhands.agenthub  # noqa F401 (we import this to get the agents registered)
 from openhands import __version__
+from openhands.server.routes.config_ui import app as config_ui_router
 from openhands.server.routes.conversation import app as conversation_api_router
 from openhands.server.routes.feedback import app as feedback_api_router
 from openhands.server.routes.files import app as files_api_router
@@ -24,7 +25,6 @@ from openhands.server.routes.security import app as security_api_router
 from openhands.server.routes.settings import app as settings_router
 from openhands.server.routes.trajectory import app as trajectory_router
 from openhands.server.shared import conversation_manager
-
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
@@ -54,3 +54,9 @@ app.include_router(manage_conversation_api_router)
 app.include_router(settings_router)
 app.include_router(github_api_router)
 app.include_router(trajectory_router)
+app.include_router(config_ui_router)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=3000)
