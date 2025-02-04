@@ -137,7 +137,7 @@ class JupyterKernel:
         self.heartbeat_callback.start()
 
     @retry(
-        retry=retry_if_exception_type(ConnectionRefusedError),
+        retry=retry_if_exception_type((ConnectionRefusedError, tornado.websocket.WebSocketClosedError)),
         stop=stop_after_attempt(3),
         wait=wait_fixed(2),
     )
