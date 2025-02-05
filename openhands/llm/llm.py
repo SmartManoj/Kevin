@@ -285,7 +285,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             """Wrapper for the litellm completion function. Logs the input and output of the completion function."""
             messages: list[Message] | Message = []
 
-            mock_function_calling = kwargs.pop('mock_function_calling', False)
+            mock_function_calling = not self.is_function_calling_active()
 
             # some callers might send the model and messages directly
             # litellm allows positional args, like completion(model, messages, **kwargs)
@@ -309,17 +309,18 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                 kwargs['messages'] = messages
             # original_fncall_messages = copy.deepcopy(messages)
             mock_fncall_tools = None
-            if mock_function_calling:
-                assert (
-                    'tools' in kwargs
-                ), "'tools' must be in kwargs when mock_function_calling is True"
+            # if the agent or caller has defined tools, and we mock via prompting, convert the messages
+            if mock_function_calling and 'tools' in kwargs:
                 messages = convert_fncall_messages_to_non_fncall_messages(
                     messages,  # type: ignore
                     kwargs['tools'],  # type: ignore
                 )
                 kwargs['messages'] = messages
+
+                # add stop words if the model supports it
                 if self.config.model not in MODELS_WITHOUT_STOP_WORDS:
                     kwargs['stop'] = STOP_WORDS
+
                 mock_fncall_tools = kwargs.pop('tools')
 
             if self.config.model.split('/')[-1].startswith('o1-'):
@@ -664,7 +665,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
         """
         return self._function_calling_active
 
-    def is_visual_browser_tool_active(self) -> bool:
+    def is_visual_browser_tool_supported(self) -> bool:
         return (
             self.config.model in VISUAL_BROWSING_TOOL_SUPPORTED_MODELS
             or self.config.model.split('/')[-1] in VISUAL_BROWSING_TOOL_SUPPORTED_MODELS

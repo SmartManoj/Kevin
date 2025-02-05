@@ -99,16 +99,6 @@ class CodeActAgent(Agent):
         self.pending_actions: deque[Action] = deque()
         self.reset()
 
-        self.mock_function_calling = False
-        if not self.llm.is_function_calling_active():
-            logger.info(
-                f'Function calling not enabled for model {self.llm.config.model}. '
-                'Mocking function calling via prompting.'
-            )
-            self.mock_function_calling = True
-
-        self.condenser = Condenser.from_config(self.config.condenser)
-        logger.debug(f'Using condenser: {self.condenser}')
 
         if not self.config.function_calling:
             self.action_parser = CodeActResponseParser()
@@ -348,10 +338,7 @@ class CodeActAgent(Agent):
                 and len(obs.set_of_marks) > 0
                 and self.config.enable_som_visual_browsing
                 and self.llm.vision_is_active()
-                and (
-                    self.mock_function_calling
-                    or self.llm.is_visual_browser_tool_active()
-                )
+                and self.llm.is_visual_browser_tool_supported()
             ):
                 text += 'Image: Current webpage screenshot (Note that only visible portion of webpage is present in the screenshot. You may need to scroll to view the remaining portion of the web-page.)\n'
         elif isinstance(obs, AgentDelegateObservation):
@@ -452,8 +439,6 @@ class CodeActAgent(Agent):
         }
         if self.config.function_calling:
             params['tools'] = self.tools
-            if self.mock_function_calling:
-                params['mock_function_calling'] = True
         else:
             params['stop'] = [
                 '</execute_ipython>',
