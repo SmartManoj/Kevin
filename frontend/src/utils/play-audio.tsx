@@ -34,7 +34,7 @@ export const generateAudio = async (text:string) => {
         const audioUrl = URL.createObjectURL(audioBlob);
 
         const audio = new Audio(audioUrl);
-        audio.playbackRate = + (localStorage.getItem('AUDIO_SPEED') || 1.25);
+        audio.playbackRate = + (localStorage.getItem('AUDIO_SPEED') || 1);
         audio.play();
     } catch (error) {
         console.error('Failed to generate audio:', error);
