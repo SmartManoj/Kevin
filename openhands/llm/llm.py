@@ -419,23 +419,23 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                     logger.debug(f'Calling LLM ...')
                     self.log_first_request(*args, **kwargs)
                     resp = self._completion_unwrapped(*args, **kwargs)
-                    # non_fncall_response = copy.deepcopy(resp)
-                    if mock_function_calling:
-                        # assert len(resp.choices) == 1
-                        assert mock_fncall_tools is not None
-                        non_fncall_response_message = resp.choices[0].message  # type: ignore
-                        fn_call_messages_with_response = (
-                            convert_non_fncall_messages_to_fncall_messages(
-                                messages + [non_fncall_response_message],
-                                mock_fncall_tools,
-                            )
-                        )  # type: ignore
-                        fn_call_response_message = fn_call_messages_with_response[-1]
-                        if not isinstance(fn_call_response_message, LiteLLMMessage):
-                            fn_call_response_message = LiteLLMMessage(
-                                **fn_call_response_message
-                            )
-                        resp.choices[0].message = fn_call_response_message  # type: ignore
+                    # # non_fncall_response = copy.deepcopy(resp)
+                    # if mock_function_calling:
+                    #     # assert len(resp.choices) == 1
+                    #     assert mock_fncall_tools is not None
+                    #     non_fncall_response_message = resp.choices[0].message  # type: ignore
+                    #     fn_call_messages_with_response = (
+                    #         convert_non_fncall_messages_to_fncall_messages(
+                    #             messages + [non_fncall_response_message],
+                    #             mock_fncall_tools,
+                    #         )
+                    #     )  # type: ignore
+                    #     fn_call_response_message = fn_call_messages_with_response[-1]
+                    #     if not isinstance(fn_call_response_message, LiteLLMMessage):
+                    #         fn_call_response_message = LiteLLMMessage(
+                    #             **fn_call_response_message
+                    #         )
+                    #     resp.choices[0].message = fn_call_response_message  # type: ignore
                     message_back = resp['choices'][0]['message']['content'] or ''
                     self_analyse = int(os.environ.get('SELF_ANALYSE', '0'))
                     if self_analyse:
