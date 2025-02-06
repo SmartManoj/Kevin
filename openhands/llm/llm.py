@@ -3,7 +3,7 @@ import os
 import warnings
 from functools import partial
 from time import sleep
-from typing import Union, Callable
+from typing import Any, Union, Callable
 
 import requests
 
