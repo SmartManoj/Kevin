@@ -99,6 +99,8 @@ class CodeActAgent(Agent):
         self.pending_actions: deque[Action] = deque()
         self.reset()
 
+        self.condenser = Condenser.from_config(self.config.condenser)
+        logger.debug(f'Using condenser: {self.condenser}')
 
         if not self.config.function_calling:
             self.action_parser = CodeActResponseParser()
