@@ -126,7 +126,7 @@ class AgentController:
 
         # the event stream must be set before maybe subscribing to it
         self.event_stream = event_stream
-
+        self.agent.event_stream = event_stream
         # subscribe to the event stream if this is not a delegate
         if not self.is_delegate:
             self.event_stream.subscribe(
