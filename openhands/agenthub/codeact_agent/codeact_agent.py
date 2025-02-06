@@ -467,19 +467,22 @@ class CodeActAgent(Agent):
             )
             params['messages'] = new_messages
             response = self.llm.completion(**params)
-            # extract the mind voice from the response
-            mind_voice = (
-                response.choices[0]
-                .message.content.split('<mind_voice>')[1]
-                .split('</mind_voice>')[0]
-            )
-            logger.info(f'Mind voice: {mind_voice}')
             # reset the params
             params['messages'] = messages
-            assert self.event_stream is not None
-            self.event_stream.add_event(
-                AudioEvent(text_for_audio=mind_voice), EventSource.AGENT
-            )
+            try:
+                _response = response.choices[0].message.content
+                # extract the mind voice from the response
+                mind_voice = (
+                    _response.split('<mind_voice>')[1]
+                    .split('</mind_voice>')[0]
+                )
+                logger.info(f'Mind voice: {mind_voice}')
+                assert self.event_stream is not None
+                self.event_stream.add_event(
+                    AudioEvent(text_for_audio=mind_voice), EventSource.AGENT
+                )
+            except Exception as e:
+                logger.error(f'Error in mind voice: {e} \n Response: {_response}')
         response = self.llm.completion(**params)
         if self.config.function_calling:
             actions = codeact_function_calling.response_to_actions(response)
