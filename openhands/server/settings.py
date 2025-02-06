@@ -52,7 +52,7 @@ class Settings(BaseModel):
         if context and context.get('expose_secrets', False):
             return github_token.get_secret_value()
 
-        return pydantic_encoder(github_token)
+        return to_jsonable_python(github_token)
 
     @staticmethod
     def from_config() -> Settings | None:
