@@ -1,11 +1,14 @@
 import warnings
 from contextlib import asynccontextmanager
 
+from fastapi.responses import JSONResponse
+
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
 
 from fastapi import (
     FastAPI,
+    Request,
 )
 
 import openhands.agenthub  # noqa F401 (we import this to get the agents registered)
@@ -52,3 +55,48 @@ app.include_router(manage_conversation_api_router)
 app.include_router(settings_router)
 app.include_router(github_api_router)
 app.include_router(trajectory_router)
+
+
+
+@app.post("/api/authenticate")
+async def authenticate(request: Request):
+    """Authenticate the user"""
+    try:
+        if request.session.get("github_token"):
+            request.state.github_token = request.session.get("github_token")
+            request.state.github_user_id = request.session.get("github_user_id")
+            return JSONResponse(
+                content={"authenticated": True},
+                status_code=200
+
+            )
+        else:
+            return JSONResponse(
+                content={"authenticated": False},
+                status_code=401
+            )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
+
+@app.post("/api/logout")
+async def logout(request: Request):
+    """Logout the user"""
+    request.session.clear()
+    return JSONResponse(
+        content={"message": "Logged out"},
+        status_code=200)
+
+
+
+@app.get("/get_github_details")
+async def get_github_details(request: Request):
+    """Get the github token"""
+    return JSONResponse(
+        content={"github_token": request.session.get("github_token"), "github_user_id": request.session.get("github_user_id"), "github_token_from_state": getattr(request.state, 'github_token', None), "github_user_id_from_state": getattr(request.state, 'github_user_id', None)},
+        status_code=200
+    )
+
+

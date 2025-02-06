@@ -1,7 +1,10 @@
+import os
 from typing import Any
 
+from fastapi import Request
 import httpx
 
+from openhands.server.auth import get_github_token
 from openhands.server.data_models.gh_types import GitHubRepository, GitHubUser
 from openhands.server.shared import SettingsStoreImpl, config, server_config
 from openhands.server.types import AppMode, GhAuthenticationError, GHUnknownException
@@ -131,3 +134,24 @@ class GitHubService:
         ]
 
         return repos
+
+    @classmethod
+    def get_gh_token(cls, request: Request) -> str | None:
+        return get_github_token(request)
+
+    async def handle_github_callback(self, code: str):
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post('https://github.com/login/oauth/access_token',
+                json={
+                    'client_id': server_config.github_client_id,
+                    'client_secret': os.environ.get('GITHUB_APP_CLIENT_SECRET', ''),
+                    'code': code
+                },
+                headers={
+                    'Accept': 'application/json'
+                }
+            )
+            return response.json()
+        except Exception as e:
+            raise GHUnknownException(f'Unknown error: {e} {response.json()}')

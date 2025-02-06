@@ -30,5 +30,8 @@ base_app.add_middleware(
 )
 base_app.middleware('http')(AttachConversationMiddleware(base_app))
 base_app.middleware('http')(GitHubTokenMiddleware(base_app))
+from starlette.middleware.sessions import SessionMiddleware
+
+base_app.add_middleware(SessionMiddleware, secret_key="your-secret-key-here")
 
 app = socketio.ASGIApp(sio, other_asgi_app=base_app)
