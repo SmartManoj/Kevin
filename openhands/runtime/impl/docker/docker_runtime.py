@@ -289,11 +289,12 @@ class DockerRuntime(ActionExecutionClient):
                     'mode': 'rw',
                 }
             }
-            # mount sock
-            volumes['/var/run/docker.sock'] = {
-                'bind': '/var/run/docker.sock',
-                'mode': 'rw',
-            }
+            if self.config.mount_docker_socket:
+                # mount sock
+                volumes['/var/run/docker.sock'] = {
+                    'bind': '/var/run/docker.sock',
+                    'mode': 'rw',
+                }
             logger.debug(f'Mount dir: {self.config.workspace_mount_path}')
         else:
             logger.debug(

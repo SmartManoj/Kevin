@@ -17,7 +17,7 @@ class LLMConfig(BaseModel):
         enable_cache: Whether to enable caching.
         seed: The seed to use for the LLM.
 
-        # litellm configs
+        # original configs
         model: The model to use.
         api_key: The API key to use.
         base_url: The base URL for the API. This is necessary for local LLMs. It is also used for Azure embeddings.
@@ -59,7 +59,7 @@ class LLMConfig(BaseModel):
     enable_cache: bool = False
     seed: int | None = 42
 
-    # litellm configs
+    # original configs
     model: str = Field(default='claude-3-5-sonnet-20241022')
     api_key: SecretStr | None = Field(default=None)
     base_url: str | None = Field(default=None)

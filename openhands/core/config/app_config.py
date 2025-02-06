@@ -18,6 +18,10 @@ class AppConfig(BaseModel):
     """Configuration for the app.
 
     Attributes:
+        # custom configs
+        mount_docker_socket: Whether to mount the docker socket.
+
+        # original configs
         llms: Dictionary mapping LLM names to their configurations.
             The default configuration is stored under the 'llm' key.
         agents: Dictionary mapping agent names to their configurations.
@@ -53,8 +57,9 @@ class AppConfig(BaseModel):
     """
     # custom configs
     workspace_base: str | None = './workspace'
+    mount_docker_socket: bool = Field(default=True)
 
-    # litellm configs
+    # original configs
     llms: dict[str, LLMConfig] = Field(default_factory=dict)
     agents: dict = Field(default_factory=dict)
     default_agent: str = Field(default=OH_DEFAULT_AGENT)
