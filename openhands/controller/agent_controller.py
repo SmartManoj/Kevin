@@ -146,7 +146,7 @@ class AgentController:
         self._initial_max_budget_per_task = max_budget_per_task
 
         # stuck helper
-        self._stuck_detector = StuckDetector(self.state, self.agent)
+        self._stuck_detector = StuckDetector(self.state, self.agent, self.agent.llm)
         self.status_callback = status_callback
 
         # replay-related

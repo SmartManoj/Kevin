@@ -1,8 +1,5 @@
 from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
 from openhands.controller.state.state import State
-from openhands.core.config import load_app_config
-from openhands.core.config.agent_config import AgentConfig
-from openhands.core.config.llm_config import LLMConfig
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message, TextContent
 from openhands.events.action.action import Action
@@ -19,9 +16,6 @@ from openhands.events.observation.error import ErrorObservation
 from openhands.events.observation.observation import Observation
 from openhands.llm.llm import LLM
 
-config = load_app_config()
-llm = LLM(config.get_llm_config())
-
 
 class StuckDetector:
     SYNTAX_ERROR_MESSAGES = [
@@ -30,9 +24,10 @@ class StuckDetector:
         'SyntaxError: incomplete input',
     ]
 
-    def __init__(self, state: State, agent: CodeActAgent):
+    def __init__(self, state: State, agent: CodeActAgent, llm: LLM):
         self.state = state
         self.agent = agent
+        self.llm = llm
 
     def generate_resolution(self, actions, observations):
         #
