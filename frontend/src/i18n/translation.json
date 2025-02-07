@@ -2184,19 +2184,19 @@
         "tr": "Yapılacaklar uygulaması"
     },
     "SUGGESTIONS$HACKER_NEWS": {
-        "en": "Write a Python script that shows the top story on Hacker News",
-        "ja": "Hacker Newsのトップ記事を表示するPythonスクリプトを作成する",
-        "zh-CN": "编写一个显示Hacker News头条新闻的Python脚本",
-        "zh-TW": "編寫一個顯示 Hacker News 頭條新聞的 Python 腳本",
-        "ko-KR": "Hacker News의 상위 기사를 보여주는 Python 스크립트 작성하기",
-        "fr": "Écrire un script Python qui affiche l'article principal de Hacker News",
-        "es": "Escribir un script Python que muestre la noticia principal de Hacker News",
-        "de": "Ein Python-Skript schreiben, das die Top-Story von Hacker News anzeigt",
-        "it": "Scrivi uno script Python che mostra la notizia principale su Hacker News",
-        "pt": "Escrever um script Python que mostra a principal notícia do Hacker News",
-        "ar": "كتابة سكربت باش يعرض أهم خبر على هاكر نيوز",
-        "no": "Skriv et Python-script som viser topphistorien på Hacker News",
-        "tr": "Hacker News klonu"
+        "en": "Write a Python script that shows the top story on Hacker News using v0",
+        "ja": "Hacker Newsのトップ記事をv0を使用して表示するPythonスクリプトを作成する",
+        "zh-CN": "编写一个使用v0显示Hacker News头条新闻的Python脚本",
+        "zh-TW": "編寫一個使用 v0 顯示 Hacker News 頭條新聞的 Python 腳本",
+        "ko-KR": "v0을 사용하여 Hacker News의 상위 기사를 보여주는 Python 스크립트 작성하기",
+        "fr": "Écrire un script Python qui affiche l'article principal de Hacker News en utilisant v0",
+        "es": "Escribir un script Python que muestre la noticia principal de Hacker News usando v0",
+        "de": "Ein Python-Skript schreiben, das die Top-Story von Hacker News mit v0 anzeigt",
+        "it": "Scrivi uno script Python che mostra la notizia principale su Hacker News utilizzando v0",
+        "pt": "Escrever um script Python que mostra a principal notícia do Hacker News usando v0",
+        "ar": "كتابة سكربت باش يعرض أهم خبر على هاكر نيوز باستخدام v0",
+        "no": "Skriv et Python-script som viser topphistorien på Hacker News ved å bruke v0",
+        "tr": "Hacker News'teki en popüler haberi v0 kullanarak gösteren bir Python betiği yazın"
     },
     "LANDING$CHANGE_PROMPT": {
         "en": "What would you like to change in {{repo}}?",
