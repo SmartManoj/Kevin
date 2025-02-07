@@ -5,6 +5,7 @@ import {
   addUserMessage,
   addErrorMessage,
 } from "#/state/chat-slice";
+import { trackError } from "#/utils/error-handler";
 import { appendSecurityAnalyzerInput } from "#/state/security-analyzer-slice";
 import { setCode, setActiveFilepath } from "#/state/code-slice";
 import { appendJupyterInput } from "#/state/jupyter-slice";
@@ -100,6 +101,11 @@ export function handleStatusMessage(message: StatusMessage) {
       }),
     );
   } else if (message.type === "error") {
+    trackError({
+      message: message.message,
+      source: "chat",
+      metadata: { msgId: message.id },
+    });
     store.dispatch(
       addErrorMessage({
         ...message,
@@ -120,9 +126,15 @@ export function handleAssistantMessage(message: Record<string, unknown>) {
   } else if (message.text_for_audio) {
     generateAudio(message.text_for_audio as string);
   } else {
+    const errorMsg = "Unknown message type received";
+    trackError({
+      message: errorMsg,
+      source: "chat",
+      metadata: { raw_message: message },
+    });
     store.dispatch(
       addErrorMessage({
-        message: "Unknown message type received",
+        message: errorMsg,
       }),
     );
   }
