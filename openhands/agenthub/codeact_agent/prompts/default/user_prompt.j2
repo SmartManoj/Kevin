@@ -1,16 +1,19 @@
 {% set DEFAULT_EXAMPLE %}
 --- START OF EXAMPLE ---
 
-USER: print 2
+USER: create a file named test.py with the content 'print("Hello, World!")'
 
 ASSISTANT:
 <execute_ipython>
-print(2)
+create_file("test.py", content="print('Hello, World!')")
 </execute_ipython>
 
 USER:
 OBSERVATION:
-2
+(File name: /workspace/test.py)
+1|print("Hello, World!")
+(this is the end of the file)
+[File updated successfully]
 
 ASSISTANT:
 The task is completed.
