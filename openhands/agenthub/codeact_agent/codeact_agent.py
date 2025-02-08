@@ -664,7 +664,8 @@ display.Image(dss())
 
             for msg in messages_to_add:
                 if msg:
-                    if msg.role == 'user' and not is_first_message_handled:
+                    # already handled the first user message
+                    if msg.role == 'user' and not is_first_message_handled and 0:
                         is_first_message_handled = True
                         # compose the first user message with examples
                         self.prompt_manager.add_examples_to_initial_message(msg)
