@@ -326,6 +326,10 @@ def create_file(filename: str, content: str = '', overwrite: bool = False) -> No
                     file.write(content)
             elif content:
                 insert_content_before_line(filename, 1, content)
+                # if the file is empty, delete it
+                with open(filename, 'r') as file:
+                    if file.read() == '':
+                        os.remove(filename)
             else:
                 print(f'[File {filename} created.]')
         except Exception as e:
