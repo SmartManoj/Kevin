@@ -131,6 +131,7 @@ class LocalRuntime(ActionExecutionClient):
 
         logger.warning(
             'Initializing LocalRuntime. WARNING: NO SANDBOX IS USED. '
+            'This is an experimental feature, please report issues to https://github.com/All-Hands-AI/OpenHands/issues. '
             '`run_as_openhands` will be ignored since the current user will be used to launch the server. '
             'We highly recommend using a sandbox (eg. DockerRuntime) unless you '
             'are running in a controlled environment.\n'
@@ -159,6 +160,10 @@ class LocalRuntime(ActionExecutionClient):
         self.status_callback = status_callback
         self.server_process: Optional[subprocess.Popen[str]] = None
         self.action_semaphore = threading.Semaphore(1)  # Ensure one action at a time
+
+        # Update env vars
+        if self.config.sandbox.runtime_startup_env_vars:
+            os.environ.update(self.config.sandbox.runtime_startup_env_vars)
 
         # Initialize the action_execution_server
         super().__init__(
@@ -300,10 +305,10 @@ class LocalRuntime(ActionExecutionClient):
     async def execute_action(self, action: Action) -> Observation:
         """Execute an action by sending it to the server."""
         if not self._runtime_initialized:
-            return ErrorObservation('Runtime not initialized')
+            raise AgentRuntimeDisconnectedError('Runtime not initialized')
 
         if self.server_process is None or self.server_process.poll() is not None:
-            return ErrorObservation('Server process died')
+            raise AgentRuntimeDisconnectedError('Server process died')
 
         with self.action_semaphore:
             try:

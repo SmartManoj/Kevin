@@ -322,6 +322,9 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                     kwargs['stop'] = STOP_WORDS
 
                 mock_fncall_tools = kwargs.pop('tools')
+                kwargs['tool_choice'] = (
+                    'none'  # force no tool calling because we're mocking it - without it, it will cause issue with sglang
+                )
 
             if self.config.model.split('/')[-1].startswith('o1-'):
                 # Message types: user and assistant messages only, system messages are not supported.
