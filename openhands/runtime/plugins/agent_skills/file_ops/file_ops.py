@@ -1307,7 +1307,8 @@ def show_function_at_line(file_path: str, line_number: int) -> None:
                 print_function_code(node)
                 return
 
-    print(f'No function found for line {line_number} in the file.')
+    print(f'[No function found for line {line_number} in the file. Using open_file() to view the file.]')
+    open_file(file_path, line_number, context_lines=10)
 
 def indent_lines(text, level=1):
     """
