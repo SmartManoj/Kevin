@@ -1333,6 +1333,12 @@ def get_indent_level(text: str, line_start: int | None = None) -> int:
             return line.count('    ')
     return 0
 
+def delete_file(file_name: str):
+    try:
+        os.remove(file_name)
+    except Exception as e:
+        print(f"Error deleting file {file_name}: {e}")
+
 __all__ = [
     'search_function',
     'search_class',
@@ -1347,6 +1353,7 @@ __all__ = [
     'scroll_down',
     'scroll_up',
     'create_file',
+    'delete_file',
     'find_and_replace',
     'delete_line',
     'delete_lines',

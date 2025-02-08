@@ -17,8 +17,7 @@ for func_name in __all__:
     if func_name in ['clean_workspace', 'custom_import']:
         continue
     func = globals()[func_name]
-
-    cur_doc = func.__doc__
+    cur_doc = func.__doc__ or ''
     # remove indentation from docstring and extra empty lines
     cur_doc = '\n'.join(filter(None, map(lambda x: x.strip(), cur_doc.split('\n'))))
     # now add a consistent 4 indentation
