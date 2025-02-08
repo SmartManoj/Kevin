@@ -51,7 +51,7 @@ class StuckDetector:
             Message(role='user', content=[TextContent(text=stuck_input)])
         )
 
-        response = llm.completion(
+        response = self.llm.completion(
             messages=message_sequence,
             temperature=0.0,
             condense=True,
