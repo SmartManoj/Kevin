@@ -15,7 +15,7 @@ class DebugMixin:
             data = [args, kwargs]
             with open('logs/llm/request.json', 'w') as f:
                 json.dump(data, f)
-            self.logged_first_request = True
+            # self.logged_first_request = True
 
     def log_prompt(self, messages: list[Message] | Message):
         if not messages:
