@@ -76,25 +76,33 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
         f'Please address the following GitHub issue for the repository, where the source code is available in the {repo_dir} directory, which I have access to.\n'
         '# Title\n'
         f'{problem_statement}\n\n'
-        '\n$ pwd\n'
-        f'{repo_dir}\n'
+        '\n$ pwd\n\n'
+        f'{repo_dir}\n\n'
     )
     if 1:
-        numbered_instructions = [
-            f'Locate the actual relevant library file that raised this error in {repo_dir} using `find_file()` skill.',
-            'Inspect the function using `show_function_at_line()` skill.',
-            'Correctly fix the library source code using try-except, ensuring proper handling of exceptions (TypeError, ValueError) without altering the intended logic.',
-            'Test the fix by reproducing the MRE.',
-        ]
-        for k, inst in enumerate(numbered_instructions):
-            instruction += f'Step {k + 1}: {inst}\n'
-        important_instructions = [
-            'Only use one skill at a time.',
-            'The traceback must be read from bottom to top, with the final entry showing where the error occurred.',
-        ]
-        instruction += '\nImportant Instructions:\n'
+        if 1:
+            numbered_instructions = [
+                f'Reproduce the MRE by create a test code in a file and run it. (You should not modify the test code itself.)',
+                f'Locate the actual relevant library file that raised this error in {repo_dir} using `find_file()` or `search_class()` or `search_function()` or `search_in_dir()` python skill.',
+                'Inspect the function using `show_function_at_line()` skill.',
+                'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it.',
+                'Test the fix.',
+                # 'Apply the same changes to other relevant classes in the file.'
+                # 'Check for similar issues that might be related to the current issue.'
+            ]
+            for k, inst in enumerate(numbered_instructions):
+                instruction += f'Step {k + 1}: {inst}\n\n'
+            important_instructions = [
+                'Only use one skill at a time.',
+                'On exceptions, raise Error instead of giving wrong values.',
+                'For replace_lines_content, you can specify same line number for both start_line_number and end_line_number',
+                'The traceback must be read from bottom to top, with the final entry showing where the error occurred.',
+                'Wrap the code with triple backticks if it is a multi-line code block.',
+                'Internet is disabled.'
+            ]
+        instruction += '\nImportant Instructions:\n\n'
         for inst in important_instructions:
-            instruction += f'{inst}\n'
+            instruction += f'{inst}\n\n'
         instruction1 = (
             'Do not provide suggestions or workarounds. Directly fix the issue by modifying the source code.\n'
             'Plan:\n'
