@@ -227,6 +227,19 @@ def initialize_runtime(
 
     This function is called before the runtime is used to run the agent.
     """
+    if os.environ.get('EXISTING_CONTAINER'):
+        for command in [
+            'cd /testbed',  
+            f'git reset --hard {instance["base_commit"]}',
+        ]:
+            action = CmdRunAction(command=command)
+            action.set_hard_timeout(600)
+            logger.info(action, extra={'msg_type': 'ACTION'})
+            obs = runtime.run_action(action)
+            logger.info(obs, extra={'msg_type': 'OBSERVATION'})
+            assert_and_raise(obs.exit_code == 0, f'Failed to {command}: {str(obs)}')
+        return
+        
     logger.info('-' * 30)
     logger.info('BEGIN Runtime Initialization Fn')
     logger.info('-' * 30)

@@ -330,6 +330,7 @@ def create_file(filename: str, content: str = '', overwrite: bool = False) -> No
                 with open(filename, 'r') as file:
                     if file.read() == '':
                         os.remove(filename)
+                        print(f'[File {filename} is not created.]')
             else:
                 print(f'[File {filename} created.]')
         except Exception as e:
