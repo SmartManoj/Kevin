@@ -10,18 +10,10 @@ load_dotenv()
 with open('config.toml', 'rb') as f:
     config = tomllib.load(f)
     config = config['llm']
-    group = 'gemini_pro'
-    group = 'gemini_exp'
-    # group = 'gemini'
-    # group = 'nemo'
-    group = 'or'
-    group = 'groq'
-    group = 'ollama'
-    group = 'nv'
-    group = 'hv'
-    # group = ''
+    group = config.get('use_group')
     if group in config:
         config.update(config[group])
+
 
 model = config['model']
 print('Using model:', model)
