@@ -56,19 +56,6 @@ function Home() {
           />
         </div>
       </div>
-      {latestConversation && (
-        <div className="flex gap-4 w-full text-center mt-8">
-          <p className="text-center w-full">
-            {t(I18nKey.LANDING$OR)}&nbsp;
-            <a
-              className="underline"
-              href={`/conversations/${latestConversation}`}
-            >
-              {t(I18nKey.LANDING$RECENT_CONVERSATION)}
-            </a>
-          </p>
-        </div>
-      )}
     </div>
   );
 }

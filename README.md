@@ -57,7 +57,7 @@ Gemini Models solves all 93 issues in this category. Checkout the results [here]
 <a name="readme-top"></a>
 
 <div align="center">
-  <img src="./docs/static/img/logo.webp" alt="Logo" width="200">
+  <img src="frontend/public/logo.png" alt="Logo" width="200">
   <h1 align="center">Kevin: Code Quick, Create Fast</h1>
 </div>
 

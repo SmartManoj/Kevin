@@ -6,7 +6,7 @@ export function HeroHeading() {
   const { t } = useTranslation();
   return (
     <div className="w-[304px] text-center flex flex-col gap-4 items-center py-4">
-      <BuildIt width={88} height={104} />
+      <img src="/logo.png" alt="Kevin" style={{ width: "50%" }} />
       <h1 className="text-[38px] leading-[32px] -tracking-[0.02em]">
         {t(I18nKey.LANDING$TITLE)}
       </h1>
