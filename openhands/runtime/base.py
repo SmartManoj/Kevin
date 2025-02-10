@@ -240,7 +240,7 @@ class Runtime(FileEditRuntimeMixin):
         random_str = ''.join(
             random.choices(string.ascii_lowercase + string.digits, k=8)
         )
-        branch_name = f'openhands-workspace-{random_str}'
+        branch_name = f'kevin-workspace-{random_str}'
         action = CmdRunAction(
             command=f'git clone {url} {dir_name} ; cd {dir_name} ; git checkout -b {branch_name}',
         )

@@ -110,7 +110,7 @@ export const useTerminal = ({
       /* Initialize the terminal in the DOM */
       initializeTerminal();
 
-      terminal.current.write("openhands@openhands-workspace:/workspace $ ");
+      terminal.current.write("kevin@kevin-workspace:/workspace $ ");
       /* Listen for resize events */
       resizeObserver = new ResizeObserver(() => {
         fitAddon.current?.fit();
