@@ -6,7 +6,7 @@ import { JupyterCell } from "./jupyter-cell";
 import { ScrollToBottomButton } from "#/components/shared/buttons/scroll-to-bottom-button";
 import { useWsClient } from "#/context/ws-client-provider";
 import { VscArrowUp } from "react-icons/vsc";
-import { Textarea } from "@nextui-org/react";
+import { Textarea } from "@heroui/react";
 import { appendJupyterInput } from "#/state/jupyter-slice";
 import { createJupyterCode } from "#/services/chat-service";
 
@@ -65,7 +65,7 @@ export function JupyterEditor({ maxWidth }: JupyterEditorProps) {
       >
         <Textarea
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value)}
           onKeyDown={onKeyPress}
           placeholder="Enter Python code here..."
           className="p-1"
