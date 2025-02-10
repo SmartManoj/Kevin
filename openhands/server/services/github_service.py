@@ -1,5 +1,7 @@
+import os
 from typing import Any
 
+from fastapi import Request
 import httpx
 from fastapi import Request
 
@@ -137,3 +139,20 @@ class GitHubService:
     @classmethod
     def get_gh_token(cls, request: Request) -> str | None:
         return get_github_token(request)
+
+    async def handle_github_callback(self, code: str):
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post('https://github.com/login/oauth/access_token',
+                json={
+                    'client_id': server_config.github_client_id,
+                    'client_secret': os.environ.get('GITHUB_APP_CLIENT_SECRET', ''),
+                    'code': code
+                },
+                headers={
+                    'Accept': 'application/json'
+                }
+            )
+            return response.json()
+        except Exception as e:
+            raise GHUnknownException(f'Unknown error: {e} {response.json()}')

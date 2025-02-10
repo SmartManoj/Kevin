@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends
+import traceback
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
+import jwt
+from pydantic import SecretStr
 
 from openhands.server.auth import get_user_id
 from openhands.server.data_models.gh_types import GitHubRepository, GitHubUser
 from openhands.server.services.github_service import GitHubService
-from openhands.server.shared import server_config
+from openhands.server.shared import SettingsStoreImpl, server_config, config
 from openhands.server.types import GhAuthenticationError, GHUnknownException
 from openhands.utils.import_utils import get_impl
 
@@ -111,3 +114,55 @@ async def search_github_repositories(
             content=str(e),
             status_code=500,
         )
+
+
+@app.post('/callback')
+async def github_callback(
+    request: Request,
+):
+    try:
+        data = await request.json()
+        code = data.get('code')
+        if not code:
+            return JSONResponse(
+                content="Missing 'code' in request body",
+                status_code=422,
+            )
+            
+        client = GithubServiceImpl(None)
+        response = await client.handle_github_callback(code)
+        print(response)
+        access_token = response['access_token']
+        request.session['github_token'] = access_token
+        request.state.github_token = access_token
+        client.token = access_token
+        user = await client.get_user()
+        request.session['github_user_id'] = user.id
+        request.state.github_user_id = user.id
+        print(f"github_user_id: {request.state.github_user_id}")
+        # save settings
+        settings_store = await SettingsStoreImpl.get_instance(config, user.id)
+        settings = await settings_store.load()
+        settings.github_token = SecretStr(access_token)
+        await settings_store.store(settings)
+        # set the cookie of github_user_id encoded in jwt
+        jwt_secret = (
+            config.jwt_secret.get_secret_value()
+            if isinstance(config.jwt_secret, SecretStr)
+            else config.jwt_secret
+        )
+        encoded = jwt.encode({'github_user_id': user.id}, jwt_secret, algorithm='HS256')
+
+        response = JSONResponse(
+            content=response,
+            status_code=200,
+        )
+        response.set_cookie(key="openhands_auth", value=encoded)
+        return response
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(
+            content=str(e),
+            status_code=500,
+        )
+
