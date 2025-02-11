@@ -55,7 +55,7 @@ from openhands.events.serialization import event_from_dict, event_to_dict
 from openhands.runtime.browser import browse
 from openhands.runtime.browser.browser_env import BrowserEnv
 from openhands.runtime.plugins import ALL_PLUGINS, JupyterPlugin, Plugin, VSCodePlugin
-if os.environ.get('USE_PEXPECT') == '1':
+if os.environ.get('USE_PEXPECT') == '1' or 1:
     from openhands.runtime.utils.bash_pexpect import BashSession
 else:        
     from openhands.runtime.utils.bash import BashSession
