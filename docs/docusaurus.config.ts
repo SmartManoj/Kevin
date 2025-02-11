@@ -3,17 +3,17 @@ import type { Config } from "@docusaurus/types";
 import { themes as prismThemes } from "prism-react-renderer";
 
 const config: Config = {
-  title: "OpenHands",
-  tagline: "Code Less, Make More",
+  title: "Kevin",
+  tagline: "Code Quick, Create Fast",
   favicon: "img/logo.webp",
 
   // Set the production url of your site here
-  url: "https://docs.all-hands.dev",
+  url: "http://kevin-docs.zebralock.ai",
   baseUrl: "/",
 
   // GitHub pages deployment config.
-  organizationName: "All-Hands-AI",
-  projectName: "OpenHands",
+  organizationName: "Zebralock",
+  projectName: "Kevin",
   trailingSlash: false,
 
   onBrokenLinks: "throw",
@@ -60,13 +60,16 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
+  customFields: {
+    documentationUrl: "https://kevin-docs.zebralock.ai",
+  },
   themeConfig: {
     image: "img/docusaurus.png",
     navbar: {
-      title: "OpenHands",
+      title: "Kevin",
       logo: {
-        alt: "OpenHands",
-        src: "img/logo.png",
+        alt: "Kevin",
+        src: "public/logo.png",
       },
       items: [
         {
@@ -86,12 +89,12 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: "https://all-hands.dev",
+          href: "https://zebralock.ai",
           label: "Company",
           position: "right",
         },
         {
-          href: "https://github.com/All-Hands-AI/OpenHands",
+          href: "https://github.com/SmartManoj/Kevin",
           label: "GitHub",
           position: "right",
         },
