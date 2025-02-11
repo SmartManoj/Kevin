@@ -64,6 +64,7 @@ class DockerRuntime(ActionExecutionClient):
         status_callback: Callable | None = None,
         attach_to_existing: bool = False,
         headless_mode: bool = True,
+        github_user_id: str | None = None,
     ):
         if not DockerRuntime._shutdown_listener_id:
             DockerRuntime._shutdown_listener_id = add_shutdown_listener(
@@ -89,7 +90,8 @@ class DockerRuntime(ActionExecutionClient):
         else:
             self.instance_id = sid
             self._container_port = find_available_tcp_port()
-        self.container_name = CONTAINER_NAME_PREFIX + self.instance_id
+        self.github_user_id = github_user_id or 'default'
+        self.container_name = CONTAINER_NAME_PREFIX + self.github_user_id  + '-' + self.instance_id
         self.docker_client: docker.DockerClient = self._init_docker_client()
         if not attach_to_existing:
             try:
@@ -123,6 +125,7 @@ class DockerRuntime(ActionExecutionClient):
             status_callback,
             attach_to_existing,
             headless_mode,
+            github_user_id,
         )
 
         # Log runtime_extra_deps after base class initialization so self.sid is available

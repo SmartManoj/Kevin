@@ -19,6 +19,7 @@ from openhands.microagent import BaseMicroAgent
 from openhands.runtime import get_runtime_cls
 from openhands.runtime.base import Runtime
 from openhands.runtime.impl.remote.remote_runtime import RemoteRuntime
+from openhands.runtime.impl.docker.docker_runtime import DockerRuntime
 from openhands.security import SecurityAnalyzer, options
 from openhands.storage.files import FileStore
 from openhands.utils.async_utils import call_sync_from_async
@@ -208,7 +209,7 @@ class AgentSession:
         )
 
         kwargs = {}
-        if runtime_cls == RemoteRuntime:
+        if runtime_cls in [RemoteRuntime, DockerRuntime]:
             kwargs['github_user_id'] = self.github_user_id
 
         self.runtime = runtime_cls(
