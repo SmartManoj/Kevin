@@ -90,8 +90,9 @@ class DockerRuntime(ActionExecutionClient):
         else:
             self.instance_id = sid
             self._container_port = find_available_tcp_port()
-        self.github_user_id = github_user_id or 'default'
-        self.container_name = CONTAINER_NAME_PREFIX + self.github_user_id  + '-' + self.instance_id
+        self.github_user_id = github_user_id
+        _ = self.github_user_id  + '-' if self.github_user_id else ''
+        self.container_name = CONTAINER_NAME_PREFIX + _ + self.instance_id
         self.docker_client: docker.DockerClient = self._init_docker_client()
         if not attach_to_existing:
             try:
@@ -141,7 +142,7 @@ class DockerRuntime(ActionExecutionClient):
     async def connect(self):
         self.send_status_message('STATUS$STARTING_RUNTIME')
         if not self.attach_to_existing:
-            logger.info('Creating new Docker container')
+            logger.info(f'Creating new Docker container for {self.container_name}')
             if self.runtime_container_image is None:
                 if self.base_container_image is None:
                     raise ValueError(
