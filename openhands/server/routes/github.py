@@ -3,17 +3,19 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 import jwt
 from pydantic import SecretStr
+from openhands.server.shared import SettingsStoreImpl, config
 
-from openhands.server.auth import get_user_id
-from openhands.server.data_models.gh_types import GitHubRepository, GitHubUser
-from openhands.server.services.github_service import GitHubService
-from openhands.server.shared import SettingsStoreImpl, server_config, config
-from openhands.server.types import GhAuthenticationError, GHUnknownException
-from openhands.utils.import_utils import get_impl
+
+from openhands.integrations.github.github_service import GithubServiceImpl
+from openhands.integrations.github.github_types import (
+    GhAuthenticationError,
+    GHUnknownException,
+    GitHubRepository,
+    GitHubUser,
+)
+from openhands.server.auth import get_github_token, get_user_id
 
 app = APIRouter(prefix='/api/github')
-
-GithubServiceImpl = get_impl(GitHubService, server_config.github_service_class)
 
 
 @app.get('/repositories')
@@ -23,8 +25,9 @@ async def get_github_repositories(
     sort: str = 'pushed',
     installation_id: int | None = None,
     github_user_id: str | None = Depends(get_user_id),
+    github_user_token: SecretStr | None = Depends(get_github_token),
 ):
-    client = GithubServiceImpl(github_user_id)
+    client = GithubServiceImpl(user_id=github_user_id, token=github_user_token)
     try:
         repos: list[GitHubRepository] = await client.get_repositories(
             page, per_page, sort, installation_id
@@ -47,8 +50,9 @@ async def get_github_repositories(
 @app.get('/user')
 async def get_github_user(
     github_user_id: str | None = Depends(get_user_id),
+    github_user_token: SecretStr | None = Depends(get_github_token),
 ):
-    client = GithubServiceImpl(github_user_id)
+    client = GithubServiceImpl(user_id=github_user_id, token=github_user_token)
     try:
         user: GitHubUser = await client.get_user()
         return user
@@ -69,8 +73,9 @@ async def get_github_user(
 @app.get('/installations')
 async def get_github_installation_ids(
     github_user_id: str | None = Depends(get_user_id),
+    github_user_token: SecretStr | None = Depends(get_github_token),
 ):
-    client = GithubServiceImpl(github_user_id)
+    client = GithubServiceImpl(user_id=github_user_id, token=github_user_token)
     try:
         installations_ids: list[int] = await client.get_installation_ids()
         return installations_ids
@@ -95,8 +100,9 @@ async def search_github_repositories(
     sort: str = 'stars',
     order: str = 'desc',
     github_user_id: str | None = Depends(get_user_id),
+    github_user_token: SecretStr | None = Depends(get_github_token),
 ):
-    client = GithubServiceImpl(github_user_id)
+    client = GithubServiceImpl(user_id=github_user_id, token=github_user_token)
     try:
         repos: list[GitHubRepository] = await client.search_repositories(
             query, per_page, sort, order

@@ -1,6 +1,7 @@
 import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
+import os
 from typing import Callable
 from urllib.parse import urlparse
 
@@ -195,6 +196,12 @@ class GitHubTokenMiddleware(SessionMiddlewareInterface):
 
         # TODO: To avoid checks like this we should re-add the abilty to have completely different middleware in SAAS as in OSS
         if getattr(request.state, 'github_token', None) is None:
-            request.state.github_token = request.session.get("github_token")
-            request.state.github_user_id = request.session.get("github_user_id")
+            if os.environ.get("APP_MODE") == "saas":
+                request.state.github_token = request.session.get("github_token")
+                request.state.github_user_id = request.session.get("github_user_id")
+            if settings and settings.github_token:
+                request.state.github_token = settings.github_token
+            else:
+                request.state.github_token = None
+
         return await call_next(request)
