@@ -155,10 +155,10 @@ class CmdOutputObservation(Observation):
 
     def to_agent_observation(self) -> str:
         ret = f'{self.metadata.prefix}{self.content}{self.metadata.suffix}'
-        if self.metadata.working_dir:
-            ret += f'\n[Current working directory: {self.metadata.working_dir}]'
-        if self.metadata.py_interpreter_path:
-            ret += f'\n[Python interpreter: {self.metadata.py_interpreter_path}]'
+        # if self.metadata.working_dir:
+        #     ret += f'\n[Current working directory: {self.metadata.working_dir}]'
+        # if self.metadata.py_interpreter_path:
+        #     ret += f'\n[Python interpreter: {self.metadata.py_interpreter_path}]'
         if self.metadata.exit_code != -1 and self.metadata.exit_code != 0:
             ret += f'\n[Command finished with exit code {self.metadata.exit_code}]'
         return ret
