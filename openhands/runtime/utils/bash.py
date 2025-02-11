@@ -327,9 +327,9 @@ class BashSession:
             metadata.prefix = f'[Previous command outputs are truncated. Showing the last {num_lines} lines of the output below.]\n'
 
         metadata.suffix = (
-            f'\n[The command completed with exit code {metadata.exit_code}.]'
+            f''
             if not is_special_key
-            else f'\n[The command completed with exit code {metadata.exit_code}. CTRL+{command[-1].upper()} was sent.]'
+            else f'CTRL+{command[-1].upper()} was sent.]'
         )
         command_output = self._get_command_output(
             command,
