@@ -31,11 +31,11 @@ export function WaitlistModal({
     <ModalBackdrop>
       <ModalBody>
         <AllHandsLogo width={68} height={46} />
-        <WaitlistMessage content={ghTokenIsSet ? "waitlist" : "sign-in"} />
+        <WaitlistMessage content={"sign-in"} />
 
         <TOSCheckbox onChange={() => setIsTosAccepted((prev) => !prev)} />
 
-        {!ghTokenIsSet && (
+        { (
           <ModalButton
             disabled={!isTosAccepted}
             text="Connect to GitHub"
@@ -44,7 +44,7 @@ export function WaitlistModal({
             onClick={handleGitHubAuth}
           />
         )}
-        {ghTokenIsSet && <JoinWaitlistAnchor />}
+        {/* {ghTokenIsSet && <JoinWaitlistAnchor />} */}
       </ModalBody>
     </ModalBackdrop>
   );
