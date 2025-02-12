@@ -12,7 +12,6 @@ from openhands.integrations.github.github_types import (
     GitHubUser,
 )
 from openhands.server.auth import get_github_token
-from openhands.server.config import server_config
 from openhands.utils.import_utils import get_impl
 
 
@@ -148,7 +147,7 @@ class GitHubService:
             async with httpx.AsyncClient() as client:
                 response = await client.post('https://github.com/login/oauth/access_token',
                 json={
-                    'client_id': server_config.github_client_id,
+                    'client_id': os.environ.get('GITHUB_APP_CLIENT_ID', ''),
                     'client_secret': os.environ.get('GITHUB_APP_CLIENT_SECRET', ''),
                     'code': code
                 },

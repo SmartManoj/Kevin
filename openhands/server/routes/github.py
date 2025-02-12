@@ -1,6 +1,6 @@
 import traceback
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 import jwt
 from pydantic import SecretStr
 from openhands.server.shared import SettingsStoreImpl, config
@@ -122,13 +122,12 @@ async def search_github_repositories(
         )
 
 
-@app.post('/callback')
+@app.get('/callback')
 async def github_callback(
     request: Request,
 ):
     try:
-        data = await request.json()
-        code = data.get('code')
+        code = request.query_params.get('code')
         if not code:
             return JSONResponse(
                 content="Missing 'code' in request body",
@@ -141,7 +140,7 @@ async def github_callback(
         access_token = response['access_token']
         request.session['github_token'] = access_token
         request.state.github_token = access_token
-        client.token = access_token
+        client.token = SecretStr(access_token)
         user = await client.get_user()
         request.session['github_user_id'] = user.id
         request.state.github_user_id = user.id
@@ -164,7 +163,7 @@ async def github_callback(
             status_code=200,
         )
         response.set_cookie(key="openhands_auth", value=encoded)
-        return response
+        return RedirectResponse(url='/')
     except Exception as e:
         traceback.print_exc()
         return JSONResponse(
