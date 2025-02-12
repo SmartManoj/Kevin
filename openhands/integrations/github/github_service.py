@@ -33,7 +33,9 @@ class GitHubService:
 
         if self.user_id and not self.token:
             self.token = await self.get_latest_token()
-
+            
+        if isinstance(self.token, str):
+            self.token = SecretStr(self.token)
         return {
             'Authorization': f'Bearer {self.token.get_secret_value()}',
             'Accept': 'application/vnd.github.v3+json',
