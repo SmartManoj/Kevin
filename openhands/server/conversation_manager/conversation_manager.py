@@ -33,7 +33,7 @@ class ConversationManager(ABC):
         """Clean up the conversation manager."""
 
     @abstractmethod
-    async def attach_to_conversation(self, sid: str) -> Conversation | None:
+    async def attach_to_conversation(self, sid: str, github_user_id: str | None) -> Conversation | None:
         """Attach to an existing conversation or create a new one."""
 
     @abstractmethod

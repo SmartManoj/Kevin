@@ -16,17 +16,21 @@ class Conversation:
     file_store: FileStore
     event_stream: EventStream
     runtime: Runtime
+    github_user_id: str | None
 
     def __init__(
         self,
         sid: str,
         file_store: FileStore,
         config: AppConfig,
+        github_user_id: str | None,
     ):
         self.sid = sid
         self.config = config
         self.file_store = file_store
         self.event_stream = EventStream(sid, file_store)
+        self.github_user_id = github_user_id
+
         if config.security.security_analyzer:
             self.security_analyzer = options.SecurityAnalyzers.get(
                 config.security.security_analyzer, SecurityAnalyzer

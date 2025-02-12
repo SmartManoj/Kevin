@@ -51,7 +51,7 @@ class StandaloneConversationManager(ConversationManager):
             self._cleanup_task.cancel()
             self._cleanup_task = None
 
-    async def attach_to_conversation(self, sid: str) -> Conversation | None:
+    async def attach_to_conversation(self, sid: str, github_user_id: str | None) -> Conversation | None:
         start_time = time.time()
         if not await session_exists(sid, self.file_store):
             return None
@@ -72,7 +72,7 @@ class StandaloneConversationManager(ConversationManager):
                 return conversation
 
             # Create new conversation if none exists
-            c = Conversation(sid, file_store=self.file_store, config=self.config)
+            c = Conversation(sid, file_store=self.file_store, config=self.config, github_user_id=github_user_id)
             try:
                 await c.connect()
             except AgentRuntimeUnavailableError as e:
