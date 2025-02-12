@@ -73,6 +73,7 @@ class DockerRuntime(ActionExecutionClient):
             )
 
         self.config = config
+        self.github_user_id = github_user_id
         self.persist_sandbox = self.config.sandbox.persist_sandbox
         if self.persist_sandbox:
             # odd port number will be used for vscode
@@ -97,7 +98,6 @@ class DockerRuntime(ActionExecutionClient):
         else:
             self.instance_id = sid
             self._container_port = find_available_tcp_port()
-        self.github_user_id = github_user_id
         _ = self.github_user_id  + '-' if self.github_user_id else ''
         self.container_name = CONTAINER_NAME_PREFIX + _ + self.instance_id
         self.docker_client: docker.DockerClient = self._init_docker_client()
