@@ -12,7 +12,6 @@ from openhands.events.action import (
     FileWriteAction,
     IPythonRunCellAction,
 )
-from openhands.events.event import FileEditSource
 from openhands.events.observation import (
     ErrorObservation,
     FileEditObservation,
@@ -204,16 +203,7 @@ class FileEditRuntimeMixin(FileEditRuntimeInterface):
                 return ErrorObservation(error_message)
         return None
 
-    def edit(self, action: FileEditAction) -> Observation:
-        if action.impl_source == FileEditSource.OH_ACI:
-            # Translate to ipython command to file_editor
-            return self.run_ipython(
-                IPythonRunCellAction(
-                    code=action.translated_ipython_code,
-                    include_extra=False,
-                )
-            )
-
+    def llm_based_edit(self, action: FileEditAction) -> Observation:
         obs = self.read(FileReadAction(path=action.path))
         if (
             isinstance(obs, ErrorObservation)

@@ -25,6 +25,7 @@ from openhands.events.action import (
     IPythonRunCellAction,
 )
 from openhands.events.action.action import Action
+from openhands.events.action.files import FileEditSource
 from openhands.events.observation import (
     ErrorObservation,
     NullObservation,
@@ -220,8 +221,11 @@ class ActionExecutionClient(Runtime):
             return ''
 
     def send_action_for_execution(self, action: Action) -> Observation:
-        if isinstance(action, FileEditAction):
-            return self.edit(action)
+        if (
+            isinstance(action, FileEditAction)
+            and action.impl_source == FileEditSource.LLM_BASED_EDIT
+        ):
+            return self.llm_based_edit(action)
 
         # set timeout to default if not set
         if action.timeout is None:
@@ -282,6 +286,9 @@ class ActionExecutionClient(Runtime):
         return self.send_action_for_execution(action)
 
     def write(self, action: FileWriteAction) -> Observation:
+        return self.send_action_for_execution(action)
+
+    def edit(self, action: FileEditAction) -> Observation:
         return self.send_action_for_execution(action)
 
     def browse(self, action: BrowseURLAction) -> Observation:

@@ -9,10 +9,8 @@ import argparse
 import asyncio
 import base64
 import io
-import json
 import mimetypes
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -22,6 +20,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from zipfile import ZipFile
 
+import psutil
 from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -37,6 +36,7 @@ from openhands.events.action import (
     BrowseInteractiveAction,
     BrowseURLAction,
     CmdRunAction,
+    FileEditAction,
     FileReadAction,
     FileWriteAction,
     IPythonRunCellAction,
@@ -81,6 +81,58 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
     return api_key
 
 
+def _execute_file_editor(
+    editor: OHEditor,
+    command: str,
+    path: str,
+    file_text: str | None = None,
+    view_range: list[int] | None = None,
+    old_str: str | None = None,
+    new_str: str | None = None,
+    insert_line: int | None = None,
+    enable_linting: bool = False,
+) -> str:
+    """Execute file editor command and handle exceptions.
+
+    Args:
+        editor: The OHEditor instance
+        command: Editor command to execute
+        path: File path
+        file_text: Optional file text content
+        view_range: Optional view range tuple (start, end)
+        old_str: Optional string to replace
+        new_str: Optional replacement string
+        insert_line: Optional line number for insertion
+        enable_linting: Whether to enable linting
+
+    Returns:
+        str: Result string from the editor operation
+    """
+    result: ToolResult | None = None
+    try:
+        result = editor(
+            command=command,
+            path=path,
+            file_text=file_text,
+            view_range=view_range,
+            old_str=old_str,
+            new_str=new_str,
+            insert_line=insert_line,
+            enable_linting=enable_linting,
+        )
+    except ToolError as e:
+        result = ToolResult(error=e.message)
+
+    if result.error:
+        return f'ERROR:\n{result.error}'
+
+    if not result.output:
+        logger.warning(f'No output from file_editor for {path}')
+        return ''
+
+    return result.output
+
+
 class ActionExecutor:
     """ActionExecutor is running inside docker sandbox.
     It is responsible for executing actions received from OpenHands backend and producing observations.
@@ -107,12 +159,29 @@ class ActionExecutor:
         self.bash_session: BashSession | None = None
         self.lock = asyncio.Lock()
         self.plugins: dict[str, Plugin] = {}
+        self.file_editor = OHEditor()
         self.browser = BrowserEnv(browsergym_eval_env)
         self.start_time = time.time()
         self.last_execution_time = self.start_time
         self.last_code = ''
         self.is_last_code_error = False
         self._initialized = False
+
+        if _override_max_memory_gb := os.environ.get('RUNTIME_MAX_MEMORY_GB', None):
+            self.max_memory_gb = int(_override_max_memory_gb)
+            logger.info(
+                f'Setting max memory to {self.max_memory_gb}GB (according to the RUNTIME_MAX_MEMORY_GB environment variable)'
+            )
+        else:
+            # Get available system memory
+            total_memory_gb = psutil.virtual_memory().total / (
+                1024 * 1024 * 1024
+            )  # Convert to GB
+            self.max_memory_gb = int(max(0.5, total_memory_gb - 1.0))
+            # Reserve 1GB as head room, minimum of 0.5GB
+            logger.info(
+                f'Total memory: {total_memory_gb}GB, setting limit to {self.max_memory_gb}GB (reserved 1GB for action execution server, minimum 0.5GB)'
+            )
 
     @property
     def initial_cwd(self):
@@ -127,8 +196,10 @@ class ActionExecutor:
             no_change_timeout_seconds=int(
                 os.environ.get('NO_CHANGE_TIMEOUT_SECONDS', 30)
             ),
+            max_memory_mb=self.max_memory_gb * 1024,
         )
         self.bash_session.initialize()
+
         await wait_all(
             (self._init_plugin(plugin) for plugin in self.plugins_to_load),
             timeout=30,
@@ -405,11 +476,17 @@ class ActionExecutor:
     async def read(self, action: FileReadAction) -> Observation:
         assert self.bash_session is not None
         if action.impl_source == FileReadSource.OH_ACI:
-            return await self.run_ipython(
-                IPythonRunCellAction(
-                    code=action.translated_ipython_code,
-                    include_extra=False,
-                )
+            result_str = _execute_file_editor(
+                self.file_editor,
+                command='view',
+                path=action.path,
+                view_range=action.view_range,
+            )
+
+            return FileReadObservation(
+                content=result_str,
+                path=action.path,
+                impl_source=FileReadSource.OH_ACI,
             )
 
         # NOTE: the client code is running inside the sandbox,
@@ -476,6 +553,16 @@ class ActionExecutor:
         filepath = self._resolve_path(action.path, working_dir)
 
         insert = action.content.split('\n')
+        if not os.path.exists(os.path.dirname(filepath)):
+            os.makedirs(os.path.dirname(filepath))
+
+        file_exists = os.path.exists(filepath)
+        if file_exists:
+            file_stat = os.stat(filepath)
+        else:
+            file_stat = None
+
+        mode = 'w' if not file_exists else 'r+'
         try:
             if not os.path.exists(os.path.dirname(filepath)):
                 os.makedirs(os.path.dirname(filepath))
@@ -513,19 +600,56 @@ class ActionExecutor:
                         os.chmod(filepath, 0o644)
                         os.chown(filepath, self.user_id, self.user_id)
 
-            except FileNotFoundError:
-                return ErrorObservation(f'File not found: {filepath}')
-            except IsADirectoryError:
-                return ErrorObservation(
-                    f'Path is a directory: {filepath}. You can only write to files'
-                )
-            except UnicodeDecodeError:
-                return ErrorObservation(
-                    f'File could not be decoded as utf-8: {filepath}'
-                )
-        except PermissionError:
-            return ErrorObservation(f'Malformed paths not permitted: {filepath}')
+                file.seek(0)
+                file.writelines(new_file)
+                file.truncate()
+
+        except FileNotFoundError:
+            return ErrorObservation(f'File not found: {filepath}')
+        except IsADirectoryError:
+            return ErrorObservation(
+                f'Path is a directory: {filepath}. You can only write to files'
+            )
+        except UnicodeDecodeError:
+            return ErrorObservation(f'File could not be decoded as utf-8: {filepath}')
+
+        # Attempt to handle file permissions
+        try:
+            if file_exists:
+                assert file_stat is not None
+                # restore the original file permissions if the file already exists
+                os.chmod(filepath, file_stat.st_mode)
+                os.chown(filepath, file_stat.st_uid, file_stat.st_gid)
+            else:
+                # set the new file permissions if the file is new
+                os.chmod(filepath, 0o664)
+                os.chown(filepath, self.user_id, self.user_id)
+        except PermissionError as e:
+            return ErrorObservation(
+                f'File {filepath} written, but failed to change ownership and permissions: {e}'
+            )
         return FileWriteObservation(content='', path=filepath)
+
+    async def edit(self, action: FileEditAction) -> Observation:
+        assert action.impl_source == FileEditSource.OH_ACI
+        result_str = _execute_file_editor(
+            self.file_editor,
+            command=action.command,
+            path=action.path,
+            file_text=action.file_text,
+            old_str=action.old_str,
+            new_str=action.new_str,
+            insert_line=action.insert_line,
+            enable_linting=False,
+        )
+
+        return FileEditObservation(
+            content=result_str,
+            path=action.path,
+            old_content=action.old_str,
+            new_content=action.new_str,
+            impl_source=FileEditSource.OH_ACI,
+        )
 
     async def browse(self, action: BrowseURLAction) -> Observation:
         return await browse(action, self.browser)
