@@ -17,6 +17,7 @@ from openhands.core.exceptions import (
 )
 from openhands.core.logger import DEBUG, DEBUG_RUNTIME
 from openhands.core.logger import openhands_logger as logger
+from openhands.db import get_port, store_port
 from openhands.events import EventStream
 from openhands.runtime.builder import DockerRuntimeBuilder
 from openhands.runtime.impl.action_execution.action_execution_client import (
@@ -82,7 +83,10 @@ class DockerRuntime(ActionExecutionClient):
                 if os.environ.get('APP_MODE') == 'oss':
                     self._container_port = self.config.sandbox.port
                 else:
-                    self._container_port = find_available_tcp_port()
+                    self._container_port = get_port(self.github_user_id)
+                    if self._container_port is None:
+                        self._container_port = find_available_tcp_port()
+                        store_port(self.github_user_id, self._container_port)
             else:
                 user = 'root'
                 self._container_port = 63712
@@ -288,6 +292,7 @@ class DockerRuntime(ActionExecutionClient):
         if (
             self.config.workspace_mount_path
             and self.config.workspace_mount_path_in_sandbox
+            and os.environ.get('APP_MODE') == 'oss'
         ):
             # e.g. result would be: {"/home/user/openhands/workspace": {'bind': "/workspace", 'mode': 'rw'}}
             volumes = {

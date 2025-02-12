@@ -242,3 +242,4 @@ openhands/sel/downloaded_files/driver_fixing.lock
 openhands/sel/downloaded_files/pyautogui.lock
 /downloaded_files
 *.env
+port_db.sqlite
