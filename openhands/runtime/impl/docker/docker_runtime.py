@@ -283,8 +283,8 @@ class DockerRuntime(ActionExecutionClient):
 
         self.log('debug', f'Workspace Base: {self.config.workspace_base}')
         if (
-            self.config.workspace_mount_path is not None
-            and self.config.workspace_mount_path_in_sandbox is not None
+            self.config.workspace_mount_path
+            and self.config.workspace_mount_path_in_sandbox
         ):
             # e.g. result would be: {"/home/user/openhands/workspace": {'bind': "/workspace", 'mode': 'rw'}}
             volumes = {
