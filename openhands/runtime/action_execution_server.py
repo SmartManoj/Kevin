@@ -9,8 +9,10 @@ import argparse
 import asyncio
 import base64
 import io
+import json
 import mimetypes
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -81,57 +83,6 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
     return api_key
 
 
-def _execute_file_editor(
-    editor: OHEditor,
-    command: str,
-    path: str,
-    file_text: str | None = None,
-    view_range: list[int] | None = None,
-    old_str: str | None = None,
-    new_str: str | None = None,
-    insert_line: int | None = None,
-    enable_linting: bool = False,
-) -> str:
-    """Execute file editor command and handle exceptions.
-
-    Args:
-        editor: The OHEditor instance
-        command: Editor command to execute
-        path: File path
-        file_text: Optional file text content
-        view_range: Optional view range tuple (start, end)
-        old_str: Optional string to replace
-        new_str: Optional replacement string
-        insert_line: Optional line number for insertion
-        enable_linting: Whether to enable linting
-
-    Returns:
-        str: Result string from the editor operation
-    """
-    result: ToolResult | None = None
-    try:
-        result = editor(
-            command=command,
-            path=path,
-            file_text=file_text,
-            view_range=view_range,
-            old_str=old_str,
-            new_str=new_str,
-            insert_line=insert_line,
-            enable_linting=enable_linting,
-        )
-    except ToolError as e:
-        result = ToolResult(error=e.message)
-
-    if result.error:
-        return f'ERROR:\n{result.error}'
-
-    if not result.output:
-        logger.warning(f'No output from file_editor for {path}')
-        return ''
-
-    return result.output
-
 
 class ActionExecutor:
     """ActionExecutor is running inside docker sandbox.
@@ -159,7 +110,7 @@ class ActionExecutor:
         self.bash_session: BashSession | None = None
         self.lock = asyncio.Lock()
         self.plugins: dict[str, Plugin] = {}
-        self.file_editor = OHEditor()
+        self.file_editor = ''
         self.browser = BrowserEnv(browsergym_eval_env)
         self.start_time = time.time()
         self.last_execution_time = self.start_time
@@ -574,35 +525,34 @@ class ActionExecutor:
                 file_stat = None
 
             mode = 'w' if not file_exists else 'r+'
-            try:
-                with open(filepath, mode, encoding='utf-8') as file:
-                    if mode != 'w':
-                        all_lines = file.readlines()
-                        new_file = insert_lines(
-                            insert, all_lines, action.start, action.end
-                        )
-                    else:
-                        new_file = [i + '\n' for i in insert]
-
-                    file.seek(0)
-                    file.writelines(new_file)
-                    file.truncate()
-
-                # Handle file permissions
-                if sys.platform != 'win32':
-                    if file_exists:
-                        assert file_stat is not None
-                        # restore the original file permissions if the file already exists
-                        os.chmod(filepath, file_stat.st_mode)
-                        os.chown(filepath, file_stat.st_uid, file_stat.st_gid)
-                    else:
-                        # set the new file permissions if the file is new
-                        os.chmod(filepath, 0o644)
-                        os.chown(filepath, self.user_id, self.user_id)
+            with open(filepath, mode, encoding='utf-8') as file:
+                if mode != 'w':
+                    all_lines = file.readlines()
+                    new_file = insert_lines(
+                        insert, all_lines, action.start, action.end
+                    )
+                else:
+                    new_file = [i + '\n' for i in insert]
 
                 file.seek(0)
                 file.writelines(new_file)
                 file.truncate()
+
+            # Handle file permissions
+            if sys.platform != 'win32':
+                if file_exists:
+                    assert file_stat is not None
+                    # restore the original file permissions if the file already exists
+                    os.chmod(filepath, file_stat.st_mode)
+                    os.chown(filepath, file_stat.st_uid, file_stat.st_gid)
+                else:
+                    # set the new file permissions if the file is new
+                    os.chmod(filepath, 0o644)
+                    os.chown(filepath, self.user_id, self.user_id)
+
+            file.seek(0)
+            file.writelines(new_file)
+            file.truncate()
 
         except FileNotFoundError:
             return ErrorObservation(f'File not found: {filepath}')
