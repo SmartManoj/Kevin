@@ -142,6 +142,7 @@ async def github_callback(
         request.state.github_token = access_token
         client.token = SecretStr(access_token)
         user = await client.get_user()
+        user.id = str(user.id)
         request.session['github_user_id'] = user.id
         request.state.github_user_id = user.id
         print(f"github_user_id: {request.state.github_user_id}")
