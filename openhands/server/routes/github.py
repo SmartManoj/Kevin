@@ -158,12 +158,9 @@ async def github_callback(
         )
         encoded = jwt.encode({'github_user_id': user.id}, jwt_secret, algorithm='HS256')
 
-        response = JSONResponse(
-            content=response,
-            status_code=200,
-        )
+        response = RedirectResponse(url='/')
         response.set_cookie(key="openhands_auth", value=encoded)
-        return RedirectResponse(url='/')
+        return response
     except Exception as e:
         traceback.print_exc()
         return JSONResponse(
