@@ -79,7 +79,10 @@ class DockerRuntime(ActionExecutionClient):
                 self._container_port = 63708
             elif self.config.run_as_openhands:
                 user = 'oh'
-                self._container_port = self.config.sandbox.port
+                if os.environ.get('APP_MODE') == 'oss':
+                    self._container_port = self.config.sandbox.port
+                else:
+                    self._container_port = find_available_tcp_port()
             else:
                 user = 'root'
                 self._container_port = 63712
