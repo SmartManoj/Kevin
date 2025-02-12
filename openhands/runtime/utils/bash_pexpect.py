@@ -158,6 +158,7 @@ class BashSession:
         work_dir: str,
         username: str | None = None,
         no_change_timeout_seconds: int = 10,
+        max_memory_mb: int | None = None,
     ):
         self.NO_CHANGE_TIMEOUT_SECONDS = no_change_timeout_seconds
         self.work_dir = work_dir
@@ -165,6 +166,8 @@ class BashSession:
         self._initialized = False
         self.last_command = ''
         self.child = None
+        self.max_memory_mb = max_memory_mb
+
 
     def initialize(self):
         """Initialize the Bash session using pexpect."""
