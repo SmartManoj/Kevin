@@ -427,12 +427,7 @@ class ActionExecutor:
     async def read(self, action: FileReadAction) -> Observation:
         assert self.bash_session is not None
         if action.impl_source == FileReadSource.OH_ACI:
-            result_str = _execute_file_editor(
-                self.file_editor,
-                command='view',
-                path=action.path,
-                view_range=action.view_range,
-            )
+            result_str = ''
 
             return FileReadObservation(
                 content=result_str,
@@ -582,16 +577,7 @@ class ActionExecutor:
 
     async def edit(self, action: FileEditAction) -> Observation:
         assert action.impl_source == FileEditSource.OH_ACI
-        result_str = _execute_file_editor(
-            self.file_editor,
-            command=action.command,
-            path=action.path,
-            file_text=action.file_text,
-            old_str=action.old_str,
-            new_str=action.new_str,
-            insert_line=action.insert_line,
-            enable_linting=False,
-        )
+        result_str = ''
 
         return FileEditObservation(
             content=result_str,
