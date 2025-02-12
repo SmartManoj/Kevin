@@ -15,6 +15,7 @@ def check_port_available(port: int) -> bool:
         sock.close()
 
 
+allocated_ports = set()
 def find_available_tcp_port(min_port=30000, max_port=39999, max_attempts=10) -> int:
     """Find an available TCP port in a specified range.
 
@@ -26,12 +27,14 @@ def find_available_tcp_port(min_port=30000, max_port=39999, max_attempts=10) -> 
     Returns:
         int: An available port number, or -1 if none found after max_attempts
     """
+    global allocated_ports
     rng = random.SystemRandom()
     ports = list(range(min_port, max_port + 1))
     rng.shuffle(ports)
 
     for port in ports[:max_attempts]:
-        if check_port_available(port):
+        if port not in allocated_ports and check_port_available(port):
+            allocated_ports.add(port)
             return port
     return -1
 
