@@ -187,9 +187,9 @@ class ActionExecutor:
     async def _init_bash_commands(self):
         is_local_runtime = os.environ.get('LOCAL_RUNTIME_MODE') == '1'
         INIT_COMMANDS = [
-            'git config --file ./.git_config user.name "openhands" && git config --file ./.git_config user.email "openhands@all-hands.dev" && alias git="git --no-pager" && export GIT_CONFIG=$(pwd)/.git_config'
+            'git config --file ./.git_config user.name "Kevin AI Agent" && git config --file ./.git_config user.email "kevin@zebralock.ai" && alias git="git --no-pager" && export GIT_CONFIG=$(pwd)/.git_config'
             if is_local_runtime
-            else 'git config --global user.name "openhands" && git config --global user.email "openhands@all-hands.dev" && alias git="git --no-pager"'
+            else 'git config --global user.name "Kevin AI Agent" && git config --global user.email "kevin@zebralock.ai" && alias git="git --no-pager"'
         ]
         INIT_COMMANDS += [
             'export TERM=xterm-256color',

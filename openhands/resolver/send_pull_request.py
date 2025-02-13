@@ -172,8 +172,8 @@ def make_commit(repo_dir: str, issue: GithubIssue, issue_type: str) -> None:
     if not result.stdout.strip():
         # If username is not set, configure git
         subprocess.run(
-            f'git -C {repo_dir} config user.name "openhands" && '
-            f'git -C {repo_dir} config user.email "openhands@all-hands.dev" && '
+            f'git -C {repo_dir} config user.name "Kevin AI Agent" && '
+            f'git -C {repo_dir} config user.email "kevin@zebralock.ai" && '
             f'git -C {repo_dir} config alias.git "git --no-pager"',
             shell=True,
             check=True,
