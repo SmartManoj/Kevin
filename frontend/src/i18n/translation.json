@@ -435,19 +435,19 @@
         "ja": "ブラウザ"
     },
     "VSCODE$OPEN": {
-        "en": "Open in VS Code",
-        "ja": "VS Codeで開く",
-        "zh-CN": "在VS Code中打开",
-        "zh-TW": "在 VS Code 中開啟",
-        "ko-KR": "VS Code에서 열기",
-        "de": "In VS Code öffnen",
-        "no": "Åpne i VS Code",
-        "it": "Apri in VS Code",
-        "pt": "Abrir no VS Code",
-        "es": "Abrir en VS Code",
-        "ar": "فتح في VS Code",
-        "fr": "Ouvrir dans VS Code",
-        "tr": "VS Code'da aç"
+        "en": "Open in VS Code Web",
+        "ja": "VS Code Webで開く",
+        "zh-CN": "在VS Code Web中打开",
+        "zh-TW": "在 VS Code Web 中開啟",
+        "ko-KR": "VS Code Web에서 열기",
+        "de": "In VS Code Web öffnen",
+        "no": "Åpne i VS Code Web",
+        "it": "Apri in VS Code Web",
+        "pt": "Abrir no VS Code Web",
+        "es": "Abrir en VS Code Web",
+        "ar": "فتح في VS Code Web",
+        "fr": "Ouvrir dans VS Code Web",
+        "tr": "VS Code Web'da aç"
     },
     "INCREASE_TEST_COVERAGE": {
         "en": "Increase test coverage",
