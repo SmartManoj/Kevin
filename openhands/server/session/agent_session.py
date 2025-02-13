@@ -78,6 +78,7 @@ class AgentSession:
         agent_configs: dict[str, AgentConfig] | None = None,
         github_token: SecretStr | None = None,
         selected_repository: str | None = None,
+        selected_branch: str | None = None,
         initial_message: MessageAction | None = None,
     ):
         """Starts the Agent session
@@ -107,6 +108,7 @@ class AgentSession:
             agent=agent,
             github_token=github_token,
             selected_repository=selected_repository,
+            selected_branch=selected_branch,
         )
 
         self.controller = self._create_controller(
@@ -186,6 +188,7 @@ class AgentSession:
         agent: Agent,
         github_token: SecretStr | None = None,
         selected_repository: str | None = None,
+        selected_branch: str | None = None,
     ):
         """Creates a runtime instance
 
@@ -246,7 +249,10 @@ class AgentSession:
         repo_directory = None
         if selected_repository:
             repo_directory = await call_sync_from_async(
-                self.runtime.clone_repo, github_token, selected_repository
+                self.runtime.clone_repo,
+                github_token,
+                selected_repository,
+                selected_branch,
             )
 
         if agent.prompt_manager:
