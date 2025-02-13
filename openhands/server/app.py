@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
 
+from openhands.integrations.github.github_service import GithubServiceImpl
+
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
 
@@ -65,6 +67,15 @@ async def authenticate(request: Request):
     """Authenticate the user"""
     try:
         if request.session.get("github_token"):
+            try:
+                # check if the token is valid
+                client = GithubServiceImpl(user_id=request.session.get("github_user_id"), token=request.session.get("github_token"))
+                await client.get_user()
+            except Exception as e:
+                return JSONResponse(
+                    content={"error": str(e)},
+                    status_code=401
+                )
             request.state.github_token = request.session.get("github_token")
             request.state.github_user_id = request.session.get("github_user_id")
             return JSONResponse(
