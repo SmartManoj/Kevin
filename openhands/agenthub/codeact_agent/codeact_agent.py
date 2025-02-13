@@ -105,7 +105,7 @@ class CodeActAgent(Agent):
         if not self.config.function_calling:
             self.action_parser = CodeActResponseParser()
             self.prompt_manager = PromptManager(
-                microagent_dir=os.path.join(os.path.dirname(__file__), 'micro')
+                microagent_dir=os.path.join(os.path.dirname(os.path.dirname(openhands.__file__)), 'microagents')
                 if self.config.use_microagents
                 else None,
                 prompt_dir=os.path.join(
