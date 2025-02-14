@@ -1188,12 +1188,13 @@ def search_function(function_name: str):
         print(f"Function '{function_name}' not found in the repository.")
 
 
-def search_class(class_name: str):
+def search_class(class_name: str, **kwargs):
     """Search for a class in the current directory.
 
     Args:
         class_name: str: The name of the class to search for.
     """
+    # TODO: IMPLEMENT dir_path or file_path
     if not search_symbol(class_name, 'class', '[:(]'):
         print(f"Class '{class_name}' not found in the repository.")
 
