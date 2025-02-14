@@ -55,6 +55,9 @@ export default defineConfig(({ mode }) => {
           // rewriteWsOrigin: true,
         },
       },
+      watch: {
+        ignored: ['**/node_modules/**', '**/.git/**'],
+      },
     },
     ssr: {
       noExternal: ["react-syntax-highlighter"],
