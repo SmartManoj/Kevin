@@ -73,7 +73,7 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
     repo_dir = '/testbed'
     problem_statement = instance.problem_statement
     instruction = (
-        f'Please address the following GitHub issue for the repository, where the source code is available in the {repo_dir} directory, which I have access to.\n'
+        f'Please address the following GitHub issue for the repository, where the source code is available in the {repo_dir} directory, which you have access to.\n'
         '# Title\n'
         f'{problem_statement}\n\n'
         '\n$ pwd\n\n'
@@ -81,28 +81,48 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
     )
     if 1:
         if 1:
+            NEW_MRE = {
+            'QTable cannot take `dimensionless_unscaled` when creating table from `data`' : '''
+from astropy import units as u
+try:
+    u.Unit(0) # Unit with scale 0 is meaningless.
+    print("Error should have been raised.")
+except Exception as e:
+    print(f"Successfully got the exception as expected.")
+        '''.strip()
+        }
+            title = problem_statement.split('\n')[0]
+            code = NEW_MRE.get(title)
+            if code:
+                instruction = fr'# Create the following test code and make it pass (Don\'t modify the test code itself). Library code is installed in /testbed directory.\n```python\n{code}\n```\n\n'
             numbered_instructions = [
-                f'Reproduce the MRE by create a test code in a file and run it. (You should not modify the test code itself.)',
-                f'Locate the actual relevant library file that raised this error in {repo_dir} using `find_file()` or `search_class()` or `search_function()` or `search_in_dir()` python skill.',
-                'Inspect the function using `show_function_at_line()` skill.',
-                'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it.',
+                # f'The best solution is to just raise an error for Unit(0).',
+                f'Reproduce the MRE by create a test code in a file and run it using bash. (You should not modify the test code itself.)',
+                f'If no traceback, locate the actual relevant library file that raised this error in {repo_dir} using `search_class()` or `search_function()` python skill.',
+                'Inspect the function using `show_function()` or `show_function_at_line()` skill.',
+                'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it. Debug by printing the type of the variables.',
                 'Test the fix.',
-                # 'Apply the same changes to other relevant classes in the file.'
-                # 'Check for similar issues that might be related to the current issue.'
+                'Apply the same changes to other relevant classes in the file.'
+                'Check for similar issues that might be related to the current issue.'
             ]
             for k, inst in enumerate(numbered_instructions):
                 instruction += f'Step {k + 1}: {inst}\n\n'
             important_instructions = [
+                'Inspect the metaclass __call__() if any.',
+                'Add your valuable thoughts to every action you take.',
                 'Only use one skill at a time.',
                 'On exceptions, raise Error instead of giving wrong values.',
                 'For replace_lines_content, you can specify same line number for both start_line_number and end_line_number',
                 'The traceback must be read from bottom to top, with the final entry showing where the error occurred.',
                 'Wrap the code with triple backticks if it is a multi-line code block.',
-                'Internet is disabled.'
+                'Internet is disabled.',
+                'Carefully verify the line numbers and range to ensure accurate code modification.',
+                'Very Very Important: Humanity is at stake. Do not give any workaround. Please fix the issue directly with atmost sincerity 🙏🙏🙏.'
             ]
         instruction += '\nImportant Instructions:\n\n'
-        for inst in important_instructions:
-            instruction += f'{inst}\n\n'
+        for k,inst in enumerate(important_instructions):
+            instruction += f'{k + 1}: {inst}\n\n'
+        
         instruction1 = (
             'Do not provide suggestions or workarounds. Directly fix the issue by modifying the source code.\n'
             'Plan:\n'
