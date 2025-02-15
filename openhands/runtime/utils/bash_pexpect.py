@@ -252,7 +252,7 @@ class BashSession:
         self.child.expect(self.bash_expect_regex)  # Wait for the shell prompt
 
         # Capture the output
-        output = self.child.before[len(command):].strip()
+        output = self.child.before[len(command):].strip() or '[Command finished execution with no output]'
         return CmdOutputObservation(
             content=output,
             command=command,
