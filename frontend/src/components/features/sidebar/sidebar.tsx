@@ -76,7 +76,7 @@ export function Sidebar() {
         <nav className="flex flex-row md:flex-col items-center justify-between h-full">
           <div className="flex flex-col items-center gap-[26px]">
             <div className="flex items-center justify-center">
-              <img src="/logo.png" alt="Kevin" />
+              <img src="/logo.png" alt="Kevin" style={{ display: "none" }} />
             </div>
             <ExitProjectButton onClick={handleEndSession} />
             {MULTI_CONVERSATION_UI && (
