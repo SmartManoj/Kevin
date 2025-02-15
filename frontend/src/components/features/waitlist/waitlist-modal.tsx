@@ -18,7 +18,7 @@ export function WaitlistModal({
   ghTokenIsSet,
   githubAuthUrl,
 }: WaitlistModalProps) {
-  const [isTosAccepted, setIsTosAccepted] = React.useState(false);
+  const [isTosAccepted, setIsTosAccepted] = React.useState(true);
 
   const handleGitHubAuth = () => {
     if (githubAuthUrl) {
@@ -33,7 +33,7 @@ export function WaitlistModal({
         <AllHandsLogo width={68} height={46} />
         <WaitlistMessage content={"sign-in"} />
 
-        <TOSCheckbox onChange={() => setIsTosAccepted((prev) => !prev)} />
+        {/* <TOSCheckbox onChange={() => setIsTosAccepted((prev) => !prev)} /> */}
 
         { (
           <ModalButton
