@@ -51,7 +51,8 @@ class JupyterPlugin(Plugin):
                     'This is required for the jupyter plugin to work with LocalRuntime.'
                 )
             poetry_prefix = f'cd {code_repo_path}\n'
-        jupyter_prefix = 'poetry run ' if os.environ.get('SKIP_POETRY') != '1' else ''
+        poetry_alias = os.environ.get('POETRY_ALIAS', 'poetry')
+        jupyter_prefix = f'{poetry_alias} run ' if os.environ.get('SKIP_POETRY') != '1' else ''
         jupyter_launch_command = (
             f"{prefix}/bin/bash << 'EOF'\n"
             f'{poetry_prefix}'

@@ -54,7 +54,8 @@ def check_dependencies(code_repo_path: str, poetry_venvs_path: str):
         )
     # Check jupyter is installed
     logger.debug('Checking dependencies: Jupyter')
-    jupyter_prefix = 'poetry run ' if os.environ.get('SKIP_POETRY') != '1' else ''
+    poetry_alias = os.environ.get('POETRY_ALIAS', 'poetry')
+    jupyter_prefix = f'{poetry_alias} run ' if os.environ.get('SKIP_POETRY') != '1' else ''
     output = subprocess.check_output(
         f'{jupyter_prefix}jupyter --version',
         shell=True,
@@ -193,13 +194,14 @@ class LocalRuntime(ActionExecutionClient):
             self._find_available_port(APP_PORT_RANGE_2),
         ]
         self.api_url = f'{self.config.sandbox.local_runtime_url}:{self._host_port}'
-
+        poetry_alias = os.environ.get('POETRY_ALIAS', 'poetry')
+        python_prefix = [*poetry_alias.split(), 'run'] if os.environ.get('SKIP_POETRY') != '1' else []
         # Start the server process
         cmd = get_action_execution_server_startup_command(
             server_port=self._host_port,
             plugins=self.plugins,
             app_config=self.config,
-            python_prefix=['poetry', 'run'] if os.environ.get('SKIP_POETRY') != '1' else [],
+            python_prefix=python_prefix,
             override_user_id=self._user_id,
             override_username=self._username,
         )
@@ -214,7 +216,7 @@ class LocalRuntime(ActionExecutionClient):
         # run poetry show -v | head -n 1 | awk '{print $2}'
         poetry_venvs_path = (
             subprocess.check_output(
-                ['poetry', 'show', '-v'],
+                f'{poetry_alias} show -v'.split(),
                 env=env,
                 cwd=code_repo_path,
                 text=True,
