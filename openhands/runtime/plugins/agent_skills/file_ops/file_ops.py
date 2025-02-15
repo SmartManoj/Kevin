@@ -42,6 +42,7 @@ from openhands.runtime.plugins.agent_skills.file_ops.ast_ops import (
 CURRENT_FILE: str | None = None
 CURRENT_LINE = 1
 WINDOW = 100
+LAST_WINDOW = 100
 SMALL_WINDOW = 20
 
 # This is also used in unit tests!
@@ -220,7 +221,8 @@ def open_file(
         context_lines: Maximum number of lines to display in the view window.
             Limited to 100 lines. Defaults to 100.
     """
-    global CURRENT_FILE, CURRENT_LINE, WINDOW
+    global CURRENT_FILE, CURRENT_LINE, WINDOW, LAST_WINDOW
+    LAST_WINDOW = WINDOW
 
     if not check_file_exists(file_path):
         return
@@ -284,12 +286,12 @@ def scroll_down() -> None:
     Args:
         None
     """
-    global CURRENT_FILE, CURRENT_LINE, WINDOW
+    global CURRENT_FILE, CURRENT_LINE, WINDOW, LAST_WINDOW
     _check_current_file()
 
     with open(str(CURRENT_FILE)) as file:
         total_lines = max(1, sum(1 for _ in file))
-    CURRENT_LINE = _clamp(CURRENT_LINE + WINDOW, 1, total_lines)
+    CURRENT_LINE = _clamp(CURRENT_LINE + LAST_WINDOW, 1, total_lines)
     output = _cur_file_header(CURRENT_FILE, total_lines)
     output += _print_window(
         CURRENT_FILE, CURRENT_LINE, WINDOW, return_str=True, ignore_window=True
@@ -303,12 +305,12 @@ def scroll_up() -> None:
     Args:
         None
     """
-    global CURRENT_FILE, CURRENT_LINE, WINDOW
+    global CURRENT_FILE, CURRENT_LINE, WINDOW, LAST_WINDOW
     _check_current_file()
 
     with open(str(CURRENT_FILE)) as file:
         total_lines = max(1, sum(1 for _ in file))
-    CURRENT_LINE = _clamp(CURRENT_LINE - WINDOW, 1, total_lines)
+    CURRENT_LINE = _clamp(CURRENT_LINE - LAST_WINDOW, 1, total_lines)
     output = _cur_file_header(CURRENT_FILE, total_lines)
     output += _print_window(
         CURRENT_FILE, CURRENT_LINE, WINDOW, return_str=True, ignore_window=True
