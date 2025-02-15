@@ -14,6 +14,7 @@ full_file_names = [
     'openhands/runtime/plugins/jupyter/__init__.py',
     'openhands/runtime/plugins/vscode/__init__.py',
     'openhands/runtime/utils/bash.py',
+    'openhands/runtime/utils/bash_pexpect.py',
     'openhands/runtime/action_execution_server.py',
     'openhands/linter/__init__.py',
     'openhands/sel/selenium_tester.py',
