@@ -1188,12 +1188,13 @@ def search_symbol(symbol_name, prefix='', suffix=''):
         return False
 
 
-def search_function(function_name: str):
+def search_function(function_name: str, **kwargs):
     """Search for a function in the current directory.
 
     Args:
         function_name: str: The name of the function to search for.
     """
+    # TODO: IMPLEMENT dir_path or file_path
     # workaround for class methods; search_function("DataArray.to_unstacked_dataset")
     function_name = function_name.split('.')[-1]
 
