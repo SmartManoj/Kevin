@@ -31,9 +31,6 @@ export default defineConfig(({ mode }) => {
       svgr(),
     ],
     server: {
-      watch: {
-        usePolling: VITE_WATCH_USE_POLLING === "true",
-      },
       port: FE_PORT,
       proxy: {
         "/api": {
@@ -56,6 +53,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       watch: {
+        usePolling: VITE_WATCH_USE_POLLING === "true",
         ignored: ['**/node_modules/**', '**/.git/**'],
       },
     },
