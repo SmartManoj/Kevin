@@ -238,7 +238,8 @@ class BashSession:
                 command='',
                 metadata=CmdOutputMetadata(exit_code=0),
             )
-        if not command.strip():
+        command = command.strip()
+        if not command:
             return CmdOutputObservation(
                 content='[Empty command detected]',
                 command='',
