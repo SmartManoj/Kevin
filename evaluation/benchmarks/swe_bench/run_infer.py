@@ -256,6 +256,10 @@ def initialize_runtime(
     This function is called before the runtime is used to run the agent.
     """
     if os.environ.get('EXISTING_CONTAINER'):
+        action = IPythonRunCellAction(code='%cd /testbed')
+        logger.info(action, extra={'msg_type': 'ACTION'})
+        obs = runtime.run_action(action)
+        logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         for command in [
             'cd /testbed',  
             f'git reset --hard {instance["base_commit"]}',
