@@ -103,6 +103,8 @@ for idx, item in enumerate(history[:]):
     if item.get('observation') == 'error':
         item = {'error': item['content']}
         history[idx] = item
+    if item.get('observation') == 'run':
+        item['extras'].pop('metadata', None)
 
 
 json_data['trajectory'] = history

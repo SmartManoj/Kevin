@@ -61,6 +61,9 @@ def store_feedback(feedback: FeedbackDataModel) -> dict[str, str]:
         if item.get('observation') == 'error':
             item = {'error': item['content']}
             feedback.trajectory[idx] = item
+        if item.get('observation') == 'run':
+            item['extras'].pop('metadata', None)
+            
     # Start actual request
     response = requests.post(
         FEEDBACK_URL,
