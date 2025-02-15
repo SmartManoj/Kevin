@@ -9,7 +9,7 @@ export function DocsButton() {
     <TooltipButton
       tooltip={t(I18nKey.SIDEBAR$DOCS)}
       ariaLabel={t(I18nKey.SIDEBAR$DOCS)}
-      href="https://docs.all-hands.dev"
+      href="http://kevin-docs.zebralock.ai/"
     >
       <DocsIcon width={28} height={28} className="text-[#9099AC]" />
     </TooltipButton>
