@@ -238,9 +238,16 @@ class BashSession:
                 command='',
                 metadata=CmdOutputMetadata(exit_code=0),
             )
+        if not command.strip():
+            return CmdOutputObservation(
+                content='[Empty command detected]',
+                command='',
+                metadata=CmdOutputMetadata(exit_code=0),
+            )
 
-        # Send the command to the shell
-        self.child.sendline(command)
+        if command !=  "dummy":
+            # Send the command to the shell
+            self.child.sendline(command)
         self.child.expect(self.bash_expect_regex)  # Wait for the shell prompt
 
         # Capture the output
