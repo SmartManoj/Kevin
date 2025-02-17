@@ -1269,8 +1269,9 @@ def show_function(file_path: str, qualified_function_name: str) -> None:
     def print_function_code(node):
         start_line = node.lineno - 1  # AST line numbers are 1-based
         end_line = node.end_lineno  # type: ignore
+        width = len(str(end_line))
         for i in range(start_line, end_line):
-            print(f'{i + 1:3}| {lines[i]}')
+            print(f'{i + 1:>{width}}| {lines[i]}')
         return
 
     if class_name:
