@@ -34,11 +34,7 @@ def show_class_structure(file_path: str, class_name: str):
 
             for item in node.body:
                 if isinstance(item, ast.FunctionDef):
-                    # Extract function name and arguments (including 'self')
-                    args = [arg.arg for arg in item.args.args]
-                    # Format the arguments as a string
-                    args_str = ', '.join(args)
-                    print(f'    -- {item.name}({args_str})')
+                    print(f'    -- {get_function_signature(item)}')
             break
     else:
         print(f'Class {class_name} not found in {file_path}')
