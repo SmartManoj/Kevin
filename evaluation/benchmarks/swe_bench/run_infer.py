@@ -97,10 +97,10 @@ except Exception as e:
                 instruction = fr'# Create the following test code and make it pass (Don\'t modify the test code itself). Library code is installed in /testbed directory.\n```python\n{code}\n```\n\n'
             numbered_instructions = [
                 # f'The best solution is to just raise an error for Unit(0).',
-                f'Reproduce the MRE by create a test code in a file and run it using bash. (You should not modify the test code itself.)',
+                f'Reproduce the MRE by create a test code (add traceback.print_exc(limit=-2)) in a file and run it using bash. (You should not modify the test code itself.)',
                 f'If no traceback, locate the actual relevant library file that raised this error in {repo_dir} using `search_class()` or `search_function()` python skill.',
-                'Inspect the function using `show_function()` or `show_function_at_line()` skill.',
-                'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it. Debug by printing the type of the variables.',
+                'Inspect the function using `show_function_at_line()` or `show_function()` skill.',
+                'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it.',
                 'Test the fix.',
                 'Apply the same changes to other relevant classes in the file.'
                 'Check for similar issues that might be related to the current issue.'
@@ -109,6 +109,8 @@ except Exception as e:
                 instruction += f'Step {k + 1}: {inst}\n\n'
             important_instructions = [
                 'Inspect the metaclass __call__() if any.',
+                'If KeyError is raised for a config dictionary, it must be that config is not passed correctly in the previous call. Don\'t simply add a check for the key in the config dictionary. Use show_function_at_line() to inspect the function definition of the previous call.',
+                'If you update min function, update max function too.',
                 'Add your valuable thoughts to every action you take.',
                 'Only use one skill at a time.',
                 'On exceptions, raise Error instead of giving wrong values.',
