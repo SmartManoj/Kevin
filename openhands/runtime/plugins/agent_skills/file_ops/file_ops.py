@@ -1300,6 +1300,28 @@ def show_function(file_path: str, qualified_function_name: str) -> None:
         else:
             print_function_code(node)
 
+class ClassNameFinder(ast.NodeVisitor):
+    def __init__(self):
+        self.current_class = None
+        self.method_classes = {}
+
+    def visit_ClassDef(self, node):
+        previous_class = self.current_class
+        self.current_class = node  # Store class name
+        self.generic_visit(node)
+        self.current_class = previous_class  # Restore previous class
+
+    def visit_FunctionDef(self, node):
+        if self.current_class:
+            self.method_classes[node.lineno] = self.current_class
+        self.generic_visit(node)
+
+def get_class_name_from_method(source_code):
+    tree = ast.parse(source_code)
+    finder = ClassNameFinder()
+    finder.visit(tree)
+    return finder.method_classes  # Returns a dict {method_name: class_name}
+
 
 def show_function_at_line(file_path: str, line_number: int) -> None:
     """
@@ -1314,12 +1336,23 @@ def show_function_at_line(file_path: str, line_number: int) -> None:
 
     tree = ast.parse(code)
     lines = code.splitlines()
+    class_name_dict = get_class_name_from_method(code)
 
     def print_function_code(node):
+        if class_node := class_name_dict.get(node.lineno):
+            if class_node.body:
+                # Find the first body element's start line
+                first_body_line = class_node.body[0].lineno
+                signature_end_line = first_body_line - 1
+            else:
+                # If empty class, signature ends on the same line
+                signature_end_line = class_node.lineno
+            print('\n'.join(lines[class_node.lineno - 1:signature_end_line]))
         start_line = node.lineno - 1  # AST line numbers are 1-based
         end_line = node.end_lineno  # type: ignore
+        width = len(str(end_line))
         for i in range(start_line, end_line):
-            print(f'{i + 1:3}| {lines[i]}')
+            print(f'{i + 1:{width}}| {lines[i]}')
         return
 
     # Walk through the AST and find the function containing the line_number
@@ -1419,14 +1452,4 @@ if not getpass.getuser() == 'root':
         __all__.extend(academic_utils.__all__)
 
 if __name__ == '__main__':
-    full_content = """
-print("hello world")
-"""
-    from datetime import datetime
-
-    dt = datetime.now()
-    file_name = r'../astroid/astroid/nodes/node_classes.py'
-    insert_content_after_line(file_name, 4302, "if isinstance(operand, objects.Property):\n    # Handle property inference for unary operations\n    yield operand.infer_unary_op(self.op)\n    continue\n")
-    # add_param_to_init_in_subclass(file_name, 'RST', 'header_rows')
-    new_content = 'dummy'
-    replace_line_content(file_name, 1, new_content)
+    show_function_at_line("C:/Users/smart/Desktop/GD/astropy/astropy/io/votable/tree.py", 1056)
