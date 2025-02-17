@@ -37,6 +37,7 @@ import uuid
 from openhands.linter import DefaultLinter, LintResult
 from openhands.runtime.plugins.agent_skills.file_ops.ast_ops import (
     show_class_structure,
+    show_file_structure,
 )
 
 CURRENT_FILE: str | None = None
@@ -1371,6 +1372,7 @@ __all__ = [
     'show_function',
     'show_function_at_line',
     'show_class_structure',
+    'show_file_structure',
     'search_in_dir',
     'search_in_file',
     'open_file',
