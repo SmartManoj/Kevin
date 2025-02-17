@@ -267,7 +267,7 @@ def finalize_config(cfg: AppConfig):
     default_llm_config = cfg.llms['llm']
     if default_llm_config.use_group:
         default_llm_config.use_group = default_llm_config.use_group.lower()
-        logger.openhands_logger.info(f'Using group {default_llm_config.use_group} for LLM')
+        logger.openhands_logger.debug(f'Using group {default_llm_config.use_group} for LLM')
         for k, v in get_llm_config_arg(default_llm_config.use_group).__dict__.items():
             setattr(default_llm_config, k, v)
     if cfg.workspace_base:
