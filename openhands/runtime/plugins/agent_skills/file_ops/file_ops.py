@@ -1288,11 +1288,16 @@ def show_function(file_path: str, qualified_function_name: str) -> None:
         print(f"Class '{class_name}' not found in the code.")
     else:
         # Top-level function (no class)
+        count = 0
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef) and node.name == function_name:
-                print_function_code(node)
-                return
-        print(f"Function '{function_name}' not found in the code.")
+                count += 1
+        if count == 0:
+            print(f"Function '{function_name}' not found in the code.")
+        elif count > 1:
+            print(f"Found {count} functions named '{function_name}' in the code. Use show_function_at_line() or use qualified_function_name to view the function definition.")
+        else:
+            print_function_code(node)
 
 
 def show_function_at_line(file_path: str, line_number: int) -> None:
