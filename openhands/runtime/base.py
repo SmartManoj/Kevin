@@ -286,6 +286,8 @@ class Runtime(FileEditRuntimeMixin):
         )
         self.log('info', f'Cloning repo: {selected_repository}')
         self.run_action(action)
+        code = f'cd {dir_name}'
+        self.run_ipython(IPythonRunCellAction(code))
         return dir_name
 
     def get_microagents_from_selected_repo(
