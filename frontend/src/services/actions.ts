@@ -59,9 +59,6 @@ const messageActions = {
       store.dispatch(appendJupyterInput(message.args.code));
     }
   },
-  [ActionType.RUN]: (message: ActionMessage) => {
-    store.dispatch(appendInput(message.args.command));
-  },
 };
 
 export function handleActionMessage(message: ActionMessage) {
@@ -70,7 +67,9 @@ export function handleActionMessage(message: ActionMessage) {
   }
 
   if (message.action === ActionType.RUN) {
-    store.dispatch(appendInput(message.args.command));
+    if (message.source === "agent") {
+      store.dispatch(appendInput(message.args.command));
+    }
   }
 
   if ("args" in message && "security_risk" in message.args) {
