@@ -76,21 +76,19 @@ class DockerRuntime(ActionExecutionClient):
         self.config = config
         self.github_user_id = github_user_id
         self.persist_sandbox = self.config.sandbox.persist_sandbox
+        user = 'oh' if self.config.run_as_openhands else 'root'
         if self.persist_sandbox:
             # odd port number will be used for vscode
             if sys.argv[1:] and 'resolve_issue' in sys.argv[1]:
                 self._container_port = 63708
+            elif os.environ.get('APP_MODE') == 'saas':
+                self._container_port = get_port(self.github_user_id)
+                if self._container_port is None:
+                    self._container_port = find_available_tcp_port()
+                    store_port(self.github_user_id, self._container_port)
             elif self.config.run_as_openhands:
-                user = 'oh'
-                if os.environ.get('APP_MODE') == 'oss':
-                    self._container_port = self.config.sandbox.port
-                else:
-                    self._container_port = get_port(self.github_user_id)
-                    if self._container_port is None:
-                        self._container_port = find_available_tcp_port()
-                        store_port(self.github_user_id, self._container_port)
+                self._container_port = self.config.sandbox.port
             else:
-                user = 'root'
                 self._container_port = 63712
             path = config.workspace_mount_path or sid
             os.environ['selection_id'] = path
