@@ -32,7 +32,7 @@ class Settings(BaseModel):
         To serialize the API key instead of ********, set expose_secrets to True in the serialization context.
         """
         context = info.context
-        if context and context.get('expose_secrets', False):
+        if context and context.get('expose_secrets', False) and llm_api_key is not None:
             return llm_api_key.get_secret_value()
 
         return to_jsonable_python(llm_api_key)
