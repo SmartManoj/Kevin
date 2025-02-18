@@ -163,6 +163,7 @@ class ActionExecutor:
             )
             logger.debug(f'AgentSkills initialized: {obs}')
 
+            await self.chdir()
         await self._init_bash_commands()
         logger.debug('Runtime client initialized.')
         self._initialized = True
