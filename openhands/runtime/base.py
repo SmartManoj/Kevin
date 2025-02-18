@@ -214,7 +214,7 @@ class Runtime(FileEditRuntimeMixin):
         assert event.timeout is not None
         try:
             if isinstance(event, CmdRunAction):
-                if self.github_user_id and '$GITHUB_TOKEN' in event.command:
+                if self.github_user_id and '$GITHUB_TOKEN' in event.command and 0:
                     gh_client = GithubServiceImpl(user_id=self.github_user_id)
                     token = await gh_client.get_latest_token()
                     if token:
