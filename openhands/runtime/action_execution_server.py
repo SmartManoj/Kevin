@@ -61,6 +61,7 @@ if os.environ.get('USE_PEXPECT') == '1' or 1:
 else:        
     from openhands.runtime.utils.bash import BashSession
 from openhands.runtime.utils.files import insert_lines, read_lines
+from openhands.runtime.utils.memory_monitor import MemoryMonitor
 from openhands.runtime.utils.runtime_init import init_user_and_working_directory
 from openhands.runtime.utils.system_stats import get_system_stats
 from openhands.utils.async_utils import call_sync_from_async, wait_all
@@ -126,13 +127,19 @@ class ActionExecutor:
         else:
             logger.info('No max memory limit set, using all available system memory')
 
+        self.memory_monitor = MemoryMonitor(
+            enable=os.environ.get('RUNTIME_MEMORY_MONITOR', 'False').lower()
+            in ['true', '1', 'yes']
+        )
+        self.memory_monitor.start_monitoring()
+
     @property
     def initial_cwd(self):
         return self._initial_cwd
 
     async def ainit(self):
         # bash needs to be initialized first
-
+        logger.debug('Initializing bash session')
         self.bash_session = BashSession(
             work_dir=self._initial_cwd,
             username=self.username,
@@ -142,11 +149,13 @@ class ActionExecutor:
             max_memory_mb=self.max_memory_gb * 1024 if self.max_memory_gb else None,
         )
         self.bash_session.initialize()
+        logger.debug('Bash session initialized')
 
         await wait_all(
             (self._init_plugin(plugin) for plugin in self.plugins_to_load),
             timeout=30,
         )
+        logger.debug('All plugins initialized')
 
         code = 'from IPython.display import Image'
         obs = await self.run_ipython(IPythonRunCellAction(code=code))
@@ -154,6 +163,7 @@ class ActionExecutor:
         # This is a temporary workaround
         # TODO: refactor AgentSkills to be part of JupyterPlugin
         # AFTER ServerRuntime is deprecated
+        logger.debug('Initializing AgentSkills')
         if 'agent_skills' in self.plugins and 'jupyter' in self.plugins:
             self.kernel_init_code = (
                 'from openhands.runtime.plugins.agent_skills.agentskills import *'
@@ -163,7 +173,7 @@ class ActionExecutor:
             )
             logger.debug(f'AgentSkills initialized: {obs}')
 
-            await self.chdir()
+        logger.debug('Initializing bash commands')
         await self._init_bash_commands()
         logger.debug('Runtime client initialized.')
         self._initialized = True
@@ -587,6 +597,7 @@ class ActionExecutor:
         return await browse(action, self.browser)
 
     def close(self):
+        self.memory_monitor.stop_monitoring()
         if self.bash_session is not None:
             self.bash_session.close()
         self.browser.close()
