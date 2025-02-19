@@ -1362,7 +1362,7 @@ def show_function_at_line(file_path: str, line_number: int) -> None:
             end_line = getattr(
                 node, 'end_lineno', start_line
             )  # To handle multi-line functions
-            if start_line <= line_number < end_line:
+            if start_line <= line_number <= end_line:
                 print_function_code(node)
                 return
 
