@@ -484,7 +484,7 @@ def complete_runtime(
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
 
         # Then run the command again
-        action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
+        action = CmdRunAction(command=f'cd /testbed')
         action.set_hard_timeout(600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
