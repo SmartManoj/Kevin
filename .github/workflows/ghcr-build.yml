@@ -167,7 +167,7 @@ jobs:
       - name: Install poetry via pipx
         run: pipx install poetry
       - name: Install Python dependencies using Poetry
-        run: make install-python-dependencies
+        run: yes | make install-python-dependencies
       - name: Get hash in App Image
         run: |
           echo "Hash from app image: ${{ needs.ghcr_build_app.outputs.hash_from_app_image }}"
@@ -232,7 +232,7 @@ jobs:
       - name: Install poetry via pipx
         run: pipx install poetry
       - name: Install Python dependencies using Poetry
-        run: make install-python-dependencies
+        run: yes | make install-python-dependencies
       - name: Run docker runtime tests
         run: |
           # We install pytest-xdist in order to run tests across CPUs
@@ -295,7 +295,7 @@ jobs:
       - name: Install poetry via pipx
         run: pipx install poetry
       - name: Install Python dependencies using Poetry
-        run: make install-python-dependencies
+        run: yes | make install-python-dependencies
       - name: Run runtime tests
         run: |
           # We install pytest-xdist in order to run tests across CPUs
