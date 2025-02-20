@@ -26,6 +26,7 @@ from litellm.utils import create_pretrained_tokenizer
 
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message
+from openhands.core.message import TextContent
 from openhands.llm.fn_call_converter import (
     STOP_WORDS,
     convert_fncall_messages_to_non_fncall_messages,
@@ -893,7 +894,5 @@ if __name__ == '__main__':
     from openhands.core.config.utils import get_llm_config_arg
     config = get_llm_config_arg('hf')
     llm = LLM(config=config)
-    from openhands.core.message import TextContent
-    from openhands.core.message import Message
     messages = [Message(role='user', content=[TextContent(text='Hello, world!')])]
     print(llm.format_messages_for_llm(messages))
