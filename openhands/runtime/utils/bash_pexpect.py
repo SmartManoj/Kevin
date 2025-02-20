@@ -10,6 +10,7 @@ import pexpect
 
 from openhands.core.logger import openhands_logger as logger
 from openhands.events.action import CmdRunAction
+from openhands.events.event import EventSource
 from openhands.events.observation import ErrorObservation
 from openhands.events.observation.commands import (
     CMD_OUTPUT_PS1_END,
@@ -205,57 +206,50 @@ class BashSession:
         """Execute a command in the Bash session."""
         if not self._initialized:
             raise RuntimeError('Bash session is not initialized')
+        commands = split_bash_commands(action.command)
+        all_output = ''
+        for command in commands:
+            command = command.strip()
+            output = None
+            if command == self.last_command and command in ['ls -l', 'ls -la']:
+                output = "[Why are you executing the same command twice? What's wrong with you? Please focus 🙏]"
+            elif command.startswith('cd'):
+                path = command[3:].strip()
+                if self.cwd == path:
+                    output = '[You are already in this directory.]'
+            elif self.username == 'root':
+                if any(command.startswith(f'{editor} ') for editor in ['nano', 'vi', 'vim', 'pico', 'joe', 'emacs']):
+                    output = f'Use non interactive command to edit files'
+                elif command.startswith('git blame'):
+                    output = "[Don't use git commands. Just directly give the solution.]"
+                elif 'pip install' in command and os.getenv('NO_PIP_INSTALL') == '1':
+                    output = '[Use the current packages only.]'
 
-        command = action.command.strip()
-        is_input: bool = action.is_input
-        output = None
-        if command == self.last_command and command in ['ls -l', 'ls -la']:
-            output = "[Why are you executing the same command twice? What's wrong with you? Please focus 🙏]"
-        elif command.startswith('cd'):
-            path = command[3:].strip()
-            if self.cwd == path:
-                output = '[You are already in this directory.]'
-        elif self.username == 'root':
-            if any(command.startswith(f'{editor} ') for editor in ['nano', 'vi', 'vim', 'pico', 'joe', 'emacs']):
-                output = f'Use non interactive command to edit files'
-            elif command.startswith('git blame'):
-                output = "[Don't use git commands. Just directly give the solution.]"
-            elif 'pip install' in command and os.getenv('NO_PIP_INSTALL') == '1':
-                output = '[Use the current packages only.]'
-
-            elif (
-                '/tmp/test_task.py' in command
-                and 'cat' not in command
-                and 'python3' not in command
-                and 'pytest' not in command
-            ):
-                output = "[The content in this file is absolutely correct. Also, you can't modify this test file. You must pass this test case. You should correct the codebase instead.]"
-            elif command.startswith('pytest') and '.py' not in command:
-                output = '[Please run specific test cases instead of running all test cases.]'
-        if output:
-            return CmdOutputObservation(
-                content=output,
-                command='',
-                metadata=CmdOutputMetadata(exit_code=0),
-            )
-        command = command.strip()
-        if not command:
-            return CmdOutputObservation(
-                content='[Empty command detected]',
-                command='',
-                metadata=CmdOutputMetadata(exit_code=0),
-            )
-
-        if command !=  "dummy":
-            # Send the command to the shell
-            self.child.sendline(command)
-        self.child.expect(self.bash_expect_regex)  # Wait for the shell prompt
-
-        # Capture the output
-        output = self.child.before[len(command):].strip() or '[Command finished execution with no output]'
+                elif (
+                    '/tmp/test_task.py' in command
+                    and 'cat' not in command
+                    and 'python3' not in command
+                    and 'pytest' not in command
+                ):
+                    output = "[The content in this file is absolutely correct. Also, you can't modify this test file. You must pass this test case. You should correct the codebase instead.]"
+                elif command.startswith('pytest') and '.py' not in command:
+                    output = '[Please run specific test cases instead of running all test cases.]'
+            if not output:
+                # Send the command to the shell
+                self.child.sendline(command)
+                self.child.expect(self.bash_expect_regex)  # Wait for the shell prompt
+                # Capture the output
+                output = self.child.before[len(command):].strip() or '[Command finished execution with no output]'
+            if all_output:
+                # previous output already exists so we add a newline
+                all_output += '\r\n'
+            # If the command originated with the agent, append the command that was run...
+            if action.source == EventSource.AGENT:
+                all_output += command + '\r\n'
+            all_output += output
         return CmdOutputObservation(
-            content=output,
-            command=command,
+            content=all_output,
+            command=action.command,
             metadata=CmdOutputMetadata(exit_code=0),
         )
 
