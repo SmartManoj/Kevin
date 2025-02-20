@@ -58,6 +58,8 @@ class AppConfig(BaseModel):
     # custom configs
     workspace_base: str | None = './workspace'
     mount_docker_socket: bool = Field(default=True)
+    file_store_path: str = Field(default='/tmp/kevin_file_store')
+
 
     # original configs
     llms: dict[str, LLMConfig] = Field(default_factory=dict)
@@ -67,7 +69,6 @@ class AppConfig(BaseModel):
     security: SecurityConfig = Field(default_factory=SecurityConfig)
     runtime: str = Field(default='docker')
     file_store: str = Field(default='local')
-    file_store_path: str = Field(default='/tmp/openhands_file_store')
     save_trajectory_path: str | None = Field(default=None)
     replay_trajectory_path: str | None = Field(default=None)
     workspace_mount_path: str | None = Field(default=None)
