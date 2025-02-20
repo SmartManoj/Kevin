@@ -8,7 +8,7 @@ name: Docker
 on:
   push:
     branches:
-      - main
+      - kevin
     tags:
       - '*'
   pull_request:
