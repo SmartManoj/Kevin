@@ -95,6 +95,8 @@ except Exception as e:
             code = NEW_MRE.get(title)
             if code:
                 instruction = fr'# Create the following test code and make it pass (Don\'t modify the test code itself). Library code is installed in /testbed directory.\n```python\n{code}\n```\n\n'
+            if title == 'Provide a way to make a copy of a model with different parameter values, or be more flexible with parameter shape':
+                instruction = fr''' Just only add the following function to the library code.
 in astropy/modeling/core.py in Model's class add after line 2530
 def _reset_parameters(self, *args, **kwargs):
         \"""
