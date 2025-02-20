@@ -119,7 +119,7 @@ jobs:
       - name: Install poetry via pipx
         run: pipx install poetry
       - name: Install Python dependencies using Poetry
-        run: make install-python-dependencies
+        run: yes | make install-python-dependencies
       - name: Create source distribution and Dockerfile
         run: poetry run python3 openhands/runtime/utils/runtime_build.py --base_image ${{ matrix.base_image.image }} --build_folder containers/runtime --force_rebuild
       - name: Build and push runtime image ${{ matrix.base_image.image }}
