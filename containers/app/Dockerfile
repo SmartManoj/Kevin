@@ -24,7 +24,7 @@ RUN apt-get update -y \
     && apt-get install -y curl make git build-essential \
     && python3 -m pip install poetry==1.8.2  --break-system-packages
 
-COPY ./pyproject.toml ./poetry.lock ./
+COPY ./pyproject.toml ./poetry.lock ./requirements-extra.txt ./
 RUN touch README.md
 RUN export POETRY_CACHE_DIR && poetry install --without evaluation,llama-index --no-root && rm -rf $POETRY_CACHE_DIR
 RUN poetry run pip install -r requirements-extra.txt
