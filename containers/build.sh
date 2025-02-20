@@ -74,7 +74,7 @@ fi
 
 echo "Tags: ${tags[@]}"
 
-if [[ "$image_name" == "openhands" ]]; then
+if [[ "$image_name" == "kevin" ]]; then
   dir="./containers/app"
 elif [[ "$image_name" == "runtime" ]]; then
   dir="./containers/runtime"
