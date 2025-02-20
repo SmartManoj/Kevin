@@ -5,11 +5,11 @@ from openhands.agenthub.planner_agent.prompt import (
     parse_response as parse_response_planner,
 )
 from openhands.core.exceptions import LLMResponseError
-from openhands.core.utils.json import loads as custom_loads
 from openhands.events.action import (
     FileWriteAction,
     MessageAction,
 )
+from openhands.io import loads as custom_loads
 
 
 @pytest.mark.parametrize(

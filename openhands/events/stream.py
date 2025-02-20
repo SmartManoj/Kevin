@@ -13,6 +13,7 @@ from openhands.core.utils import json
 from openhands.events.action.action import Action
 from openhands.events.event import Event, EventSource
 from openhands.events.serialization.event import event_from_dict, event_to_dict
+from openhands.io import json
 from openhands.storage import FileStore
 from openhands.storage.locations import (
     get_conversation_dir,

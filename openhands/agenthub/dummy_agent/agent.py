@@ -23,7 +23,6 @@ from openhands.events.observation import (
     CmdOutputObservation,
     FileReadObservation,
     FileWriteObservation,
-    NullObservation,
     Observation,
 )
 from openhands.events.serialization.event import event_to_dict
@@ -114,7 +113,7 @@ class DummyAgent(Agent):
             },
             {
                 'action': AgentRejectAction(),
-                'observations': [NullObservation('')],
+                'observations': [AgentStateChangedObservation('', AgentState.REJECTED)],
             },
             {
                 'action': AgentFinishAction(
