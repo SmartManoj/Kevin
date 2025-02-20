@@ -1,7 +1,7 @@
 from openhands.controller.state.state import State
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.schema import ActionType
-from openhands.core.utils import json
+from openhands.io import json
 from openhands.events.action import (
     Action,
     NullAction,

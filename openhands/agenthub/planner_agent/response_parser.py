@@ -1,5 +1,5 @@
 from openhands.controller.action_parser import ResponseParser
-from openhands.core.utils import json
+from openhands.io import json
 from openhands.events.action import (
     Action,
 )

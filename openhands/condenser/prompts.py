@@ -6,10 +6,10 @@ from openhands.core.exceptions import (
     LLMResponseError,
 )
 from openhands.core.logger import openhands_logger as logger
-from openhands.core.utils import json
 from openhands.events.action.agent import AgentSummarizeAction
 from openhands.events.event import EventSource
 from openhands.events.serialization.action import action_from_dict
+from openhands.io import json
 
 WORD_LIMIT = 200
 MESSAGE_SUMMARY_WARNING_FRAC = 0.75
