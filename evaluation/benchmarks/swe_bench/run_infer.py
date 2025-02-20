@@ -95,6 +95,17 @@ except Exception as e:
             code = NEW_MRE.get(title)
             if code:
                 instruction = fr'# Create the following test code and make it pass (Don\'t modify the test code itself). Library code is installed in /testbed directory.\n```python\n{code}\n```\n\n'
+in astropy/modeling/core.py in Model's class add after line 2530
+def _reset_parameters(self, *args, **kwargs):
+        \"""
+        Reset parameters on the models to those specified.
+        Parameters can be specified either as positional arguments or keyword
+        arguments, as in the model initializer. Any parameters not specified
+        will be reset to their default values.
+        \"""
+        self._initialize_parameters(args, kwargs)
+        self._initialize_slices()
+\n'''
             numbered_instructions = [
                 # f'The best solution is to just raise an error for Unit(0).',
                 f'Reproduce the MRE by create a test code (add traceback.print_exc(limit=-2)) in a file and run it using bash. (You should not modify the test code itself.)',
@@ -108,6 +119,7 @@ except Exception as e:
             for k, inst in enumerate(numbered_instructions):
                 instruction += f'Step {k + 1}: {inst}\n\n'
             important_instructions = [
+                'Response Guides: Escape triple double quotes properly.',
                 'Inspect the metaclass __call__() if any.',
                 'If KeyError is raised for a config dictionary, it must be that config is not passed correctly in the previous call. Don\'t simply add a check for the key in the config dictionary. Use show_function_at_line() to inspect the function definition of the previous call.',
                 'If you update min function, update max function too.',

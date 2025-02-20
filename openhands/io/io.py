@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 
 
@@ -34,6 +35,8 @@ def read_task(args: argparse.Namespace, cli_multiline_input: bool) -> str:
         task_str = read_task_from_file(args.file)
     elif args.task:
         task_str = args.task
+    elif os.environ.get('OPENHANDS_TASK'):
+        task_str = os.environ.get('OPENHANDS_TASK')
     elif not sys.stdin.isatty():
         task_str = read_input(cli_multiline_input)
 
