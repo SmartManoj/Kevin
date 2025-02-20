@@ -264,6 +264,9 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
 
             mock_function_calling = not self.is_function_calling_active()
 
+            if self.config.model.split('/')[-1].startswith('o1-mini'):
+                kwargs['messages'].append(Message(role='assistant', content=[TextContent(text='DO NOT PRODUCE INVALID CONTENT')]))
+
             # some callers might send the model and messages directly
             # litellm allows positional args, like completion(model, messages, **kwargs)
             if len(args) > 1:
