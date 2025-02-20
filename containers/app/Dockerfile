@@ -62,6 +62,7 @@ RUN useradd -l -m -u $OPENHANDS_USER_ID -s /bin/bash openhands && \
     usermod -aG sudo openhands && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN chown -R openhands:app /app && chmod -R 774 /app
+RUN sudo chown -R openhands:app $FILE_STORE_PATH && sudo chmod -R 770 $FILE_STORE_PATH
 RUN sudo chown -R openhands:app $WORKSPACE_BASE && sudo chmod -R 770 $WORKSPACE_BASE
 USER openhands
 
