@@ -309,7 +309,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
 
             if self.config.model.split('/')[-1].startswith('o1-'):
                 # Message types: user and assistant messages only, system messages are not supported.
-                messages[0].role = 'user'
+                messages[0]['role'] = 'user'
 
             if self.is_over_token_limit(messages):
                 # if kwargs['condense'] and 0:
