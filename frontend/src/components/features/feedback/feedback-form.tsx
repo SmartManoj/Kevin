@@ -110,6 +110,12 @@ export function FeedbackForm({ onClose, polarity }: FeedbackFormProps) {
           {t(I18nKey.FEEDBACK$PRIVATE_LABEL)}
         </label>
         <label className="flex gap-2 cursor-pointer">
+        <input
+            name="permissions"
+            value="public"
+            type="radio"
+            defaultChecked
+          />
           {t(I18nKey.FEEDBACK$PUBLIC_LABEL)}
         </label>
       </div>
