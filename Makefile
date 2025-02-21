@@ -169,6 +169,9 @@ check-poetry:
 			read -p "Do you want to install Python $(PYTHON_VERSION)? [y/n]:" consent; \
 			if [ "$$consent" = "y" ]; then \
 				pip install poetry -U; \
+				export PATH="$$HOME/.local/bin:$$PATH"; \
+				source ~/.bashrc; \
+				echo "$(GREEN)Poetry installed successfully.$(RESET)"; \
 			else \
 				echo "$(RED)Poetry 1.8 or later is required. You can install poetry by running the following command, then adding Poetry to your PATH:"; \
 				echo "$(RED) pip install poetry -U;$(RESET)"; \
@@ -176,9 +179,12 @@ check-poetry:
 			fi; \
 		fi; \
 	else \
-		read -p "Do you want to install Python $(PYTHON_VERSION)? [y/n]:" consent; \
+		read -p "Do you want to install Poetry? [y/n]:" consent; \
 		if [ "$$consent" = "y" ]; then \
 			pip install poetry -U; \
+			export PATH="$$HOME/.local/bin:$$PATH"; \
+			source ~/.bashrc; \
+			echo "$(GREEN)Poetry installed successfully.$(RESET)"; \
 		else \
 			echo "$(RED)Poetry is not installed. You can install poetry by running the following command, then adding Poetry to your PATH:"; \
 			echo "$(RED) pip install poetry -U; -$(RESET)"; \
