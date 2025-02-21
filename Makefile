@@ -148,8 +148,13 @@ check-docker:
 			read -p "Do you want to install Docker? [y/n]:" consent; \
 			if [ "$$consent" = "y" ]; then \
 				sudo apt install -y docker.io; \
+				sudo usermod -aG docker $$USER; \
+				newgrp docker; \
+				echo "$(GREEN)Docker installed successfully.$(RESET)"; \
+			else \
+				echo "$(RED)Docker is not installed. Please install Docker to continue.$(RESET)"; \
+				exit 1; \
 			fi; \
-			exit 1; \
 		fi; \
 	fi
 
