@@ -18,6 +18,7 @@ def show_class_structure(file_path: str, class_name: str):
         file_path: The path to the file containing the class.
         class_name: The name of the class to show the methods of.
     """
+    # TODO: show line numbers
     with open(file_path, 'r') as file:
         code = file.read()
     tree = ast.parse(code)
