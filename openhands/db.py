@@ -5,7 +5,7 @@ import sqlite3
 def create_db():
     conn = sqlite3.connect('port_db.sqlite')
     c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS ports (user_id TEXT PRIMARY KEY, port INTEGER)')
+    c.execute('CREATE TABLE IF NOT EXISTS ports (user_id TEXT PRIMARY KEY, port INTEGER, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)')
     conn.commit()
     return conn
 
