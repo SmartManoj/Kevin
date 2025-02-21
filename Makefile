@@ -38,8 +38,8 @@ check-dependencies:
 	@$(MAKE) -s check-system
 	@$(MAKE) -s check-python
 	@$(MAKE) -s check-netcat
-	@$(MAKE) -s check-npm
 	@$(MAKE) -s check-nodejs
+	@$(MAKE) -s check-npm
 ifeq ($(INSTALL_DOCKER),)
 	@$(MAKE) -s check-docker
 endif
