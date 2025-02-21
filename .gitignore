@@ -230,6 +230,8 @@ runtime_*.tar
 # docker build
 containers/runtime/Dockerfile
 containers/runtime/project.tar.gz
+
+# misc
 /workspace2
 /workspace3
 trajectory.json
@@ -243,3 +245,4 @@ openhands/sel/downloaded_files/pyautogui.lock
 /downloaded_files
 *.env
 port_db.sqlite
+*.pem
