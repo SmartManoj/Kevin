@@ -197,6 +197,7 @@ sel:
 	@python -i openhands/sel/selenium_browser.py
 
 install-python-dependencies:
+	@export DEBIAN_FRONTEND=noninteractive
 	@echo "$(GREEN)Installing Python dependencies...$(RESET)"
 	@if [ -z "${TZ}" ]; then \
 		echo "Defaulting TZ (timezone) to UTC"; \
