@@ -75,7 +75,6 @@ check-python:
 				sudo add-apt-repository ppa:deadsnakes/ppa; \
 				sudo apt update; \
 				sudo apt install -y python$(PYTHON_VERSION); \
-				sudo apt install -y python$(PYTHON_VERSION)-distutils; \
 			fi; \
 		else \
 			echo "$(RED)Python $(PYTHON_VERSION) is not installed. Please install Python $(PYTHON_VERSION) to continue.$(RESET)"; \
