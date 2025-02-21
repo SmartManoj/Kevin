@@ -171,19 +171,17 @@ check-poetry:
 				pip install poetry -U; \
 			else \
 				echo "$(RED)Poetry 1.8 or later is required. You can install poetry by running the following command, then adding Poetry to your PATH:"; \
-				echo "$(RED) curl -sSL https://install.python-poetry.org | python$(PYTHON_VERSION) -$(RESET)"; \
-				echo "$(RED)More detail here: https://python-poetry.org/docs/#installing-with-the-official-installer$(RESET)"; \
+				echo "$(RED) pip install poetry -U;$(RESET)"; \
 				exit 1; \
 			fi; \
 		fi; \
 	else \
 		read -p "Do you want to install Python $(PYTHON_VERSION)? [y/n]:" consent; \
 		if [ "$$consent" = "y" ]; then \
-			sudo apt install -y python3-poetry; \
+			pip install poetry -U; \
 		else \
 			echo "$(RED)Poetry is not installed. You can install poetry by running the following command, then adding Poetry to your PATH:"; \
-			echo "$(RED) curl -sSL https://install.python-poetry.org | python$(PYTHON_VERSION) -$(RESET)"; \
-			echo "$(RED)More detail here: https://python-poetry.org/docs/#installing-with-the-official-installer$(RESET)"; \
+			echo "$(RED) pip install poetry -U; -$(RESET)"; \
 			exit 1; \
 		fi; \
 	fi
