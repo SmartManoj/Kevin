@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { RUNTIME_INACTIVE_STATES } from "#/types/agent-state";
+import { AgentState, RUNTIME_INACTIVE_STATES } from "#/types/agent-state";
 import { ExplorerTree } from "#/components/features/file-explorer/explorer-tree";
 import toast from "#/utils/toast";
 import { RootState } from "#/store";
@@ -24,7 +24,7 @@ export function FileExplorer({ isOpen, onToggle }: FileExplorerProps) {
 
   const { data: paths, refetch, error } = useListFiles();
   const { data: vscodeUrl } = useVSCodeUrl({
-    enabled: !RUNTIME_INACTIVE_STATES.includes(curAgentState),
+    enabled: curAgentState !== AgentState.LOADING,
   });
 
   const handleOpenVSCode = () => {
@@ -96,7 +96,7 @@ export function FileExplorer({ isOpen, onToggle }: FileExplorerProps) {
           {isOpen && (
             <OpenVSCodeButton
               onClick={handleOpenVSCode}
-              isDisabled={RUNTIME_INACTIVE_STATES.includes(curAgentState)}
+              isDisabled={curAgentState === AgentState.LOADING}
             />
           )}
         </div>
