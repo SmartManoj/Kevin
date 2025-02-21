@@ -224,7 +224,8 @@ class BashSession:
                     output = "[Don't use git commands. Just directly give the solution.]"
                 elif 'pip install' in command and os.getenv('NO_PIP_INSTALL') == '1':
                     output = '[Use the current packages only.]'
-
+                elif any(command.startswith(f'{cmd} ') for cmd in ['pip', 'wget', 'curl']) and os.getenv('NO_INTERNET') == '1':
+                    output = '[Internet is disabled. Please use a workaround.]'
                 elif (
                     '/tmp/test_task.py' in command
                     and 'cat' not in command
