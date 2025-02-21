@@ -28,7 +28,7 @@ class VSCodePlugin(Plugin):
             return
 
         self.vscode_port = int(os.environ['VSCODE_PORT'])
-        self.vscode_connection_token = str(uuid.uuid4())
+        self.vscode_connection_token = os.environ['VSCODE_CONNECTION_TOKEN']
         assert check_port_available(self.vscode_port)
         cmd = (
             f"su - {username} -s /bin/bash << 'EOF'\n"

@@ -4,6 +4,7 @@ import time
 from functools import lru_cache
 from typing import Callable
 from uuid import UUID
+import uuid
 
 import docker
 import requests
@@ -281,6 +282,7 @@ class DockerRuntime(ActionExecutionClient):
             'port': str(self._container_port),
             'PYTHONUNBUFFERED': 1,
             'VSCODE_PORT': str(self._vscode_port),
+            'VSCODE_CONNECTION_TOKEN': str(uuid.uuid4()),
         }
         if self.config.debug or DEBUG:
             environment['DEBUG'] = 'true'
