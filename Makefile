@@ -145,6 +145,10 @@ check-docker:
 			echo "$(BLUE)$(shell docker --version) is already installed.$(RESET)"; \
 		else \
 			echo "$(RED)Docker is not installed. Please install Docker to continue.$(RESET)"; \
+			read -p "Do you want to install Docker? [y/n]:" consent; \
+			if [ "$$consent" = "y" ]; then \
+				sudo apt install -y docker.io; \
+			fi; \
 			exit 1; \
 		fi; \
 	fi
