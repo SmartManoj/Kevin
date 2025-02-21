@@ -89,6 +89,7 @@ class AppConfig(BaseModel):
     file_uploads_allowed_extensions: list[str] = Field(default_factory=lambda: ['.*'])
     runloop_api_key: SecretStr | None = Field(default=None)
     cli_multiline_input: bool = Field(default=False)
+    conversation_max_age_seconds: int = Field(default=864000)  # 10 days in seconds
 
     show_workspace_contents: bool = True
     override_UI_settings: bool = False
