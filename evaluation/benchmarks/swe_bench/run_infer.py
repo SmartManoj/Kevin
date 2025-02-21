@@ -70,14 +70,14 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
     # Prepare instruction
     # Instruction based on Anthropic's official trajectory
     # https://github.com/eschluntz/swe-bench-experiments/tree/main/evaluation/verified/20241022_tools_claude-3-5-sonnet-updated/trajs
-    repo_dir = '/testbed'
+    repo_path = '/testbed'
     problem_statement = instance.problem_statement
     instruction = (
-        f'Please address the following GitHub issue for the repository, where the source code is available in the {repo_dir} directory, which you have access to.\n'
+        f'Please address the following GitHub issue for the repository, where the source code is available in the {repo_path} directory, which you have access to.\n'
         '# Title\n'
         f'{problem_statement}\n\n'
         '\n$ pwd\n\n'
-        f'{repo_dir}\n\n'
+        f'{repo_path}\n\n'
     )
     if 1:
         if 1:
@@ -111,7 +111,7 @@ def _reset_parameters(self, *args, **kwargs):
             numbered_instructions = [
                 # f'The best solution is to just raise an error for Unit(0).',
                 f'Reproduce the MRE by create a test code (add traceback.print_exc(limit=-2)) in a file and run it using bash. (You should not modify the test code itself.)',
-                f'If no traceback, locate the actual relevant library file that raised this error in {repo_dir} using `search_class()` or `search_function()` python skill.',
+                f'If no traceback, locate the actual relevant library file that raised this error in {repo_path} using `search_class()` or `search_function()` python skill.',
                 'Inspect the function using `show_function_at_line()` or `show_function()` skill.',
                 'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it.',
                 'Test the fix.',
