@@ -1407,9 +1407,9 @@ def delete_file(file_name: str):
 __all__ = [
     'search_function',
     'search_class',
-    'show_class',
     'show_function',
     'show_function_at_line',
+    'show_class',
     'show_class_structure',
     'show_file_structure',
     'search_in_dir',
