@@ -172,7 +172,7 @@ class BashSession:
 
     def initialize(self):
         """Initialize the Bash session using pexpect."""
-        self.child = pexpect.spawn('/bin/bash', encoding='utf-8', timeout=30)
+        self.child = pexpect.spawn('/bin/bash', encoding='utf-8')
 
         logger.info(f'PS1: {self.PS1}')
         # Configure bash to use a simple PS1 prompt
