@@ -240,7 +240,7 @@ class BashSession:
                 self.child.sendline(command)
                 self.child.expect(self.bash_expect_regex)  # Wait for the shell prompt
                 # Capture the output
-                output = self.child.before[len(command):].strip() or '[Command finished execution with no output]'
+                output = self.child.before[len(command):].strip() or '[Command executed successfully with no output]'
             if all_output:
                 # previous output already exists so we add a newline
                 all_output += '\r\n'
