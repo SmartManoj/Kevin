@@ -157,12 +157,12 @@ class CodeActActionParserCmdRun(ActionParser):
 
     def check_condition(self, action_str: str) -> bool:
         self.bash_command = re.search(
-            r'<execute_bash>(.*)</execute_bash>', action_str, re.DOTALL
+            r'<execute_bash>(.*?)</execute_bash>', action_str, re.DOTALL
         )
         if self.bash_command is None and '<execute_' not in action_str:
             # Gemini flash not providing the tag and returns as code wrap in backticks
             self.bash_command = re.search(
-                r'^```bash(.*)```', action_str, re.DOTALL | re.MULTILINE
+                r'^```bash(.*?)```', action_str, re.DOTALL | re.MULTILINE
             )
         return self.bash_command is not None
 
@@ -192,11 +192,11 @@ class CodeActActionParserIPythonRunCell(ActionParser):
         # For Gemini: tool_code is not a valid tag and returns as code wrap in backticks
         action_str = re.sub(r'^```(?:tool_code)(.*)```', r'\1', action_str, flags=re.DOTALL)
         self.python_code = re.search(
-            r'<execute_ipython>(.*\S.*)</execute_ipython>', action_str, re.DOTALL
+            r'<execute_ipython>(.*\S.*?)</execute_ipython>', action_str, re.DOTALL
         )
         if self.python_code is None and '<execute_' not in action_str:
             self.python_code = re.search(
-                r'^```(?:python)(.*)```', action_str, re.DOTALL | re.MULTILINE
+                r'^```(?:python)(.*?)```', action_str, re.DOTALL | re.MULTILINE
             )
         return self.python_code is not None
 
@@ -257,7 +257,7 @@ class CodeActActionParserAgentDelegate(ActionParser):
 
     def check_condition(self, action_str: str) -> bool:
         self.agent_delegate = re.search(
-            r'<execute_browse>(.*)</execute_browse>', action_str, re.DOTALL
+            r'<execute_browse>(.*?)</execute_browse>', action_str, re.DOTALL
         )
         return self.agent_delegate is not None
 
