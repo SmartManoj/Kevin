@@ -20,8 +20,16 @@ class AgentConfig(BaseModel):
         mind_voice: Voice for the mind.
         mind_voice_language: Language for the mind voice.
         condenser: Configuration for the memory condenser. Default is NoOpCondenserConfig.
+        enable_history_truncation: If history should be truncated once LLM context limit is hit.
     """
+    # custom configs
+    function_calling: bool = False
+    mind_voice: str | None = None
+    mind_voice_language: str = 'English'
+    use_microagents: bool = True
+    codeact_enable_bash: bool = True
 
+    # original configs
     codeact_enable_browsing: bool = Field(default=True)
     enable_som_visual_browsing: bool = Field(default=False)
     codeact_enable_llm_editor: bool = Field(default=False)
@@ -33,10 +41,4 @@ class AgentConfig(BaseModel):
     enable_prompt_extensions: bool = Field(default=True)
     disabled_microagents: list[str] | None = Field(default=None)
     condenser: CondenserConfig = Field(default_factory=NoOpCondenserConfig)
-
-    # custom configs
-    function_calling: bool = False
-    mind_voice: str | None = None
-    mind_voice_language: str = 'English'
-    use_microagents: bool = True
-    codeact_enable_bash: bool = True
+    enable_history_truncation: bool = Field(default=True)

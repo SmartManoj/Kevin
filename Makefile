@@ -121,7 +121,7 @@ check-nodejs:
 				curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -; \
 				sudo apt-get install -y nodejs; \
 			else \
-				echo "$(RED)Node.js 20.x or later is required. Please install Node.js 20.x or later to continue.$(RESET)"; \
+				echo "$(RED)Node.js 22.x or later is required. Please install Node.js 22.x or later to continue.$(RESET)"; \
 				exit 1; \
 			fi; \
 		fi; \

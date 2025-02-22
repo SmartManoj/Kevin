@@ -21,6 +21,7 @@ from litellm import completion_cost as litellm_completion_cost
 from litellm.exceptions import (
     RateLimitError,
 )
+from litellm.llms.custom_httpx.http_handler import HTTPHandler
 from litellm.types.utils import CostPerToken, ModelResponse, Usage
 from litellm.utils import create_pretrained_tokenizer
 
