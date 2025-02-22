@@ -211,6 +211,10 @@ class ActionExecutor:
                 'cd /workspace',
                 "export PATH=/openhands/poetry/$(ls /openhands/poetry | sed -n '2p')/bin:$PATH",
             ]
+        else:
+            INIT_COMMANDS += [
+                "export PATH=/testbed/.venv/bin::$PATH",
+            ]
         logger.debug(f'Initializing by running {len(INIT_COMMANDS)} bash commands...')
         # if root user, skip last command
         if self.username == 'root' and not is_local_runtime:
