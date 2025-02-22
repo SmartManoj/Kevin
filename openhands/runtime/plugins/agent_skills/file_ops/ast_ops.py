@@ -18,11 +18,11 @@ def show_class_structure(file_path: str, class_name: str):
         file_path: The path to the file containing the class.
         class_name: The name of the class to show the methods of.
     """
-    # TODO: show line numbers
     with open(file_path, 'r') as file:
         code = file.read()
     tree = ast.parse(code)
 
+    width = len(str(len(code.split('\n'))))
     # Traverse the AST to find the class with the specified name
     for node in tree.body:
         if isinstance(node, ast.ClassDef) and node.name == class_name:
@@ -31,11 +31,11 @@ def show_class_structure(file_path: str, class_name: str):
                 base.id for base in node.bases if isinstance(base, ast.Name)
             ]
             parent_str = f"({', '.join(parent_classes)})" if parent_classes else ''
-            print(f'class {node.name}{parent_str}:')
+            print(f'{node.lineno:>{width}}|class {node.name}{parent_str}:')
 
             for item in node.body:
                 if isinstance(item, ast.FunctionDef):
-                    print(f'    -- {get_function_signature(item)}')
+                    print(f'{item.lineno:>{width}}|    -- {get_function_signature(item)}')
             break
     else:
         print(f'Class {class_name} not found in {file_path}')
@@ -66,6 +66,7 @@ def show_file_structure(file_path: str):
         code = file.read()
     tree = ast.parse(code)
 
+    width = len(str(len(code.split('\n'))))
     # Traverse the AST to find the class with the specified name
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
@@ -74,17 +75,17 @@ def show_file_structure(file_path: str):
                 base.id for base in node.bases if isinstance(base, ast.Name)
             ]
             parent_str = f"({', '.join(parent_classes)})" if parent_classes else ''
-            print(f'class {node.name}{parent_str}:')
+            print(f'{node.lineno:>{width}}|class {node.name}{parent_str}:')
 
             for item in node.body:
                 if isinstance(item, ast.FunctionDef):
                     # Extract function name and arguments (including 'self')
-                    print('    -- ', get_function_signature(item))
+                    print(f'{item.lineno:>{width}}|    -- ', get_function_signature(item))
             print("--------------------------------\n")
         
         elif isinstance(node, ast.FunctionDef):
             fun = node
-            print(get_function_signature(fun))
+            print(f'{fun.lineno:>{width}}|    -- ', get_function_signature(fun))
             print("--------------------------------\n")
 if __name__ == '__main__':
     # Usage example
