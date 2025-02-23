@@ -172,7 +172,7 @@ class BashSession:
 
     def initialize(self):
         """Initialize the Bash session using pexpect."""
-        self.child = pexpect.spawn('/bin/bash', encoding='utf-8')
+        self.child = pexpect.spawn('/bin/bash', encoding='utf-8', echo=False, timeout=None)
 
         logger.info(f'PS1: {self.PS1}')
         # Configure bash to use a simple PS1 prompt
@@ -240,7 +240,7 @@ class BashSession:
                 self.child.sendline(command)
                 self.child.expect(self.bash_expect_regex)  # Wait for the shell prompt
                 # Capture the output
-                output = self.child.before[len(command):].strip() or '[Command executed successfully with no output]'
+                output = self.child.before.strip() or '[Command executed successfully with no output]'
             if all_output:
                 # previous output already exists so we add a newline
                 all_output += '\r\n'
