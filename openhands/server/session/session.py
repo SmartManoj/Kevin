@@ -25,6 +25,7 @@ from openhands.events.observation import (
     IPythonRunCellObservation,
     NullObservation,
 )
+from openhands.db import get_credits, set_credits
 from openhands.events.observation.error import ErrorObservation
 from openhands.events.serialization import event_from_dict, event_to_dict
 from openhands.events.stream import EventStreamSubscriber
@@ -32,10 +33,12 @@ from openhands.llm.llm import LLM
 from openhands.server.session.agent_session import AgentSession
 from openhands.server.session.conversation_init_data import ConversationInitData
 from openhands.server.settings import Settings
+from openhands.server.types import AppMode
 from openhands.storage.files import FileStore
 
 ROOM_KEY = 'room:{sid}'
 
+users_start_time = {}
 
 class Session:
     sid: str
@@ -207,6 +210,20 @@ class Session:
             # feedback from the environment to agent actions is understood as agent events by the UI
             event_dict = event_to_dict(event)
             event_dict['source'] = EventSource.AGENT
+            if os.environ.get('APP_MODE') != AppMode.OSS:
+                if isinstance(event, AgentStateChangedObservation):
+                    agent_state = event.agent_state
+                    print('agent_state is', agent_state)
+                    if agent_state == AgentState.RUNNING:
+                        print('setting start time',)
+                        users_start_time[self.sid] = time.time()
+                    elif agent_state != AgentState.RUNNING and users_start_time.get(self.sid):
+                        total_time = time.time() - users_start_time[self.sid]
+                        total_hours = total_time / 3600
+                        remaining_credits = get_credits(self.user_id) - total_hours
+                        print('setting credits', remaining_credits)
+                        set_credits(self.user_id, remaining_credits)
+                        del users_start_time[self.sid]
             await self.send(event_dict)
         elif isinstance(event, ErrorObservation):
             # send error events as agent events to the UI

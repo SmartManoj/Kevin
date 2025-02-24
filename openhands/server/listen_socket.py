@@ -5,6 +5,7 @@ from pydantic import SecretStr
 from socketio.exceptions import ConnectionRefusedError
 
 from openhands.core.logger import openhands_logger as logger
+from openhands.db import get_credits
 from openhands.events.action import (
     NullAction,
 )
@@ -56,6 +57,10 @@ async def connect(connection_id: str, environ, auth):
 
         logger.info(f'User {user_id} is connecting to conversation {conversation_id}')
 
+        # check if credit is enough
+        if get_credits(user_id) <= 0:
+            logger.error(f'User {user_id} has no credits')
+            raise ConnectionRefusedError('User has no credits')
         conversation_store = await ConversationStoreImpl.get_instance(config, user_id)
         metadata = await conversation_store.get_metadata(conversation_id)
 

@@ -52,12 +52,12 @@ export function PaymentForm() {
           <span>Balance</span>
         </div>
         {!isLoading && (
-          <span data-testid="user-balance">${Number(balance).toFixed(2)}</span>
+          <span data-testid="user-balance">{Math.floor(Number(balance))}h {Math.round((Number(balance) % 1) * 60)}m</span>
         )}
         {isLoading && <LoadingSpinner size="small" />}
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" style={{ display: "none" }}>
         <SettingsInput
           testId="top-up-input"
           name="top-up-input"
