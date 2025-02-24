@@ -95,7 +95,7 @@ except Exception as e:
             code = NEW_MRE.get(title)
             if code:
                 instruction = fr'# Create the following test code and make it pass (Don\'t modify the test code itself). Library code is installed in /testbed directory.\n```python\n{code}\n```\n\n'
-            if title == 'Provide a way to make a copy of a model with different parameter values, or be more flexible with parameter shape':
+            if title == 'Provide a way to make a copy of a model with different parameter values, or be more flexible with parameter shape' and 0:
                 instruction = fr''' Just only add the following function to the library code.
 in astropy/modeling/core.py in Model's class add after line 2530
 def _reset_parameters(self, *args, **kwargs):
@@ -110,7 +110,7 @@ def _reset_parameters(self, *args, **kwargs):
 \n'''
             numbered_instructions = [
                 # f'The best solution is to just raise an error for Unit(0).',
-                f'Reproduce the MRE by create a test code (add traceback.print_exc(limit=-2)) in a file and run it using bash. (You should not modify the test code itself.)',
+                f'Reproduce the MRE by create a test code (add traceback.print_exc(limit=-2) if there is many lines of traceback) in a file and run it using bash. (You should not modify the test code itself.)',
                 f'If no traceback, locate the actual relevant library file that raised this error in {repo_path} using `search_class()` or `search_function()` python skill.',
                 'Inspect the function using `show_function_at_line()` or `show_function()` skill.',
                 'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it.',
