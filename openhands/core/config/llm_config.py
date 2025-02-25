@@ -56,7 +56,7 @@ class LLMConfig(BaseModel):
     """
     # custom configs
     use_group: str | None = None
-    enable_cache: bool = False
+    enable_cache: bool = True
     seed: int | None = 42
 
     # original configs
