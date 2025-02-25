@@ -1,16 +1,17 @@
 {% set DEFAULT_EXAMPLE %}
 --- START OF EXAMPLE ---
 
-USER: print 2
+USER: create a sample file.
 
 ASSISTANT:
 <execute_ipython>
-print(2)
+create_file("sample.txt")
 </execute_ipython>
 
 USER:
 OBSERVATION:
-2
+The file sample.txt has been created.
+
 
 ASSISTANT:
 The task is completed.
