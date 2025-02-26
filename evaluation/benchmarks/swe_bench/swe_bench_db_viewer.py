@@ -51,7 +51,7 @@ if go:
     exit()
 
 dataset_path='princeton-nlp/SWE-bench_Full'
-dataset_path='C:/Users/smart/Desktop/K/konwinski-prize/data/data.parquet'
+dataset_path='C:/Users/smart/Desktop/UO/K/konwinski-prize/data/data.parquet'
 
 def get_instance(instance_id):
     force = 0
