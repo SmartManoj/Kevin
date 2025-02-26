@@ -460,7 +460,6 @@ class LlmFileHandler(logging.FileHandler):
         self.message_counter = 1
         clear_llm_logs(self.log_directory)
 
-
 def _get_llm_file_handler(name: str, log_level: int) -> LlmFileHandler:
     # The 'delay' parameter, when set to True, postpones the opening of the log file
     # until the first log message is emitted.
