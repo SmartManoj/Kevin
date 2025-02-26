@@ -235,6 +235,8 @@ class BashSession:
                     output = "[The content in this file is absolutely correct. Also, you can't modify this test file. You must pass this test case. You should correct the codebase instead.]"
                 elif command.startswith('pytest') and '.py' not in command:
                     output = '[Please run specific test cases instead of running all test cases.]'
+                elif command=='exit':
+                    output = '[There is no need to exit the shell. You can continue to execute commands.]'
             if not output:
                 # Send the command to the shell
                 self.child.sendline(command)
