@@ -70,7 +70,15 @@ from openhands.llm.retry_mixin import RetryMixin
 __all__ = ['LLM']
 
 # tuple of exceptions to retry on
-LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,)
+LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (
+        APIConnectionError,
+        # FIXME: APIError is useful on 502 from a proxy for example,
+        # but it also retries on other errors that are permanent
+        APIError,
+        InternalServerError,
+        RateLimitError,
+        ServiceUnavailableError,
+    )
 
 # cache prompt supporting models
 # remove this when we gemini and deepseek are supported
