@@ -9,6 +9,7 @@ import requests
 
 from openhands.core import config2
 from openhands.core.config import LLMConfig
+from openhands.utils.ensure_httpx_close import ensure_httpx_close
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
@@ -213,6 +214,7 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
         # set up the completion function
         kwargs: dict[str, Any] = {
             'temperature': self.config.temperature,
+            'max_completion_tokens': self.config.max_output_tokens,
         }
         if (
             self.config.model.lower() in REASONING_EFFORT_SUPPORTED_MODELS
@@ -222,6 +224,10 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
             kwargs.pop(
                 'temperature'
             )  # temperature is not supported for reasoning models
+        # Azure issue: https://github.com/All-Hands-AI/OpenHands/issues/6777
+        if self.config.model.startswith('azure'):
+            kwargs['max_tokens'] = self.config.max_output_tokens
+            kwargs.pop('max_completion_tokens')
 
         # if o3-mini or o3-mini-2025-01-31, add max_completion_tokens
         if self.config.model.split('/')[-1] in ['o3-mini', 'o3-mini-2025-01-31']:
