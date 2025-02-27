@@ -185,3 +185,11 @@ class LLMConfig(BaseModel):
         # Azure issue: https://github.com/All-Hands-AI/OpenHands/issues/6777
         if self.model.startswith('azure') and self.api_version is None:
             self.api_version = '2024-08-01-preview'
+
+        # strip / in base_url if present
+        if self.base_url and self.base_url.endswith('/'):
+            self.base_url = self.base_url.rstrip('/')
+
+        # strip / in ollama_base_url if present
+        if self.ollama_base_url and self.ollama_base_url.endswith('/'):
+            self.ollama_base_url = self.ollama_base_url.rstrip('/')
