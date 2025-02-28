@@ -79,6 +79,7 @@ COPY --chown=openhands:app --chmod=777 ./openhands/runtime/plugins ./openhands/r
 COPY --chown=openhands:app --chmod=770 ./openhands/agenthub ./openhands/agenthub
 COPY --chown=openhands:app ./pyproject.toml ./pyproject.toml
 COPY --chown=openhands:app ./poetry.lock ./poetry.lock
+COPY --chown=openhands:app ./requirements-extra.txt ./requirements-extra.txt
 COPY --chown=openhands:app ./README.md ./README.md
 COPY --chown=openhands:app ./MANIFEST.in ./MANIFEST.in
 COPY --chown=openhands:app ./LICENSE ./LICENSE
