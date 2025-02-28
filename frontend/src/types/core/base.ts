@@ -12,6 +12,7 @@ export type OpenHandsEventType =
   | "reject"
   | "add_task"
   | "modify_task"
+  | "think"
   | "finish"
   | "error";
 

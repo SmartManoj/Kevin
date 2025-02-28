@@ -1,6 +1,6 @@
 import os
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 
 class SandboxConfig(BaseModel):
@@ -81,3 +81,23 @@ class SandboxConfig(BaseModel):
     # custom configs
     persist_sandbox: bool = True
     port: int = 63710
+    @classmethod
+    def from_toml_section(cls, data: dict) -> dict[str, 'SandboxConfig']:
+        """
+        Create a mapping of SandboxConfig instances from a toml dictionary representing the [sandbox] section.
+
+        The configuration is built from all keys in data.
+
+        Returns:
+            dict[str, SandboxConfig]: A mapping where the key "sandbox" corresponds to the [sandbox] configuration
+        """
+        # Initialize the result mapping
+        sandbox_mapping: dict[str, SandboxConfig] = {}
+
+        # Try to create the configuration instance
+        try:
+            sandbox_mapping['sandbox'] = cls.model_validate(data)
+        except ValidationError as e:
+            raise ValueError(f'Invalid sandbox configuration: {e}')
+
+        return sandbox_mapping
