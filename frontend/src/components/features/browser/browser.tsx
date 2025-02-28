@@ -4,7 +4,10 @@ import { RootState } from "#/store";
 import { updateBrowserTabUrl } from "#/services/browse-service";
 import { BrowserSnapshot } from "./browser-snapshot";
 import { EmptyBrowserMessage } from "./empty-browser-message";
+import { useWsClient } from "#/context/ws-client-provider";
+
 export function BrowserPanel() {
+  const { send } = useWsClient();
   const { url, screenshotSrc } = useSelector(
     (state: RootState) => state.browser,
   );
@@ -17,7 +20,7 @@ export function BrowserPanel() {
 
   const handleURLBar = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      updateBrowserTabUrl(editableUrl);
+      send(updateBrowserTabUrl(editableUrl));
     }
   };
 
