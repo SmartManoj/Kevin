@@ -2,6 +2,7 @@ import asyncio
 import os
 from copy import deepcopy
 import json
+import subprocess
 import time
 from copy import deepcopy
 
@@ -136,8 +137,10 @@ class Session:
 
         agent = Agent.get_cls(agent_cls)(llm, agent_config)
         # store agent, language, model in environmnet for feeedback
+        git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('utf-8').strip()
+
         os.environ['OPENHANDS_AGENT'] = agent_cls
-        os.environ['OPENHANDS_LANGUAGE'] = settings.language.upper() + ' | ' + 'Using Kevin Fork'
+        os.environ['OPENHANDS_LANGUAGE'] = settings.language.upper() + ' | ' + 'Using Kevin Fork on ' + git_hash[:7]
         os.environ['OPENHANDS_MODEL'] = config2.model
 
         github_token = None
