@@ -225,7 +225,7 @@ class DockerRuntime(ActionExecutionClient):
             self.copy_to(path, '/openhands/code/openhands/sel/')
             path = 'openhands/sel/selenium_tester.py'
             self.copy_to(path, '/openhands/code/openhands/sel/')
-            logger.info('Copied selenium files to runtime')
+            logger.debug('Copied selenium files to runtime')
         except Exception as e:
             logger.error(f'Error copying selenium files to runtime: {e}')
         try:
