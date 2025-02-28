@@ -132,7 +132,7 @@ class DockerRuntimeBuilder(RuntimeBuilder):
         buildx_cmd.append(path)  # must be last!
 
         self.rolling_logger.start(
-            f'================ {buildx_cmd[0].upper()} BUILD STARTED (may take a ~3 minutes) ================'
+            f'================ {buildx_cmd[0].upper()} BUILD STARTED (may take ~3 minutes) ================'
         )
 
         try:
