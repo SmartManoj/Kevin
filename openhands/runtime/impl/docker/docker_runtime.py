@@ -238,7 +238,7 @@ class DockerRuntime(ActionExecutionClient):
     @lru_cache(maxsize=1)
     def _init_docker_client() -> docker.DockerClient:
         try:
-            return docker.from_env()
+            return docker.from_env(timeout=os.environ.get('DOCKER_TIMEOUT', 120))
         except Exception as e:
             logger.error(
                 f'Is Docker Desktop running? If so, check `docker ps` output for errors.\n{e}',
