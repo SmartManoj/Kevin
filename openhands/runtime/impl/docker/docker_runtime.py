@@ -90,7 +90,7 @@ class DockerRuntime(ActionExecutionClient):
             elif self.config.run_as_openhands:
                 self._container_port = self.config.sandbox.port
             else:
-                self._container_port = 63712
+                self._container_port = int(os.getenv('OPENHANDS_CONTAINER_PORT', 63712))
             path = config.workspace_mount_path or sid
             os.environ['selection_id'] = path
             path = ''.join(c if c.isalnum() else '_' for c in path)  # type: ignore
