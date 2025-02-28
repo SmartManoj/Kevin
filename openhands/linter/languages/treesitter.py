@@ -56,7 +56,11 @@ class TreesitterBasicLinter(BaseLinter):
         lang = filename_to_lang(file_path)
         if not lang:
             return []
-        parser = get_parser(lang)
+        try:
+            parser = get_parser(lang)
+        except Exception as e:
+            print(f'Error getting parser for {lang}: {e}')
+            return []
         with open(file_path, 'r') as f:
             code = f.read()
         tree = parser.parse(bytes(code, 'utf-8'))
