@@ -60,6 +60,7 @@ class AppConfig(BaseModel):
     workspace_base: str | None = './workspace'
     mount_docker_socket: bool = Field(default=True)
     file_store_path: str = Field(default='/tmp/kevin_file_store')
+    run_as_openhands: bool = Field(default=False)
 
 
     # original configs
@@ -77,7 +78,6 @@ class AppConfig(BaseModel):
     workspace_mount_path_in_sandbox: str = Field(default='/workspace')
     workspace_mount_rewrite: str | None = Field(default=None)
     cache_dir: str = Field(default='/tmp/cache')
-    run_as_openhands: bool = Field(default=True)
     max_iterations: int = Field(default=OH_MAX_ITERATIONS)
     max_budget_per_task: float | None = Field(default=None)
     e2b_api_key: SecretStr | None = Field(default=None)
