@@ -59,7 +59,7 @@ class TreesitterBasicLinter(BaseLinter):
         try:
             parser = get_parser(lang)
         except Exception as e:
-            print(f'Error getting parser for {lang}: {e}')
+            # print(f'Error getting parser for {lang}: {e}')
             return []
         with open(file_path, 'r') as f:
             code = f.read()
