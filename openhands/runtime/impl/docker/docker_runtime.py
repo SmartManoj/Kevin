@@ -362,7 +362,7 @@ class DockerRuntime(ActionExecutionClient):
             if '409' in str(e):
                 self.log(
                     'warning',
-                    f'Container {self.container_name} already exists. Removing...',
+                    f'{e}; Container {self.container_name} already exists. Removing...',
                 )
                 stop_all_containers(self.container_name)
                 return self._init_container()
