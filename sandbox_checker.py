@@ -3,7 +3,7 @@ from time import sleep
 
 import requests
 import os 
-sandbox_port = os.environ.get('SANDBOX_PORT', 63710)
+sandbox_port = os.environ.get('SANDBOX_PORT', 39180)
 def run_ipython(code):
     return {
         'action': {
@@ -45,6 +45,14 @@ def write_file(path, content):
         }
     }
 
+def file_edit(**kwargs):
+    return {
+        'action': {
+            'action': 'edit',
+            'args': kwargs,
+        }
+    }
+
 def execute_action(data, timeout=5):
     data = json.dumps(data)
     for k in [1, 2]:
@@ -68,7 +76,7 @@ def execute_action(data, timeout=5):
 
 
 if __name__ == '__main__':
-    execute_action(run_ipython('%pwd'))
+    # execute_action(run_ipython('%pwd'))
     # execute_action(run_ipython('!which python'))
     if 0:
         if 0:
@@ -84,6 +92,7 @@ if __name__ == '__main__':
             )
         )
     # execute_action(run_ipython('open_file'))
-    execute_action(run('pwd'))
-    execute_action(write_file('test', 'hello'))
-    execute_action(read_file('test'))
+    # execute_action(run('pwd'))
+    # execute_action(read_file('test2'))
+    execute_action(file_edit(path='/workspace/test10.txt', command='create', file_text='hello'))
+    # execute_action(write_file('test6.txt', 'hello'))
