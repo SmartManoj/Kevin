@@ -592,6 +592,7 @@ class ActionExecutor:
             old_content=action.old_str,
             new_content=action.new_str,
             impl_source=FileEditSource.OH_ACI,
+            diff='',
         )
 
     async def browse(self, action: BrowseURLAction) -> Observation:

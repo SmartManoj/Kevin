@@ -15,19 +15,22 @@ from openhands.events.observation import (
 from openhands.events.observation.agent import AgentStateChangedObservation
 from openhands.events.serialization import event_to_dict
 from openhands.events.stream import AsyncEventStreamWrapper
+from openhands.server.shared import server_config
 from openhands.server.shared import (
     ConversationStoreImpl,
     SettingsStoreImpl,
     config,
     conversation_manager,
-    server_config,
     sio,
 )
 from openhands.server.types import AppMode
+from openhands.storage.conversation.conversation_validator import (
+    ConversationValidatorImpl,
+)
 
 
 @sio.event
-async def connect(connection_id: str, environ, auth):
+async def connect(connection_id: str, environ):
     logger.info(f'sio:connect: {connection_id}')
     query_params = parse_qs(environ.get('QUERY_STRING', ''))
     latest_event_id = int(query_params.get('latest_event_id', [-1])[0])
