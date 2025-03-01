@@ -434,6 +434,11 @@ class ActionExecutor:
 
     async def edit(self, action: FileEditAction) -> Observation:
         assert action.impl_source == FileEditSource.OH_ACI
+        assert self.bash_session is not None
+        working_dir = self.bash_session.cwd
+        filepath = self._resolve_path(action.path, working_dir)
+        file_exists = os.path.exists(filepath)
+
         result_str, (old_content, new_content) = _execute_file_editor(
             self.file_editor,
             command=action.command,
@@ -445,6 +450,28 @@ class ActionExecutor:
             enable_linting=False,
         )
 
+        if file_exists:
+            file_stat = os.stat(filepath)
+        else:
+            file_stat = None
+
+        # Attempt to handle file permissions
+        try:
+            if file_exists:
+                assert file_stat is not None
+                # restore the original file permissions if the file already exists
+                os.chmod(filepath, file_stat.st_mode)
+                os.chown(filepath, file_stat.st_uid, file_stat.st_gid)
+            else:
+                # set the new file permissions if the file is new
+                os.chmod(filepath, 0o664)
+                os.chown(filepath, self.user_id, self.user_id)
+            print(self.user_id, 'changed')
+        except PermissionError as e:
+            return ErrorObservation(
+                f'File {filepath} written, but failed to change ownership and permissions: {e}'
+            )
+        
         return FileEditObservation(
             content=result_str,
             path=action.path,
