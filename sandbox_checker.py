@@ -37,6 +37,14 @@ def read_file(path):
         }
     }
 
+def write_file(path, content):
+    return {
+        'action': {
+            'action': 'write',
+            'args': {'path': path, 'content': content},
+        }
+    }
+
 def execute_action(data, timeout=5):
     data = json.dumps(data)
     for k in [1, 2]:
@@ -77,4 +85,5 @@ if __name__ == '__main__':
         )
     # execute_action(run_ipython('open_file'))
     execute_action(run('pwd'))
-    execute_action(read_file('.openhands_instructions'))
+    execute_action(write_file('test', 'hello'))
+    execute_action(read_file('test'))
