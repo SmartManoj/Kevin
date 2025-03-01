@@ -172,7 +172,11 @@ class BashSession:
 
     def initialize(self):
         """Initialize the Bash session using pexpect."""
-        self.child = pexpect.spawn('/bin/bash', encoding='utf-8', echo=False, timeout=None)
+        _shell_command = '/bin/bash'
+        if self.username in ['root', 'openhands']:
+            # This starts a non-login (new) shell for the given user
+            _shell_command = f'su {self.username} -'
+        self.child = pexpect.spawn(_shell_command, encoding='utf-8', echo=False, timeout=None)
 
         logger.info(f'PS1: {self.PS1}')
         # Configure bash to use a simple PS1 prompt
