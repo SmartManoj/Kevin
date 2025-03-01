@@ -306,7 +306,7 @@ class DockerRuntime(ActionExecutionClient):
         if (
             self.config.workspace_mount_path
             and self.config.workspace_mount_path_in_sandbox
-            and os.environ.get('APP_MODE') == 'oss'
+            and os.environ.get('APP_MODE') != 'sass'
         ):
             # e.g. result would be: {"/home/user/openhands/workspace": {'bind': "/workspace", 'mode': 'rw'}}
             volumes = {
