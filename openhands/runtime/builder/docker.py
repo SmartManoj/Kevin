@@ -25,14 +25,19 @@ class DockerRuntimeBuilder(RuntimeBuilder):
                 'Docker server version must be >= 18.09 to use BuildKit'
             )
 
+        if self.is_podman and tuple(map(int, server_version.split('.')[:2])) < (4, 9):
+            raise AgentRuntimeBuildError(
+                'Podman server version must be >= 4.9.0'
+            )
+
         self.rolling_logger = RollingLogger(max_lines=10)
 
     @staticmethod
-    def check_buildx():
+    def check_buildx(is_podman: bool = False):
         """Check if Docker Buildx is available"""
         try:
             result = subprocess.run(
-                ['docker', 'buildx', 'version'], capture_output=True, text=True
+                ['docker' if not is_podman else 'podman', 'buildx', 'version'], capture_output=True, text=True
             )
             return result.returncode == 0
         except FileNotFoundError:
@@ -66,7 +71,7 @@ class DockerRuntimeBuilder(RuntimeBuilder):
             If `use_local_cache` is True, it will attempt to use and update the build cache in a local directory.
             The `extra_build_args` parameter allows for passing additional Docker build arguments as needed.
         """
-        if not DockerRuntimeBuilder.check_buildx():
+        if not DockerRuntimeBuilder.check_buildx(self.is_podman):
             # when running openhands in a container, there might not be a "docker"
             # binary available, in which case we need to download docker binary.
             # since the official openhands app image is built from debian, we use
