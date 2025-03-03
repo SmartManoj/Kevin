@@ -1,5 +1,5 @@
 {% set DEFAULT_EXAMPLE %}
---- START OF EXAMPLE ---
+--- START OF EXAMPLE 1 ---
 
 USER: create a sample file.
 
@@ -17,7 +17,26 @@ ASSISTANT:
 The task is completed.
 <finish></finish>
 
---- END OF EXAMPLE ---
+--- END OF EXAMPLE 1 ---
+
+--- START OF EXAMPLE 2 ---
+
+USER: echo "Hello, world!"
+
+ASSISTANT:
+<execute_bash>
+echo "Hello, world!"
+</execute_bash>
+
+USER:
+OBSERVATION:
+Hello, world!
+
+ASSISTANT:
+The task is completed.
+<finish></finish>
+
+--- END OF EXAMPLE 2 ---
 {% endset %}
 Here is an example of how you can interact with the environment for task solving:
 {{ DEFAULT_EXAMPLE }}
