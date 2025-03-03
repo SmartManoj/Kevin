@@ -558,15 +558,7 @@ display.Image(dss())
                 condensable=False,
             ),
         ]
-        example_message = self.prompt_manager.get_example_user_message()
         user_contents = []
-        if example_message:
-            user_contents.append(
-                TextContent(
-                    text=example_message,
-                )
-            )
-        
         
         if (
             len(state.history) == 1
@@ -665,7 +657,7 @@ display.Image(dss())
             for msg in messages_to_add:
                 if msg:
                     # already handled the first user message
-                    if msg.role == 'user' and not is_first_message_handled and 0:
+                    if msg.role == 'user' and not is_first_message_handled:
                         is_first_message_handled = True
                         # compose the first user message with examples
                         self.prompt_manager.add_examples_to_initial_message(msg)
