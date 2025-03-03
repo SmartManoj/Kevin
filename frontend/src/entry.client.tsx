@@ -58,7 +58,7 @@ prepareApp().then(() =>
             <QueryClientProvider client={queryClient}>
               <SettingsProvider>
                 <HydratedRouter />
-                <PosthogInit />
+                {/* <PosthogInit /> */}
               </SettingsProvider>
             </QueryClientProvider>
           </AuthProvider>
