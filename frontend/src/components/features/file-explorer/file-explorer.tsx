@@ -34,7 +34,7 @@ export function FileExplorer({ isOpen, onToggle }: FileExplorerProps) {
       if (window.location.hostname != "localhost") {
         url = url.replace("localhost", window.location.hostname);
       }
-      if (!window.location.port) {
+      if (!window.location.port && url.includes("3000")) {
         const newUrl = new URL(url);
         newUrl.hostname = newUrl.hostname.replace("3000", newUrl.port);
         newUrl.port = "";
