@@ -95,6 +95,7 @@ class AppConfig(BaseModel):
     daytona_target: str = Field(default='us')
     cli_multiline_input: bool = Field(default=False)
     conversation_max_age_seconds: int = Field(default=864000)  # 10 days in seconds
+    enable_default_condenser: bool = Field(default=True)
 
     show_workspace_contents: bool = True
     override_UI_settings: bool = False

@@ -101,7 +101,7 @@ class CodeActAgent(Agent):
         self.reset()
 
         self.condenser = Condenser.from_config(self.config.condenser)
-        logger.debug(f'Using condenser: {self.condenser}')
+        logger.debug(f'Using condenser: {type(self.condenser)}')
 
         if not self.config.function_calling:
             self.action_parser = CodeActResponseParser()
