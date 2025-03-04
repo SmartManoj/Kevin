@@ -219,20 +219,20 @@ class DockerRuntime(ActionExecutionClient):
         if not self.attach_to_existing:
             self.send_status_message(' ')
         self._runtime_initialized = True
-
-        try:
-            path = 'openhands/sel/selenium_session_details.py'
-            self.copy_to(path, '/openhands/code/openhands/sel/')
-            path = 'openhands/sel/selenium_tester.py'
-            self.copy_to(path, '/openhands/code/openhands/sel/')
-            logger.debug('Copied selenium files to runtime')
-        except Exception as e:
-            logger.error(f'Error copying selenium files to runtime: {e}')
-        try:
-            self.copy_to('sandbox.env', '/openhands/code')
-        except Exception as e:
-            # logger.error(f'Error copying sandbox.env to runtime: {e}')
-            pass
+        if os.environ.get('USE_SELENIUM'):
+            try:
+                path = 'openhands/sel/selenium_session_details.py'
+                self.copy_to(path, '/openhands/code/openhands/sel/')
+                path = 'openhands/sel/selenium_tester.py'
+                self.copy_to(path, '/openhands/code/openhands/sel/')
+                logger.debug('Copied selenium files to runtime')
+            except Exception as e:
+                logger.error(f'Error copying selenium files to runtime: {e}')
+            try:
+                self.copy_to('sandbox.env', '/openhands/code')
+            except Exception as e:
+                # logger.error(f'Error copying sandbox.env to runtime: {e}')
+                pass
 
     @staticmethod
     @lru_cache(maxsize=1)
