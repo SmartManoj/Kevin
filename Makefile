@@ -34,15 +34,15 @@ build:
 	fi
 
 check-dependencies:
+ifeq ($(INSTALL_DOCKER),)
+	@$(MAKE) -s check-docker
+endif
 	@echo "$(YELLOW)Checking dependencies...$(RESET)"
 	@$(MAKE) -s check-system
 	@$(MAKE) -s check-python
 	@$(MAKE) -s check-netcat
 	@$(MAKE) -s check-nodejs
 	@$(MAKE) -s check-npm
-ifeq ($(INSTALL_DOCKER),)
-	@$(MAKE) -s check-docker
-endif
 	@$(MAKE) -s check-poetry
 	@echo "$(GREEN)Dependencies checked successfully.$(RESET)"
 
@@ -136,6 +136,13 @@ check-nodejs:
 		fi; \
 	fi
 
+post-docker-install:
+	@echo "$(YELLOW)Post-Docker Installation...$(RESET)"
+	@sudo usermod -aG docker $$USER;
+	@echo "Entering new group... So rerun the command again";
+	@newgrp docker;
+	@exit 0;
+
 check-docker:
 	@echo "$(YELLOW)Checking Docker installation...$(RESET)"
 	@if [ -n "${RUN_WITHOUT_DOCKER}" ]; then \
@@ -148,9 +155,7 @@ check-docker:
 			read -p "Do you want to install Docker? [y/n]:" consent; \
 			if [ "$$consent" = "y" ]; then \
 				sudo apt install -y docker.io; \
-				sudo usermod -aG docker $$USER; \
-				newgrp docker; \
-				echo "$(GREEN)Docker installed successfully.$(RESET)"; \
+				@$(MAKE) post-docker-install; \
 			else \
 				echo "$(RED)Docker is not installed. Please install Docker to continue.$(RESET)"; \
 				exit 1; \
@@ -439,4 +444,4 @@ help:
 
 # Phony targets
 .PHONY: build check-dependencies check-python check-netcat check-npm check-docker check-poetry install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint start-backend start-frontend start run setup-config setup-config-prompts kill help
-.PHONY: docker-dev docker-run sel
+.PHONY: docker-dev docker-run sel post-docker-install
