@@ -109,13 +109,13 @@ export default function MainApp() {
         />
       )}
 
-      {config.data?.APP_MODE === "oss" && consentFormIsOpen && (
+      {/* {config.data?.APP_MODE === "oss" && consentFormIsOpen && (
         <AnalyticsConsentFormModal
           onClose={() => {
             setConsentFormIsOpen(false);
           }}
         />
-      )}
+      )} */}
     </div>
   );
 }
