@@ -485,6 +485,12 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                         logger.warning('No completion messages!')
 
                 message_back = resp['choices'][0]['message']['content'] or ''
+
+                # deepseek-r1 tweaks; add <think> to the beginning of the response if it's not there
+                if 'deepseek-r1' in self.config.model.lower() and not message_back.startswith('<think>'):
+                    message_back = '<think>\n' + message_back
+                    resp['choices'][0]['message']['content'] = message_back
+
                 tool_calls: list[ChatCompletionMessageToolCall] = resp['choices'][0][
                     'message'
                 ].get('tool_calls', [])  # type: ignore
