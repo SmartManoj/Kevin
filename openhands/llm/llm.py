@@ -486,8 +486,8 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
 
                 message_back = resp['choices'][0]['message']['content'] or ''
 
-                # deepseek-r1 tweaks; add <think> to the beginning of the response if it's not there
-                if 'deepseek-r1' in self.config.model.lower() and not message_back.startswith('<think>'):
+                # think model tweaks; add <think> to the beginning of the response if it's not there
+                if not message_back.startswith('<think>') and '</think>' in message_back:
                     message_back = '<think>\n' + message_back
                     resp['choices'][0]['message']['content'] = message_back
 
