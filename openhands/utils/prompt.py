@@ -225,10 +225,14 @@ class PromptManager:
                 repo_instructions += '\n\n'
             repo_instructions += microagent.content
 
+        server_keywords = ['fastapi', 'flask', 'django']
+        is_runtime_info_needed = any(keyword in repo_instructions for keyword in server_keywords)
+
+
         additional_info = self.additional_info_template.render(
             repository_instructions=repo_instructions,
             repository_info=self.repository_info,
-            runtime_info=self.runtime_info,
+            runtime_info=self.runtime_info if is_runtime_info_needed else None,
         ).strip()
 
         # Insert the new content at the start of the TextContent list
