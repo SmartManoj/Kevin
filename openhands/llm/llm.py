@@ -601,6 +601,8 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                 # max_output_tokens has precedence over max_tokens, if either exists.
                 # litellm has models with both, one or none of these 2 parameters!
                 self.config.max_output_tokens = self.model_info.get('max_output_tokens') or self.model_info.get('max_tokens')
+            if 'claude-3-7-sonnet' in self.config.model:
+                self.config.max_output_tokens = 64000  # litellm set max to 128k, but that requires a header to be set
 
         # Initialize function calling capability
         # Check if model name is in our supported list
