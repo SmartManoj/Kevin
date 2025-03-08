@@ -179,11 +179,11 @@ def _reset_parameters(self, *args, **kwargs):
     # instruction += AGENT_CLS_TO_INST_SUFFIX[metadata.agent_class]
 
     if RUN_WITH_BROWSING:
-        instruction += (
-            '<IMPORTANT!>\n'
-            'You SHOULD NEVER attempt to browse the web. '
-            '</IMPORTANT!>\n'
-        )
+        instruction += """
+<IMPORTANT!>
+You SHOULD NEVER attempt to browse the web.
+</IMPORTANT!>
+"""
     return instruction
 
 

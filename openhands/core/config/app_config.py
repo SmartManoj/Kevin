@@ -96,6 +96,9 @@ class AppConfig(BaseModel):
     cli_multiline_input: bool = Field(default=False)
     conversation_max_age_seconds: int = Field(default=864000)  # 10 days in seconds
     enable_default_condenser: bool = Field(default=True)
+    max_concurrent_conversations: int = Field(
+        default=3
+    )  # Maximum number of concurrent agent loops allowed per user
 
     show_workspace_contents: bool = True
     override_UI_settings: bool = False

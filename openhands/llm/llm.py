@@ -9,7 +9,6 @@ import requests
 
 from openhands.core import config2
 from openhands.core.config import LLMConfig
-from openhands.utils.ensure_httpx_close import ensure_httpx_close
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
