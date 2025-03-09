@@ -79,6 +79,7 @@ async def authenticate(request: Request):
                     status_code=401
                 )
             request.state.github_token = request.session.get("github_token")
+            os.environ[f'GITHUB_TOKEN_{request.session.get("github_user_id")}'] = request.session.get("github_token")
             request.state.github_user_id = request.session.get("github_user_id")
             return JSONResponse(
                 content={"authenticated": True},

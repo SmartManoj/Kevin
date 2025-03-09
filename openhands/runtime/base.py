@@ -52,6 +52,7 @@ from openhands.runtime.plugins import (
     VSCodeRequirement,
 )
 from openhands.runtime.utils.edit import FileEditRuntimeMixin
+# from openhands.server.shared import SettingsStoreImpl, config
 from openhands.utils.async_utils import call_sync_from_async
 
 STATUS_MESSAGES = {
@@ -216,11 +217,11 @@ class Runtime(FileEditRuntimeMixin):
         assert event.timeout is not None
         try:
             if isinstance(event, CmdRunAction):
-                if self.github_user_id and '$GITHUB_TOKEN' in event.command and 0:
-                    gh_client = GithubServiceImpl(
-                        user_id=self.github_user_id, external_token_manager=True
-                    )
-                    token = await gh_client.get_latest_provider_token()
+                if self.github_user_id and '$GITHUB_TOKEN' in event.command:
+                    # ERROR:root:<class 'ImportError'>: cannot import name 'Agent' from partially initialized module 'openhands.controller.agent'
+                    # settings_store = await SettingsStoreImpl.get_instance(config, self.github_user_id)
+                    # settings = await settings_store.load()
+                    token = os.environ.get(f'GITHUB_TOKEN_{self.github_user_id}')
                     if token:
                         export_cmd = CmdRunAction(
                             f"export GITHUB_TOKEN='{token.get_secret_value()}'"
