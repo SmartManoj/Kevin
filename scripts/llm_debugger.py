@@ -4,12 +4,12 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import litellm
-import tomllib
+import pip._vendor.tomli as toml
 from dotenv import load_dotenv
 
 load_dotenv()
-with open('config.toml', 'rb') as f:
-    config = tomllib.load(f)
+with open('config.toml', 'r') as f:
+    config = toml.load(f)
     config = config['llm']
     group = config.get('use_group')
     if group in config:
