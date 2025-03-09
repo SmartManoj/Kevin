@@ -221,8 +221,8 @@ class Runtime(FileEditRuntimeMixin):
                     # ERROR:root:<class 'ImportError'>: cannot import name 'Agent' from partially initialized module 'openhands.controller.agent'
                     # settings_store = await SettingsStoreImpl.get_instance(config, self.github_user_id)
                     # settings = await settings_store.load()
-                    token = os.environ.get(f'GITHUB_TOKEN_{self.github_user_id}')
-                    if token:
+                    token = SecretStr(os.environ.get(f'GITHUB_TOKEN_{self.github_user_id}'))
+                    if token.get_secret_value():
                         export_cmd = CmdRunAction(
                             f"export GITHUB_TOKEN='{token.get_secret_value()}'"
                         )
