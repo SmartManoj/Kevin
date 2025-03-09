@@ -44,7 +44,7 @@ export function Sidebar() {
     React.useState(false);
 
   // TODO: Remove HIDE_LLM_SETTINGS check once released
-  const isSaas = HIDE_LLM_SETTINGS() && config?.APP_MODE === "saas" && false;
+  const isSaas = HIDE_LLM_SETTINGS() && config?.APP_MODE === "saas";
 
   React.useEffect(() => {
     if (isSaas) return;
