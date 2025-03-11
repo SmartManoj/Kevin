@@ -246,3 +246,4 @@ openhands/sel/downloaded_files/pyautogui.lock
 *.env
 port_db.sqlite
 *.pem
+start.sh
