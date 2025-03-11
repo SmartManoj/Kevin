@@ -13,7 +13,7 @@ from starlette.requests import Request as StarletteRequest
 from starlette.types import ASGIApp
 
 from openhands.server import shared
-from openhands.server.auth import get_github_user_id
+from openhands.server.auth import get_github_user_id, get_user_id
 from openhands.server.types import SessionMiddlewareInterface
 
 
