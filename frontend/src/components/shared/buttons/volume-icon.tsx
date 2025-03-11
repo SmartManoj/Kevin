@@ -1,6 +1,6 @@
 import React from "react";
 import { IoMdVolumeHigh, IoMdVolumeOff } from "react-icons/io";
-import { RiChatVoiceFill, RiUserVoiceFill  } from "react-icons/ri";
+import { RiUserVoiceFill  } from "react-icons/ri";
 import { playAudio } from "#/utils/play-audio";
 import notificationSound from "#/assets/notification.mp3";
 
