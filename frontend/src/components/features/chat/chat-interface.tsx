@@ -30,6 +30,7 @@ import { useGetTrajectory } from "#/hooks/mutation/use-get-trajectory";
 import { downloadTrajectory } from "#/utils/download-files";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { VoiceModeIcon } from "#/components/shared/buttons/volume-icon";
+import notificationSound from "#/assets/notification.mp3";
 
 function getEntryPoint(
   hasRepository: boolean | null,
@@ -132,7 +133,7 @@ export function ChatInterface() {
       curAgentState === AgentState.ERROR ||
       curAgentState === AgentState.FINISHED
     ) {
-      if (localStorage["is_muted"] !== "true") playAudio("beep.wav");
+      if (localStorage["is_muted"] !== "true") playAudio(notificationSound);
     }
   }, [curAgentState]);
 

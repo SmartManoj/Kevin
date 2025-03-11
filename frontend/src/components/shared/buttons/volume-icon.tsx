@@ -2,6 +2,7 @@ import React from "react";
 import { IoMdVolumeHigh, IoMdVolumeOff } from "react-icons/io";
 import { RiChatVoiceFill, RiUserVoiceFill  } from "react-icons/ri";
 import { playAudio } from "#/utils/play-audio";
+import notificationSound from "#/assets/notification.mp3";
 
 export function VoiceModeIcon() {
   const [isVoiceMode, setIsVoiceMode] = React.useState(
@@ -37,7 +38,7 @@ export function VolumeIcon() {
     setIsMuted(newIsMuted);
     localStorage["is_muted"] = newIsMuted ? "true" : "false";
     if (!newIsMuted) {
-      playAudio("beep.wav");
+      playAudio(notificationSound);
     }
   };
 
