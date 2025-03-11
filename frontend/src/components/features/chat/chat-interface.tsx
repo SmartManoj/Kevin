@@ -128,8 +128,9 @@ export function ChatInterface() {
     }
   }, [autoMode, curAgentState]);
   React.useEffect(() => {
+    const isVoiceMode = localStorage["voiceMode"] === "true";
     if (
-      (!autoMode && curAgentState === AgentState.AWAITING_USER_INPUT) ||
+      (!autoMode && !isVoiceMode && curAgentState === AgentState.AWAITING_USER_INPUT) ||
       curAgentState === AgentState.ERROR ||
       curAgentState === AgentState.FINISHED
     ) {
