@@ -29,6 +29,7 @@ import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { useGetTrajectory } from "#/hooks/mutation/use-get-trajectory";
 import { downloadTrajectory } from "#/utils/download-files";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
+import { VoiceModeIcon } from "#/components/shared/buttons/volume-icon";
 
 function getEntryPoint(
   hasRepository: boolean | null,
@@ -273,6 +274,7 @@ export function ChatInterface() {
           <span>Auto Mode</span>
         </label>
         </div>
+        <VoiceModeIcon />
         <VolumeIcon />
 
       </div>

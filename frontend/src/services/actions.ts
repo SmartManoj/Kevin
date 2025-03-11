@@ -20,6 +20,7 @@ import {
 import { handleObservationMessage } from "./observations";
 import { appendInput } from "#/state/command-slice";
 import { generateAudio } from "#/utils/play-audio";
+import { speakText } from "#/utils/play-audio";
 
 const messageActions = {
   [ActionType.BROWSE]: (message: ActionMessage) => {
@@ -52,6 +53,7 @@ const messageActions = {
       );
     } else {
       store.dispatch(addAssistantMessage(message.args.content));
+      speakText(message.args.content);
     }
   },
   [ActionType.RUN_IPYTHON]: (message: ActionMessage) => {

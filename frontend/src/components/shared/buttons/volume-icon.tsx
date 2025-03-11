@@ -1,6 +1,31 @@
 import React from "react";
 import { IoMdVolumeHigh, IoMdVolumeOff } from "react-icons/io";
+import { RiChatVoiceFill, RiUserVoiceFill  } from "react-icons/ri";
 import { playAudio } from "#/utils/play-audio";
+
+export function VoiceModeIcon() {
+  const [isVoiceMode, setIsVoiceMode] = React.useState(
+    localStorage["voiceMode"] === "true",
+  );
+
+  const toggleVoiceMode = () => {
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
+    const newIsVoiceMode = !isVoiceMode;
+    setIsVoiceMode(newIsVoiceMode);
+    localStorage["voiceMode"] = newIsVoiceMode ? "true" : "false";
+  };
+
+  return (
+    <div
+      className="cursor-pointer hover:opacity-80 transition-all"
+      onClick={toggleVoiceMode}
+    >
+      {!isVoiceMode ? <RiUserVoiceFill size={23} /> : <RiUserVoiceFill size={23} style={{ color: "orange" }}/>}
+    </div>
+  );
+}
 
 export function VolumeIcon() {
   const [isMuted, setIsMuted] = React.useState(
