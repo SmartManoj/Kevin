@@ -51,6 +51,9 @@ export const playAudio = (audioFile: string) => {
       }
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = speechSynthesis.getVoices()[0];
+      utterance.onend = () => {
+        (document.querySelector('[title="Start voice input"]') as HTMLElement)?.click();
+      };
       speechSynthesis.speak(utterance);
   };
   
