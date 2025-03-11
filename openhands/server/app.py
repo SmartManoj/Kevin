@@ -71,7 +71,7 @@ async def authenticate(request: Request):
         if request.session.get("github_token"):
             try:
                 # check if the token is valid
-                client = GithubServiceImpl(user_id=request.session.get("github_user_id"), token=request.session.get("github_token"))
+                client = GithubServiceImpl(user_id=request.session.get("github_user_id"), github_token=request.session.get("github_token"))
                 await client.get_user()
             except Exception as e:
                 return JSONResponse(

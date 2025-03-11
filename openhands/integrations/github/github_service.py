@@ -41,11 +41,11 @@ class GitHubService:
         """
         Retrieve the GH Token from settings store to construct the headers
         """
-        if self.user_id and not self.token:
-            self.token = await self.get_latest_token()
+        if self.user_id and not self.github_token:
+            self.github_token = await self.get_latest_token()
             
-        if isinstance(self.token, str):
-            self.token = SecretStr(self.token)
+        if isinstance(self.github_token, str):
+            self.github_token = SecretStr(self.github_token)
         return {
             'Authorization': f'Bearer {self.github_token.get_secret_value() if self.github_token else ""}',
             'Accept': 'application/vnd.github.v3+json',
