@@ -58,7 +58,7 @@ from openhands.events.observation import (
 )
 from openhands.events.serialization.event import event_to_trajectory, truncate_content
 from openhands.llm.llm import LLM
-from openhands.llm.metrics import Metrics, TokenUsage
+from openhands.core.metrics import Metrics, TokenUsage
 
 # note: RESUME is only available on web GUI
 TRAFFIC_CONTROL_REMINDER = (
