@@ -57,8 +57,6 @@ def test_compat_env_to_config(monkeypatch, setup_env):
     monkeypatch.setenv('WORKSPACE_BASE', '/repos/openhands/workspace')
     monkeypatch.setenv('LLM_API_KEY', 'sk-proj-rgMV0...')
     monkeypatch.setenv('LLM_MODEL', 'gpt-4o')
-    monkeypatch.setenv('AGENT_MEMORY_MAX_THREADS', '4')
-    monkeypatch.setenv('AGENT_MEMORY_ENABLED', 'True')
     monkeypatch.setenv('DEFAULT_AGENT', 'CodeActAgent')
     monkeypatch.setenv('SANDBOX_TIMEOUT', '10')
 
@@ -70,9 +68,6 @@ def test_compat_env_to_config(monkeypatch, setup_env):
     assert config.get_llm_config().api_key.get_secret_value() == 'sk-proj-rgMV0...'
     assert config.get_llm_config().model == 'gpt-4o'
     assert isinstance(config.get_agent_config(), AgentConfig)
-    assert isinstance(config.get_agent_config().memory_max_threads, int)
-    assert config.get_agent_config().memory_max_threads == 4
-    assert config.get_agent_config().memory_enabled is True
     assert config.default_agent == 'CodeActAgent'
     assert config.sandbox.timeout == 10
 
@@ -80,16 +75,14 @@ def test_compat_env_to_config(monkeypatch, setup_env):
 def test_load_from_old_style_env(monkeypatch, default_config):
     # Test loading configuration from old-style environment variables using monkeypatch
     monkeypatch.setenv('LLM_API_KEY', 'test-api-key')
-    monkeypatch.setenv('AGENT_MEMORY_ENABLED', 'True')
-    monkeypatch.setenv('DEFAULT_AGENT', 'PlannerAgent')
+    monkeypatch.setenv('DEFAULT_AGENT', 'BrowsingAgent')
     monkeypatch.setenv('WORKSPACE_BASE', '/opt/files/workspace')
     monkeypatch.setenv('SANDBOX_BASE_CONTAINER_IMAGE', 'custom_image')
 
     load_from_env(default_config, os.environ)
 
     assert default_config.get_llm_config().api_key.get_secret_value() == 'test-api-key'
-    assert default_config.get_agent_config().memory_enabled is True
-    assert default_config.default_agent == 'PlannerAgent'
+    assert default_config.default_agent == 'BrowsingAgent'
     assert default_config.workspace_base == '/opt/files/workspace'
     assert default_config.workspace_mount_path is None  # before finalize_config
     assert default_config.workspace_mount_path_in_sandbox is not None
@@ -110,11 +103,11 @@ model = "some-cheap-model"
 api_key = "cheap-model-api-key"
 
 [agent]
-memory_enabled = true
+enable_prompt_extensions = true
 
 [agent.BrowsingAgent]
 llm_config = "cheap"
-memory_enabled = false
+enable_prompt_extensions = false
 
 [sandbox]
 timeout = 1
@@ -131,14 +124,16 @@ default_agent = "TestAgent"
     assert default_config.default_agent == 'TestAgent'
     assert default_config.get_llm_config().model == 'test-model'
     assert default_config.get_llm_config().api_key.get_secret_value() == 'toml-api-key'
-    assert default_config.get_agent_config().memory_enabled is True
+    assert default_config.get_agent_config().enable_prompt_extensions is True
 
     # undefined agent config inherits default ones
     assert (
         default_config.get_llm_config_from_agent('CodeActAgent')
         == default_config.get_llm_config()
     )
-    assert default_config.get_agent_config('CodeActAgent').memory_enabled is True
+    assert (
+        default_config.get_agent_config('CodeActAgent').enable_prompt_extensions is True
+    )
 
     # defined agent config overrides default ones
     assert default_config.get_llm_config_from_agent(
@@ -148,7 +143,10 @@ default_agent = "TestAgent"
         default_config.get_llm_config_from_agent('BrowsingAgent').model
         == 'some-cheap-model'
     )
-    assert default_config.get_agent_config('BrowsingAgent').memory_enabled is False
+    assert (
+        default_config.get_agent_config('BrowsingAgent').enable_prompt_extensions
+        is False
+    )
 
     assert default_config.workspace_base == '/opt/files2/workspace'
     assert default_config.sandbox.timeout == 1
@@ -436,7 +434,7 @@ def test_core_not_in_toml(default_config, temp_toml_file):
 model = "test-model"
 
 [agent]
-memory_enabled = true
+enable_prompt_extensions = true
 
 [sandbox]
 timeout = 1
@@ -449,7 +447,7 @@ security_analyzer = "semgrep"
 
     load_from_toml(default_config, temp_toml_file)
     assert default_config.get_llm_config().model == 'test-model'
-    assert default_config.get_agent_config().memory_enabled is True
+    assert default_config.get_agent_config().enable_prompt_extensions is True
     assert default_config.sandbox.base_container_image == 'custom_image'
     assert default_config.sandbox.user_id == 1001
     assert default_config.security.security_analyzer == 'semgrep'
@@ -474,7 +472,7 @@ invalid_field = "test"
 model = "gpt-4"
 
 [agent]
-memory_enabled = true
+enable_prompt_extensions = true
 
 [sandbox]
 invalid_field_in_sandbox = "test"
@@ -549,15 +547,6 @@ def test_workspace_mount_rewrite(default_config, monkeypatch):
     monkeypatch.setattr('os.getcwd', lambda: '/current/working/directory')
     finalize_config(default_config)
     assert default_config.workspace_mount_path == '/sandbox/project'
-
-
-def test_embedding_base_url_default(default_config):
-    default_config.get_llm_config().base_url = 'https://api.exampleapi.com'
-    finalize_config(default_config)
-    assert (
-        default_config.get_llm_config().embedding_base_url
-        == 'https://api.exampleapi.com'
-    )
 
 
 def test_cache_dir_creation(default_config, tmpdir):
@@ -843,7 +832,9 @@ def test_api_keys_repr_str():
 
     # Test AgentConfig
     # No attrs in AgentConfig have 'key' or 'token' in their name
-    agent_config = AgentConfig(memory_enabled=True, memory_max_threads=4)
+    agent_config = AgentConfig(
+        enable_prompt_extensions=True, codeact_enable_browsing=False
+    )
     for attr_name in AgentConfig.model_fields.keys():
         if not attr_name.startswith('__'):
             assert (
@@ -925,12 +916,10 @@ max_budget_per_task = 4.0
 [llm.gpt3]
 model="gpt-3.5-turbo"
 api_key="redacted"
-embedding_model="openai"
 
 [llm.gpt4o]
 model="gpt-4o"
 api_key="redacted"
-embedding_model="openai"
 """
 
     with open(temp_toml_file, 'w') as f:
@@ -938,7 +927,6 @@ embedding_model="openai"
 
     llm_config = get_llm_config_arg('gpt3', temp_toml_file)
     assert llm_config.model == 'gpt-3.5-turbo'
-    assert llm_config.embedding_model == 'openai'
 
 
 def test_get_agent_configs(default_config, temp_toml_file):
@@ -948,10 +936,10 @@ max_iterations = 100
 max_budget_per_task = 4.0
 
 [agent.CodeActAgent]
-memory_enabled = true
+enable_prompt_extensions = true
 
-[agent.PlannerAgent]
-memory_max_threads = 10
+[agent.BrowsingAgent]
+codeact_enable_jupyter = false
 """
 
     with open(temp_toml_file, 'w') as f:
@@ -960,9 +948,9 @@ memory_max_threads = 10
     load_from_toml(default_config, temp_toml_file)
 
     codeact_config = default_config.get_agent_configs().get('CodeActAgent')
-    assert codeact_config.memory_enabled is True
+    assert codeact_config.enable_prompt_extensions is True
     browsing_config = default_config.get_agent_configs().get('BrowsingAgent')
-    assert browsing_config.memory_max_threads == 10
+    assert browsing_config.codeact_enable_jupyter is False
 
 
 def test_get_agent_config_arg(temp_toml_file):
@@ -972,26 +960,24 @@ max_iterations = 100
 max_budget_per_task = 4.0
 
 [agent.CodeActAgent]
-memory_enabled = true
 enable_prompt_extensions = false
+codeact_enable_browsing = false
 
 [agent.BrowsingAgent]
-memory_enabled = false
 enable_prompt_extensions = true
-memory_max_threads = 10
+codeact_enable_jupyter = false
 """
 
     with open(temp_toml_file, 'w') as f:
         f.write(temp_toml)
 
     agent_config = get_agent_config_arg('CodeActAgent', temp_toml_file)
-    assert agent_config.memory_enabled
     assert not agent_config.enable_prompt_extensions
+    assert not agent_config.codeact_enable_browsing
 
     agent_config2 = get_agent_config_arg('BrowsingAgent', temp_toml_file)
-    assert not agent_config2.memory_enabled
     assert agent_config2.enable_prompt_extensions
-    assert agent_config2.memory_max_threads == 10
+    assert not agent_config2.codeact_enable_jupyter
 
 
 def test_agent_config_custom_group_name(temp_toml_file):
@@ -1000,10 +986,10 @@ def test_agent_config_custom_group_name(temp_toml_file):
 max_iterations = 99
 
 [agent.group1]
-memory_enabled = true
+enable_prompt_extensions = true
 
 [agent.group2]
-memory_enabled = false
+enable_prompt_extensions = false
 """
     with open(temp_toml_file, 'w') as f:
         f.write(temp_toml)
@@ -1015,9 +1001,9 @@ memory_enabled = false
     # run_infer in evaluation can use `get_agent_config_arg` to load custom
     # agent configs with any group name (not just agent name)
     agent_config1 = get_agent_config_arg('group1', temp_toml_file)
-    assert agent_config1.memory_enabled
+    assert agent_config1.enable_prompt_extensions
     agent_config2 = get_agent_config_arg('group2', temp_toml_file)
-    assert not agent_config2.memory_enabled
+    assert not agent_config2.enable_prompt_extensions
 
 
 def test_agent_config_from_toml_section():
@@ -1026,11 +1012,10 @@ def test_agent_config_from_toml_section():
 
     # Test with base config and custom configs
     agent_section = {
-        'memory_enabled': True,
-        'memory_max_threads': 5,
         'enable_prompt_extensions': True,
-        'CustomAgent1': {'memory_enabled': False, 'codeact_enable_browsing': False},
-        'CustomAgent2': {'memory_max_threads': 10, 'enable_prompt_extensions': False},
+        'codeact_enable_browsing': True,
+        'CustomAgent1': {'codeact_enable_browsing': False},
+        'CustomAgent2': {'enable_prompt_extensions': False},
         'InvalidAgent': {
             'invalid_field': 'some_value'  # This should be skipped but not affect others
         },
@@ -1041,20 +1026,16 @@ def test_agent_config_from_toml_section():
 
     # Verify the base config was correctly parsed
     assert 'agent' in result
-    assert result['agent'].memory_enabled is True
-    assert result['agent'].memory_max_threads == 5
     assert result['agent'].enable_prompt_extensions is True
+    assert result['agent'].codeact_enable_browsing is True
 
     # Verify custom configs were correctly parsed and inherit from base
     assert 'CustomAgent1' in result
-    assert result['CustomAgent1'].memory_enabled is False  # Overridden
-    assert result['CustomAgent1'].memory_max_threads == 5  # Inherited
     assert result['CustomAgent1'].codeact_enable_browsing is False  # Overridden
     assert result['CustomAgent1'].enable_prompt_extensions is True  # Inherited
 
     assert 'CustomAgent2' in result
-    assert result['CustomAgent2'].memory_enabled is True  # Inherited
-    assert result['CustomAgent2'].memory_max_threads == 10  # Overridden
+    assert result['CustomAgent2'].codeact_enable_browsing is True  # Inherited
     assert result['CustomAgent2'].enable_prompt_extensions is False  # Overridden
 
     # Verify the invalid config was skipped
@@ -1068,8 +1049,11 @@ def test_agent_config_from_toml_section_with_invalid_base():
     # Test with invalid base config but valid custom configs
     agent_section = {
         'invalid_field': 'some_value',  # This should be ignored in base config
-        'memory_max_threads': 'not_an_int',  # This should cause validation error
-        'CustomAgent': {'memory_enabled': True, 'memory_max_threads': 8},
+        'codeact_enable_jupyter': 'not_a_bool',  # This should cause validation error
+        'CustomAgent': {
+            'codeact_enable_browsing': False,
+            'codeact_enable_jupyter': True,
+        },
     }
 
     # Parse the section
@@ -1077,10 +1061,10 @@ def test_agent_config_from_toml_section_with_invalid_base():
 
     # Verify a default base config was created despite the invalid fields
     assert 'agent' in result
-    assert result['agent'].memory_enabled is False  # Default value
-    assert result['agent'].memory_max_threads == 3  # Default value
+    assert result['agent'].codeact_enable_browsing is True  # Default value
+    assert result['agent'].codeact_enable_jupyter is True  # Default value
 
     # Verify custom config was still processed correctly
     assert 'CustomAgent' in result
-    assert result['CustomAgent'].memory_enabled is True
-    assert result['CustomAgent'].memory_max_threads == 8
+    assert result['CustomAgent'].codeact_enable_browsing is False
+    assert result['CustomAgent'].codeact_enable_jupyter is True

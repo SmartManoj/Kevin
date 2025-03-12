@@ -13,7 +13,7 @@ from starlette.requests import Request as StarletteRequest
 from starlette.types import ASGIApp
 
 from openhands.server import shared
-from openhands.server.auth import get_github_user_id, get_user_id
+from openhands.server.auth import get_user_id
 from openhands.server.types import SessionMiddlewareInterface
 
 
@@ -191,7 +191,7 @@ class GitHubTokenMiddleware(SessionMiddlewareInterface):
 
     async def __call__(self, request: Request, call_next: Callable):
         settings_store = await shared.SettingsStoreImpl.get_instance(
-            shared.config, get_github_user_id(request)
+            shared.config, get_user_id(request)
         )
         settings = await settings_store.load()
 
@@ -200,6 +200,7 @@ class GitHubTokenMiddleware(SessionMiddlewareInterface):
             if os.environ.get("APP_MODE") == "saas":
                 request.state.github_token = request.session.get("github_token")
                 request.state.github_user_id = request.session.get("github_user_id")
+                request.state.user_id = request.session.get("user_id")
             else:
                 if settings and settings.github_token:
                     request.state.github_token = settings.github_token
