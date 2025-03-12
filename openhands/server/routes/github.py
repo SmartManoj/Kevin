@@ -157,7 +157,6 @@ async def github_callback(
             
         client = GithubServiceImpl(None)
         response = await client.handle_github_callback(code)
-        print(response)
         access_token = response['access_token']
         request.session['github_token'] = access_token
         request.state.github_token = access_token
@@ -166,7 +165,8 @@ async def github_callback(
         user.id = str(user.id)
         request.session['github_user_id'] = user.id
         request.state.github_user_id = user.id
-        print(f"github_user_id: {request.state.github_user_id}")
+        request.session['user_id'] = user.id
+        request.state.user_id = user.id
         # save settings
         settings_store = await SettingsStoreImpl.get_instance(config, user.id)
         settings = await settings_store.load()
