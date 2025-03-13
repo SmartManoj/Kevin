@@ -34,7 +34,7 @@ from openhands.utils.async_utils import call_sync_from_async
 from openhands.utils.shutdown_listener import add_shutdown_listener
 from openhands.utils.tenacity_stop import stop_if_should_exit
 
-CONTAINER_NAME_PREFIX = 'kevin-runtime-'
+CONTAINER_NAME_PREFIX = os.getenv('CONTAINER_NAME_PREFIX', 'kevin-runtime-')
 
 EXECUTION_SERVER_PORT_RANGE = (30000, 39999)
 VSCODE_PORT_RANGE = (40000, 49999)
@@ -547,3 +547,14 @@ class DockerRuntime(ActionExecutionClient):
             pass
         finally:
             docker_client.close()
+
+    def get_logs(self):
+        if not self.container:
+            return []
+        return self.container.logs()
+    
+    def restart(self):
+        if not self.container:
+            raise RuntimeError('Container not initialized')
+        self.container.restart()
+        self.log('debug', f'Container {self.container_name} restarted')
