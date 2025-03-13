@@ -551,7 +551,7 @@ class DockerRuntime(ActionExecutionClient):
     def get_logs(self):
         if not self.container:
             return []
-        return self.container.logs()
+        return self.container.logs(tail=1000)
     
     def restart(self):
         if not self.container:
