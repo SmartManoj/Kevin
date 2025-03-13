@@ -3,7 +3,7 @@ from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Coroutine, Iterable, List
 
-GENERAL_TIMEOUT: int = 15
+GENERAL_TIMEOUT: int = 60
 EXECUTOR = ThreadPoolExecutor()
 
 
