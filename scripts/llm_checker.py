@@ -7,7 +7,7 @@ import pip._vendor.tomli as toml
 from dotenv import load_dotenv
 
 load_dotenv()
-with open('config.toml', 'r') as f:
+with open('config.toml', 'rb') as f:
     config = toml.load(f)
     config = config['llm']
     group = config.get('use_group')
@@ -39,6 +39,8 @@ if 0:
         print('Model supports vision')
     else:
         print('Model does not support vision')
+
+stream = 1
 response = litellm.completion(
     model=model,
     messages=[{'role': 'user', 'content': 'Tell a random number with 4 decimal places between 1 to 10.'}],
@@ -46,7 +48,11 @@ response = litellm.completion(
     **args,
     seed=seed,
     temperature=temperature,
+    stream=stream,
 )
-
-print(response.choices[0].message.content)
+if stream:
+    for chunk in response:
+        print(chunk['choices'][0]['delta']['content'], end='', flush=True)
+else:
+    print(response.choices[0].message.content)
 # print(response)
