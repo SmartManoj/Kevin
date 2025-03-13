@@ -214,6 +214,8 @@ class BashSession:
         all_output = ''
         for command in commands:
             command = command.strip()
+            if not command:
+                continue
             output = None
             if command == self.last_command and command in ['ls -l', 'ls -la']:
                 output = "[Why are you executing the same command twice? What's wrong with you? Please focus 🙏]"
