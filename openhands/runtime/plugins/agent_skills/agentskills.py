@@ -31,7 +31,7 @@ for func_name in __all__:
 # from openhands.runtime.plugins.agent_skills.file_editor import file_editor  # noqa: E402
 
 # __all__ += ['file_editor']
-if not os.environ.get('DISABLE_BROWSER'):
+if os.environ.get('USE_SELENIUM'):
     from openhands.sel.selenium_tester import driver, create_driver
     def dss():
         '''
