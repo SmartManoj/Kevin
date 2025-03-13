@@ -60,7 +60,7 @@ async def _create_new_conversation(
         # We could use litellm.check_valid_key for a more accurate check,
         # but that would run a tiny inference.
         if (
-            not settings.llm_api_key
+            settings.llm_api_key is None
             or settings.llm_api_key.get_secret_value().isspace()
         ):
             logger.warn(f'Missing api key for model {settings.llm_model}')
