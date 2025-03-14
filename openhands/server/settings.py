@@ -1,11 +1,18 @@
 from __future__ import annotations
 import os
 
-from pydantic import BaseModel, SecretStr, SerializationInfo, field_serializer
+from pydantic import (
+    BaseModel,
+    SecretStr,
+    SerializationInfo,
+    field_serializer,
+    model_validator,
+)
 from pydantic_core import to_jsonable_python
 
 from openhands.core.config.llm_config import LLMConfig
 from openhands.core.config.utils import load_app_config
+from openhands.integrations.provider import ProviderToken, ProviderType, SecretStore
 
 
 class Settings(BaseModel):
@@ -22,7 +29,7 @@ class Settings(BaseModel):
     llm_api_key: SecretStr | None = SecretStr(os.environ.get('LLM_API_KEY'))
     llm_base_url: str | None = os.environ.get('LLM_BASE_URL')
     remote_runtime_resource_factor: int | None = None
-    github_token: SecretStr | None = None
+    secrets_store: SecretStore = SecretStore()
     enable_default_condenser: bool = False
     enable_sound_notifications: bool = False
     user_consents_to_analytics: bool | None = None
@@ -39,22 +46,63 @@ class Settings(BaseModel):
 
         return to_jsonable_python(llm_api_key)
 
-    @field_serializer('github_token')
-    def github_token_serializer(
-        self, github_token: SecretStr | None, info: SerializationInfo
-    ):
-        """Custom serializer for the GitHub token.
+    @staticmethod
+    def _convert_token_value(
+        token_type: ProviderType, token_value: str | dict
+    ) -> ProviderToken | None:
+        """Convert a token value to a ProviderToken object."""
+        if isinstance(token_value, dict):
+            token_str = token_value.get('token')
+            if not token_str:
+                return None
+            return ProviderToken(
+                token=SecretStr(token_str),
+                user_id=token_value.get('user_id'),
+            )
+        if isinstance(token_value, str) and token_value:
+            return ProviderToken(token=SecretStr(token_value), user_id=None)
+        return None
 
-        To serialize the token instead of ********, set expose_secrets to True in the serialization context.
-        """
-        if github_token is None:
-            return None
+    @model_validator(mode='before')
+    @classmethod
+    def convert_provider_tokens(cls, data: dict | object) -> dict | object:
+        """Convert provider tokens from JSON format to SecretStore format."""
+        if not isinstance(data, dict):
+            return data
 
-        context = info.context
-        if context and context.get('expose_secrets', False):
-            return github_token.get_secret_value()
+        secrets_store = data.get('secrets_store')
+        if not isinstance(secrets_store, dict):
+            return data
 
-        return to_jsonable_python(github_token)
+        tokens = secrets_store.get('provider_tokens')
+        if not isinstance(tokens, dict):
+            return data
+
+        converted_tokens = {}
+        for token_type_str, token_value in tokens.items():
+            if not token_value:
+                continue
+
+            try:
+                token_type = ProviderType(token_type_str)
+            except ValueError:
+                continue
+
+            provider_token = cls._convert_token_value(token_type, token_value)
+            if provider_token:
+                converted_tokens[token_type] = provider_token
+
+        data['secrets_store'] = SecretStore(provider_tokens=converted_tokens)
+        return data
+
+    @field_serializer('secrets_store')
+    def secrets_store_serializer(self, secrets: SecretStore, info: SerializationInfo):
+        """Custom serializer for secrets store."""
+        return {
+            'provider_tokens': secrets.provider_tokens_serializer(
+                secrets.provider_tokens, info
+            )
+        }
 
     @staticmethod
     def from_config() -> Settings | None:
@@ -74,7 +122,7 @@ class Settings(BaseModel):
             llm_api_key=llm_config.api_key,
             llm_base_url=llm_config.base_url,
             remote_runtime_resource_factor=app_config.sandbox.remote_runtime_resource_factor,
-            github_token=None,
+            provider_tokens={},
         )
         return settings
 
@@ -85,14 +133,12 @@ class POSTSettingsModel(Settings):
     """
 
     unset_github_token: bool | None = None
-    github_token: str | None = (
-        None  # This is a string because it's coming from the frontend
-    )
+    # Override provider_tokens to accept string tokens from frontend
+    provider_tokens: dict[str, str] = {}
 
-    # Override the serializer for the GitHub token to handle the string input
-    @field_serializer('github_token')
-    def github_token_serializer(self, github_token: str | None):
-        return github_token
+    @field_serializer('provider_tokens')
+    def provider_tokens_serializer(self, provider_tokens: dict[str, str]):
+        return provider_tokens
 
 
 class GETSettingsModel(Settings):

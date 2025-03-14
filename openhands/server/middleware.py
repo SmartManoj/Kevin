@@ -206,5 +206,14 @@ class GitHubTokenMiddleware(SessionMiddlewareInterface):
                     request.state.github_token = settings.github_token
                 else:
                     request.state.github_token = None
+        if getattr(request.state, 'provider_tokens', None) is None:
+            if (
+                settings
+                and settings.secrets_store
+                and settings.secrets_store.provider_tokens
+            ):
+                request.state.provider_tokens = settings.secrets_store.provider_tokens
+            else:
+                request.state.provider_tokens = None
 
         return await call_next(request)
