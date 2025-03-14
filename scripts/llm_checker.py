@@ -48,11 +48,13 @@ response = litellm.completion(
     **args,
     seed=seed,
     temperature=temperature,
-    stream=stream,
+    stream=bool(stream),
 )
 if stream:
     for chunk in response:
-        print(chunk['choices'][0]['delta']['content'], end='', flush=True)
+        content = chunk['choices'][0]['delta']['content']
+        if content:
+            print(content, end='', flush=True)
 else:
     print(response.choices[0].message.content)
-# print(response)
+    # print(response)
