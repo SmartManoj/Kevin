@@ -11,7 +11,6 @@ class NoOpCondenserConfig(BaseModel):
 
     type: Literal['noop'] = Field('noop')
 
-    model_config = {'extra': 'forbid'}
 
 
 class ObservationMaskingCondenserConfig(BaseModel):
@@ -24,7 +23,6 @@ class ObservationMaskingCondenserConfig(BaseModel):
         ge=1,
     )
 
-    model_config = {'extra': 'forbid'}
 
 
 class BrowserOutputCondenserConfig(BaseModel):
@@ -53,7 +51,6 @@ class RecentEventsCondenserConfig(BaseModel):
         default=100, description='Maximum number of events to keep.', ge=1
     )
 
-    model_config = {'extra': 'forbid'}
 
 
 class LLMSummarizingCondenserConfig(BaseModel):
@@ -76,7 +73,6 @@ class LLMSummarizingCondenserConfig(BaseModel):
         ge=2,
     )
 
-    model_config = {'extra': 'forbid'}
 
 
 class AmortizedForgettingCondenserConfig(BaseModel):
@@ -96,7 +92,6 @@ class AmortizedForgettingCondenserConfig(BaseModel):
         ge=0,
     )
 
-    model_config = {'extra': 'forbid'}
 
 
 class LLMAttentionCondenserConfig(BaseModel):
@@ -119,7 +114,6 @@ class LLMAttentionCondenserConfig(BaseModel):
         ge=0,
     )
 
-    model_config = {'extra': 'forbid'}
 
 
 # Type alias for convenience

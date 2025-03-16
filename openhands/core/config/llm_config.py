@@ -83,7 +83,6 @@ class LLMConfig(BaseModel):
     native_tool_calling: bool | None = Field(default=None)
     reasoning_effort: str | None = Field(default='high')
 
-    model_config = {'extra': 'forbid'}
 
     @classmethod
     def from_toml_section(cls, data: dict) -> dict[str, LLMConfig]:

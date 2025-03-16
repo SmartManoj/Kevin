@@ -75,7 +75,6 @@ class SandboxConfig(BaseModel):
     docker_runtime_kwargs: dict | None = Field(default=None)
     selected_repo: str | None = Field(default=None)
 
-    model_config = {'extra': 'forbid'}
 
     @classmethod
     def from_toml_section(cls, data: dict) -> dict[str, 'SandboxConfig']:

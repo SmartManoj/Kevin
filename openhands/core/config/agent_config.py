@@ -32,7 +32,6 @@ class AgentConfig(BaseModel):
     enable_som_visual_browsing: bool = Field(default=False)
     condenser: CondenserConfig = Field(default_factory=NoOpCondenserConfig)
 
-    model_config = {'extra': 'forbid'}
 
     @classmethod
     def from_toml_section(cls, data: dict) -> dict[str, AgentConfig]:
