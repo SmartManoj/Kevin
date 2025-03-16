@@ -302,7 +302,6 @@ class AgentController:
                 isinstance(event, NullObservation)
                 and event.cause is not None
                 and event.cause > 0
-                and event.source == EventSource.USER
             ):
                 return True
             if isinstance(event, AgentStateChangedObservation) or isinstance(

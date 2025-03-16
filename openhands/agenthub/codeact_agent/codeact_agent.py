@@ -654,14 +654,6 @@ display.Image(dss())
                         # compose the first user message with examples
                         self.prompt_manager.add_examples_to_initial_message(msg)
 
-                        # and/or repo/runtime info
-                        if self.config.enable_prompt_extensions:
-                            self.prompt_manager.add_info_to_initial_message(msg)
-
-                    # enhance the user message with additional context based on keywords matched
-                    if msg.role == 'user' and not os.environ.get('SWE_BENCH'):
-                        self.prompt_manager.enhance_message(msg)
-
                     messages.append(msg)
 
         if self.llm.is_caching_prompt_active():

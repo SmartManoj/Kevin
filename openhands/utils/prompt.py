@@ -7,6 +7,7 @@ from jinja2 import Template
 from openhands.controller.state.state import State
 from openhands.core.message import Message, TextContent
 from openhands.events.observation.agent import MicroagentKnowledge
+from openhands.microagent.microagent import BaseMicroAgent, load_microagents_from_dir
 
 
 @dataclass
@@ -53,8 +54,7 @@ class PromptManager:
             available_hosts={}, additional_agent_instructions=''
         )
 
-        self.knowledge_microagents: dict[str, KnowledgeMicroAgent] = {}
-        self.repo_microagents: dict[str, RepoMicroAgent] = {}
+        
 
         self.use_bash = use_bash
         self.use_browser = use_browser
@@ -67,35 +67,7 @@ class PromptManager:
             repo_microagents, knowledge_microagents, _ = load_microagents_from_dir(
                 microagent_dir
             )
-            assert all(
-                isinstance(microagent, KnowledgeMicroAgent)
-                for microagent in knowledge_microagents.values()
-            )
-            for name, microagent in knowledge_microagents.items():
-                if name not in self.disabled_microagents:
-                    self.knowledge_microagents[name] = microagent
-            assert all(
-                isinstance(microagent, RepoMicroAgent)
-                for microagent in repo_microagents.values()
-            )
-            for name, microagent in repo_microagents.items():
-                if name not in self.disabled_microagents:
-                    self.repo_microagents[name] = microagent
-
-    def load_microagents(self, microagents: list[BaseMicroAgent]) -> None:
-        """Load microagents from a list of BaseMicroAgents.
-
-        This is typically used when loading microagents from inside a repo.
-        """
-        openhands_logger.info('Loading microagents: %s', [m.name for m in microagents])
-        # Only keep KnowledgeMicroAgents and RepoMicroAgents
-        for microagent in microagents:
-            if microagent.name in self.disabled_microagents:
-                continue
-            if isinstance(microagent, KnowledgeMicroAgent):
-                self.knowledge_microagents[microagent.name] = microagent
-            elif isinstance(microagent, RepoMicroAgent):
-                self.repo_microagents[microagent.name] = microagent
+            
 
     def _load_template(self, template_name: str) -> Template:
         if self.prompt_dir is None:
