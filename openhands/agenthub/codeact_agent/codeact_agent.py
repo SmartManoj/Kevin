@@ -1,4 +1,3 @@
-import json
 import os
 import re
 from collections import deque
@@ -125,17 +124,10 @@ class CodeActAgent(Agent):
             codeact_enable_llm_editor=self.config.codeact_enable_llm_editor,
         )
         logger.debug(
-            f'TOOLS loaded for CodeActAgent: {json.dumps(self.tools, indent=2, ensure_ascii=False).replace("\\n", "\n")}'
+            f'TOOLS loaded for CodeActAgent: {', '.join([tool.get('function').get('name') for tool in self.tools])}'
         )
         self.prompt_manager = PromptManager(
-            microagent_dir=os.path.join(
-                os.path.dirname(os.path.dirname(openhands.__file__)),
-                'microagents',
-            )
-            if self.config.enable_prompt_extensions
-            else None,
             prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
-            disabled_microagents=self.config.disabled_microagents,
         )
 
     def get_action_message(
@@ -688,3 +680,39 @@ display.Image(dss())
                         break
 
         return messages
+
+    def _enhance_messages(self, messages: list[Message]) -> list[Message]:
+        """Enhances the user message with additional context based on keywords matched.
+
+        Args:
+            messages (list[Message]): The list of messages to enhance
+
+        Returns:
+            list[Message]: The enhanced list of messages
+        """
+        assert self.prompt_manager, 'Prompt Manager not instantiated.'
+
+        results: list[Message] = []
+        is_first_message_handled = False
+        prev_role = None
+
+        for msg in messages:
+            if msg.role == 'user' and not is_first_message_handled:
+                is_first_message_handled = True
+                # compose the first user message with examples
+                self.prompt_manager.add_examples_to_initial_message(msg)
+
+            elif msg.role == 'user':
+                # Add double newline between consecutive user messages
+                if prev_role == 'user' and len(msg.content) > 0:
+                    # Find the first TextContent in the message to add newlines
+                    for content_item in msg.content:
+                        if isinstance(content_item, TextContent):
+                            # If the previous message was also from a user, prepend two newlines to ensure separation
+                            content_item.text = '\n\n' + content_item.text
+                            break
+
+            results.append(msg)
+            prev_role = msg.role
+
+        return results

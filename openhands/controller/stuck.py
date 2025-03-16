@@ -176,6 +176,11 @@ class StuckDetector:
 
     def _is_stuck_repeating_action_error(self, last_actions, last_observations):
         # scenario 2: same action, errors
+        # it takes 3 actions and 3 observations to detect a loop
+        # check if the last three actions are the same and result in errors
+
+        if len(last_actions) < 3 or len(last_observations) < 3:
+            return False
 
         # are the last three actions the "same"?
         if all(self._eq_no_pid(last_actions[0], action) for action in last_actions[:3]):
