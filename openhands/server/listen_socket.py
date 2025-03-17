@@ -85,7 +85,7 @@ async def connect(connection_id: str, environ):
         )
 
     event_stream = await conversation_manager.join_conversation(
-        conversation_id, connection_id, settings, user_id, github_user_id
+        conversation_id, connection_id, settings, user_id, user_id
     )
 
     agent_state_changed = None
