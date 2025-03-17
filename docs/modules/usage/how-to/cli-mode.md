@@ -17,7 +17,7 @@ poetry run python -m openhands.core.cli
 
 Example:
 ```bash
-poetry run python -m openhands.core.cli -t "Print 'Hello, World'"
+poetry run python -m openhands.core.cli -t "Print 'Hello, World'" --no-auto-continue
 ```
 
 This command will start an interactive session where you can input tasks and receive responses from OpenHands.
