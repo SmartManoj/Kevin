@@ -98,7 +98,7 @@ class Runtime(FileEditRuntimeMixin):
         status_callback: Callable | None = None,
         attach_to_existing: bool = False,
         headless_mode: bool = False,
-        github_user_id: str | None = None,
+        user_id: str | None = None,
     ):
         self.sid = sid
         self.event_stream = event_stream
@@ -131,7 +131,7 @@ class Runtime(FileEditRuntimeMixin):
             self, enable_llm_editor=config.get_agent_config().codeact_enable_llm_editor
         )
 
-        self.github_user_id = github_user_id
+        self.user_id = user_id
 
 
     def setup_initial_env(self, force: bool = False) -> None:
@@ -217,7 +217,7 @@ class Runtime(FileEditRuntimeMixin):
         assert event.timeout is not None
         try:
             if isinstance(event, CmdRunAction):
-                if self.github_user_id and '$GITHUB_TOKEN' in event.command:
+                if self.user_id and '$GITHUB_TOKEN' in event.command:
                     # ERROR:root:<class 'ImportError'>: cannot import name 'Agent' from partially initialized module 'openhands.controller.agent'
                     # settings_store = await SettingsStoreImpl.get_instance(config, self.github_user_id)
                     # settings = await settings_store.load()
