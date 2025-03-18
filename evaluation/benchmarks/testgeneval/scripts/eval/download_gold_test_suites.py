@@ -9,7 +9,7 @@ parser.add_argument(
     '--dataset_name',
     type=str,
     help='Name of the dataset to download',
-    default='princeton-nlp/SWE-bench_Verified',
+    default='kjain14/testgeneval',
 )
 parser.add_argument('--split', type=str, help='Split to download', default='test')
 args = parser.parse_args()
@@ -17,16 +17,12 @@ args = parser.parse_args()
 dataset = load_dataset(args.dataset_name, split=args.split)
 output_filepath = args.output_filepath
 print(
-    f'Downloading gold patches from {args.dataset_name} (split: {args.split}) to {output_filepath}'
+    f'Downloading gold test suites from {args.dataset_name} (split: {args.split}) to {output_filepath}'
 )
-patches = [
-    {
-        'instance_id': row['instance_id'],
-        'model_patch': row['patch'],
-        'model_name_or_path': 'gold',
-    }
+test_suites = [
+    {'instance_id': row['instance_id'], 'test_suite': row['test_src']}
     for row in dataset
 ]
-print(f'{len(patches)} gold patches loaded')
-pd.DataFrame(patches).to_json(output_filepath, lines=True, orient='records')
-print(f'Patches saved to {output_filepath}')
+print(f'{len(test_suites)} test suites loaded')
+pd.DataFrame(test_suites).to_json(output_filepath, lines=True, orient='records')
+print(f'Test suites saved to {output_filepath}')
