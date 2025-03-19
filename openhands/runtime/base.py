@@ -133,6 +133,8 @@ class Runtime(FileEditRuntimeMixin):
 
         self.user_id = user_id
 
+        # TODO: remove once done debugging expired github token
+        self.prev_token: SecretStr | None = None
 
     def setup_initial_env(self, force: bool = False) -> None:
         if self.attach_to_existing and not force:
@@ -221,19 +223,43 @@ class Runtime(FileEditRuntimeMixin):
                     # ERROR:root:<class 'ImportError'>: cannot import name 'Agent' from partially initialized module 'openhands.controller.agent'
                     # settings_store = await SettingsStoreImpl.get_instance(config, self.github_user_id)
                     # settings = await settings_store.load()
-                    token = SecretStr(os.environ.get(f'GITHUB_TOKEN_{self.github_user_id}'))
+                    token = SecretStr(os.environ.get(f'GITHUB_TOKEN_{self.user_id}'))
                     if token.get_secret_value():
                         export_cmd = CmdRunAction(
                             f"export GITHUB_TOKEN='{token.get_secret_value()}'"
                         )
 
+                    if token:
+                        raw_token = token.get_secret_value()
+
+                        if not self.prev_token:
+                            logger.info(
+                                f'Setting github token in runtime: {self.sid}\nToken value: {raw_token[0:5]}; length: {len(raw_token)}'
+                            )
+
+                        elif self.prev_token.get_secret_value() != raw_token:
+                            logger.info(
+                                f'Setting new github token in runtime {self.sid}\nToken value: {raw_token[0:5]}; length: {len(raw_token)}'
+                            )
+
+                        self.prev_token = token
+
+                        env_vars = {
+                            'GITHUB_TOKEN': raw_token,
+                        }
+
+                        try:
+                            self.add_env_vars(env_vars)
+                        except Exception as e:
+                            logger.warning(
+                                f'Failed export latest github token to runtime: {self.sid}, {e}'
+                            )
+
                         self.event_stream.update_secrets(
                             {
-                                'github_token': token.get_secret_value(),
+                                'github_token': raw_token,
                             }
                         )
-
-                        await call_sync_from_async(self.run, export_cmd)
 
             observation: Observation = await call_sync_from_async(
                 self.run_action, event
