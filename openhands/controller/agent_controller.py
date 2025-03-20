@@ -8,11 +8,18 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import litellm
-from litellm.exceptions import (
+from litellm.exceptions import (  # noqa
+    APIConnectionError,
+    APIError,
+    AuthenticationError,
     BadRequestError,
     ContextWindowExceededError,
+    InternalServerError,
+    NotFoundError,
     OpenAIError,
     RateLimitError,
+    ServiceUnavailableError,
+    Timeout,
 )
 
 from openhands.controller.agent import Agent
@@ -267,12 +274,21 @@ class AgentController:
                 f'Error: {e}'
             )
             if (
-                isinstance(e, litellm.AuthenticationError)
-                or isinstance(e, litellm.BadRequestError)
+                isinstance(e, Timeout)
+                or isinstance(e, APIError)
+                or isinstance(e, BadRequestError)
+                or isinstance(e, NotFoundError)
+                or isinstance(e, InternalServerError)
+                or isinstance(e, AuthenticationError)
                 or isinstance(e, RateLimitError)
                 or isinstance(e, LLMContextWindowExceedError)
             ):
                 reported = e
+            else:
+                self.log(
+                    'warning',
+                    f'Unknown exception type while running the agent: {type(e).__name__}.',
+                )
             await self._react_to_exception(reported)
 
     def should_step(self, event: Event) -> bool:
