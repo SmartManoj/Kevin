@@ -31,6 +31,7 @@ from openhands.db import get_credits, set_credits
 from openhands.events.observation.error import ErrorObservation
 from openhands.events.serialization import event_from_dict, event_to_dict
 from openhands.events.stream import EventStreamSubscriber
+from openhands.integrations.provider import PROVIDER_TOKEN_TYPE
 from openhands.llm.llm import LLM
 from openhands.server.session.agent_session import AgentSession
 from openhands.server.session.conversation_init_data import ConversationInitData
@@ -151,11 +152,11 @@ class Session:
         os.environ['OPENHANDS_LANGUAGE'] = settings.language.upper() + ' | ' + 'Using Kevin Fork on ' + git_hash[:7]
         os.environ['OPENHANDS_MODEL'] = config2.model
 
-        provider_token = None
+        git_provider_tokens = None
         selected_repository = None
         selected_branch = None
         if isinstance(settings, ConversationInitData):
-            provider_token = settings.provider_token
+            git_provider_tokens = settings.git_provider_tokens
             selected_repository = settings.selected_repository
             selected_branch = settings.selected_branch
 
@@ -168,7 +169,7 @@ class Session:
                 max_budget_per_task=self.config.max_budget_per_task,
                 agent_to_llm_config=self.config.get_agent_to_llm_config_map(),
                 agent_configs=self.config.get_agent_configs(),
-                github_token=provider_token,
+                git_provider_tokens=git_provider_tokens,
                 selected_repository=selected_repository,
                 selected_branch=selected_branch,
                 initial_message=initial_message,

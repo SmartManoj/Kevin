@@ -27,7 +27,7 @@ import { VolumeIcon } from "#/components/shared/buttons/volume-icon";
 import { FaSyncAlt } from "react-icons/fa";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { useGetTrajectory } from "#/hooks/mutation/use-get-trajectory";
-import { downloadTrajectory } from "#/utils/download-files";
+import { downloadTrajectory } from "#/utils/download-trajectory";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { VoiceModeIcon } from "#/components/shared/buttons/volume-icon";
 import notificationSound from "#/assets/notification.mp3";
