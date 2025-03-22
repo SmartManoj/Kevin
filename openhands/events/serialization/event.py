@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from openhands.events import Event, EventSource
 from openhands.events.event import AudioEvent, LogEvent
+from openhands.events.observation.observation import Observation
 from openhands.events.serialization.action import action_from_dict
 from openhands.events.serialization.observation import observation_from_dict
 from openhands.events.serialization.utils import remove_fields
@@ -49,6 +50,8 @@ DELETE_FROM_TRAJECTORY_EXTRAS_AND_SCREENSHOTS = DELETE_FROM_TRAJECTORY_EXTRAS | 
     'screenshot',
     'set_of_marks',
 }
+
+DELETE_FROM_MEMORY_EXTRAS = DELETE_FROM_TRAJECTORY_EXTRAS | {'open_pages_urls'}
 
 
 def event_from_dict(data) -> 'Event':
@@ -159,7 +162,27 @@ def event_to_trajectory(event: 'Event', include_screenshots: bool = False) -> di
     return d
 
 
-def truncate_content(content: str, max_chars: int) -> str:
+def event_to_memory(event: 'Event', max_message_chars: int) -> dict:
+    d = event_to_dict(event)
+    d.pop('id', None)
+    d.pop('cause', None)
+    d.pop('timestamp', None)
+    d.pop('message', None)
+    d.pop('image_urls', None)
+
+    # runnable actions have some extra fields used in the BE/FE, which should not be sent to the LLM
+    if 'args' in d:
+        d['args'].pop('blocking', None)
+        d['args'].pop('confirmation_state', None)
+
+    if 'extras' in d:
+        remove_fields(d['extras'], DELETE_FROM_MEMORY_EXTRAS)
+    if isinstance(event, Observation) and 'content' in d:
+        d['content'] = truncate_content(d['content'], max_message_chars)
+    return d
+
+
+def truncate_content(content: str, max_chars: int | None = None) -> str:
     """Truncate the middle of the observation content if it is too long."""
     if len(content) <= max_chars or max_chars == -1:
         return content
