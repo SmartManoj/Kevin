@@ -9,5 +9,5 @@ This folder integrates the [browser-use](https://github.com/browser-use/browser-
 poetry run python ./openhands/core/main.py \
            -i 10 \
            -t "tell me the usa's president using google search" \
-           -c Browser_Use_Agent 
+           -c BrowserUseAgent 
 ```

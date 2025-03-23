@@ -1,7 +1,15 @@
+import asyncio
+import nest_asyncio
+
+from openhands.core.logger import openhands_logger as logger
+
+nest_asyncio.apply()
+import os
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from browser_use import Agent as BrowserUseAgent
+from browser_use import Agent as BrowserUseAgent_
 from browser_use import BrowserConfig, Browser
+from browser_use.browser.context import BrowserContext, BrowserContextConfig
 
 from openhands.controller.state.state import State
 from openhands.controller.agent import Agent
@@ -9,11 +17,13 @@ from openhands.core.config.agent_config import AgentConfig
 from openhands.events.action.action import Action
 from openhands.events.action.agent import AgentFinishAction
 from openhands.llm.llm import LLM
-from openhands.utils.async_utils import call_async_from_sync
 
+from warnings import filterwarnings
+from langchain_core._api import LangChainBetaWarning
+filterwarnings("ignore", category=LangChainBetaWarning)
 
 def get_llm(model, api_key = None, base_url = None):
-    model_provider, model_name = model.split("/")
+    model_provider, model_name = model.split("/", 1)
     if model_provider.lower() == "gemini":
         return ChatGoogleGenerativeAI(model=model_name, api_key=api_key)
     else:
@@ -36,6 +46,13 @@ class BrowserUseAgent(Agent):
         """
         super().__init__(llm, config)
         self.langchain_llm = get_llm(llm.config.model, llm.config.api_key, llm.config.base_url)
+        config = BrowserConfig(
+            headless=os.getenv('BROWSER_HEADLESS', 'true').lower() in ['true','1'],
+            disable_security=True
+        )
+        self.browser = Browser(config=config)
+        self.browser_context = BrowserContext(browser=self.browser, config=BrowserContextConfig())
+        self.loop = asyncio.new_event_loop()
         
 
     def step(self, state: State) -> Action:
@@ -44,18 +61,14 @@ class BrowserUseAgent(Agent):
         if goal is None:
             goal = state.inputs['task']
         
-        config = BrowserConfig(
-            headless=True,
-            disable_security=True
-        )
-
-        browser = Browser(config=config)
-        agent = BrowserUseAgent(
-            browser=browser,
+        agent = BrowserUseAgent_(
+            browser=self.browser,
+            browser_context=self.browser_context,
             task=goal,
             llm=self.langchain_llm,
         )
-        history = call_async_from_sync(agent.run)
+        logger.info(f"Running agent with goal: {goal}")
+        history = self.loop.run_until_complete(agent.run())
         last_action = history.last_action()
         result = last_action['done']['text']
         if not last_action['done']['success']:
