@@ -22,7 +22,7 @@ def get_llm(model, api_key = None, base_url = None):
     else:
         return ChatOpenAI(model=model_name, api_key=api_key, base_url=base_url)
 
-class Browser_Use_Agent(Agent):
+class BrowserUseAgent(Agent):
     VERSION = '1.0'
     """
     An agent that interacts with the browser.
