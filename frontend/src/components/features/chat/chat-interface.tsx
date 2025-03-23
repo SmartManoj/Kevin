@@ -17,7 +17,7 @@ import { useWsClient } from "#/context/ws-client-provider";
 import { Messages } from "./messages";
 import { ChatSuggestions } from "./chat-suggestions";
 import { ActionSuggestions } from "./action-suggestions";
-import { ContinueButton } from "#/components/shared/buttons/continue-button";
+
 import { ScrollToBottomButton } from "#/components/shared/buttons/scroll-to-bottom-button";
 import { IoMdChatbubbles } from "react-icons/io";
 import { playAudio } from "#/utils/play-audio";
@@ -32,12 +32,8 @@ import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { VoiceModeIcon } from "#/components/shared/buttons/volume-icon";
 import notificationSound from "#/assets/notification.mp3";
 
-function getEntryPoint(
-  hasRepository: boolean | null,
-  hasImportedProjectZip: boolean | null,
-): string {
+function getEntryPoint(hasRepository: boolean | null): string {
   if (hasRepository) return "github";
-  if (hasImportedProjectZip) return "zip";
   return "direct";
 }
 
@@ -59,7 +55,7 @@ export function ChatInterface() {
   const [messageToSend, setMessageToSend] = React.useState<string | null>(null);
   const [autoMode, setAutoMode] = React.useState(false);
 
-  const { selectedRepository, importedProjectZip } = useSelector(
+  const { selectedRepository } = useSelector(
     (state: RootState) => state.initialQuery,
   );
   const params = useParams();
@@ -68,12 +64,8 @@ export function ChatInterface() {
   const handleSendMessage = async (content: string, files: File[]) => {
     if (messages.length === 0) {
       posthog.capture("initial_query_submitted", {
-        entry_point: getEntryPoint(
-          selectedRepository !== null,
-          importedProjectZip !== null,
-        ),
+        entry_point: getEntryPoint(selectedRepository !== null),
         query_character_length: content.length,
-        uploaded_zip_size: importedProjectZip?.length,
       });
     } else {
       posthog.capture("user_message_sent", {
@@ -223,10 +215,6 @@ export function ChatInterface() {
           </button>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0">
-            {messages.length > 2 &&
-              curAgentState === AgentState.AWAITING_USER_INPUT && (
-                <ContinueButton onClick={handleSendContinueMsg} />
-              )}
             {curAgentState === AgentState.RUNNING && <TypingIndicator />}
           </div>
 
