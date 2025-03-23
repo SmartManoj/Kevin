@@ -35,7 +35,7 @@ class Conversation:
         
         kwargs = {}
         if runtime_cls in [RemoteRuntime, DockerRuntime]:
-            kwargs['github_user_id'] = self.github_user_id
+            kwargs['user_id'] = self.user_id
 
         self.runtime = runtime_cls(
             config=config,

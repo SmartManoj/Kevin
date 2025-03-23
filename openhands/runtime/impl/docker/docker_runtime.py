@@ -67,7 +67,7 @@ class DockerRuntime(ActionExecutionClient):
         status_callback: Callable | None = None,
         attach_to_existing: bool = False,
         headless_mode: bool = True,
-        github_user_id: str | None = None,
+        user_id: str | None = None,
     ):
         if not DockerRuntime._shutdown_listener_id:
             DockerRuntime._shutdown_listener_id = add_shutdown_listener(
@@ -75,7 +75,7 @@ class DockerRuntime(ActionExecutionClient):
             )
 
         self.config = config
-        self.github_user_id = github_user_id
+        self.user_id = user_id
         self.persist_sandbox = self.config.sandbox.persist_sandbox
         user = 'oh' if self.config.run_as_openhands else 'root'
         if self.persist_sandbox:
@@ -83,10 +83,10 @@ class DockerRuntime(ActionExecutionClient):
             if sys.argv[1:] and 'resolve_issue' in sys.argv[1]:
                 self._container_port = 63708
             elif os.environ.get('APP_MODE') == 'saas':
-                self._container_port = get_port(self.github_user_id)
+                self._container_port = get_port(self.user_id)
                 if self._container_port is None:
                     self._container_port = find_available_tcp_port()
-                    store_port(self.github_user_id, self._container_port)
+                    store_port(self.user_id, self._container_port)
             elif self.config.run_as_openhands:
                 self._container_port = self.config.sandbox.port
             else:
@@ -98,7 +98,7 @@ class DockerRuntime(ActionExecutionClient):
         else:
             self.instance_id = sid
             self._container_port = find_available_tcp_port()
-        _ = self.github_user_id  + '-' if self.github_user_id else ''
+        _ = self.user_id  + '-' if self.user_id else ''
         self.container_name = CONTAINER_NAME_PREFIX + _ + self.instance_id
         self.docker_client: docker.DockerClient = self._init_docker_client()
         if not attach_to_existing:
@@ -133,7 +133,7 @@ class DockerRuntime(ActionExecutionClient):
             status_callback,
             attach_to_existing,
             headless_mode,
-            github_user_id,
+            user_id,
         )
 
         # Log runtime_extra_deps after base class initialization so self.sid is available
