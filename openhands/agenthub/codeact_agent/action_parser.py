@@ -274,7 +274,7 @@ class CodeActActionParserAgentDelegate(ActionParser):
         )
 
         return AgentDelegateAction(
-            agent='BrowsingAgent', thought=thought, inputs={'task': browse_actions}
+            agent='BrowserUseAgent', thought=thought, inputs={'task': browse_actions}
         )
 
 
