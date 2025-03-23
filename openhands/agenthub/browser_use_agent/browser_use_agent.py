@@ -1,12 +1,9 @@
-import asyncio
-
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from browser_use import Agent as BrowserUseAgent
 from browser_use import BrowserConfig, Browser
 
 from openhands.controller.state.state import State
-from openhands.core.config import llm_config
 from openhands.controller.agent import Agent
 from openhands.core.config.agent_config import AgentConfig
 from openhands.events.action.action import Action
@@ -22,7 +19,7 @@ def get_llm(model, api_key = None, base_url = None):
     else:
         return ChatOpenAI(model=model_name, api_key=api_key, base_url=base_url)
 
-class Browser_Use_Agent(Agent):
+class BrowserUseAgent(Agent):
     VERSION = '1.0'
     """
     An agent that interacts with the browser.
