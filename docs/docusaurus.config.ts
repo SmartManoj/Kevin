@@ -1,6 +1,6 @@
-import type * as Preset from "@docusaurus/preset-classic";
-import type { Config } from "@docusaurus/types";
-import { themes as prismThemes } from "prism-react-renderer";
+import type * as Preset from '@docusaurus/preset-classic';
+import type { Config } from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
 
 const config: Config = {
   title: "Kevin",
@@ -16,15 +16,15 @@ const config: Config = {
   projectName: "Kevin",
   trailingSlash: false,
 
-  onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'fr', 'zh-Hans'],
+    locales: ['en', 'fr', 'zh-Hans', 'pt-BR'],
     localeConfigs: {
       en: {
         htmlLang: 'en-GB',
@@ -38,24 +38,24 @@ const config: Config = {
   themes: ['@docusaurus/theme-mermaid'],
   presets: [
     [
-      "classic",
+      'classic',
       {
         docs: {
-          path: "modules",
-          routeBasePath: "modules",
-          sidebarPath: "./sidebars.ts",
+          path: 'modules',
+          routeBasePath: 'modules',
+          sidebarPath: './sidebars.ts',
           exclude: [
             // '**/_*.{js,jsx,ts,tsx,md,mdx}',
             // '**/_*/**',
-            "**/*.test.{js,jsx,ts,tsx}",
-            "**/__tests__/**",
+            '**/*.test.{js,jsx,ts,tsx}',
+            '**/__tests__/**',
           ],
         },
         blog: {
           showReadingTime: true,
         },
         theme: {
-          customCss: "./src/css/custom.css",
+          customCss: './src/css/custom.css',
         },
       } satisfies Preset.Options,
     ],
@@ -64,7 +64,7 @@ const config: Config = {
     documentationUrl: "https://kevin-docs.zebralock.ai",
   },
   themeConfig: {
-    image: "img/docusaurus.png",
+    image: 'img/docusaurus.png',
     navbar: {
       title: "Kevin",
       logo: {
@@ -73,10 +73,10 @@ const config: Config = {
       },
       items: [
         {
-          type: "docSidebar",
-          sidebarId: "docsSidebar",
-          position: "left",
-          label: "User Guides",
+          type: 'docSidebar',
+          sidebarId: 'docsSidebar',
+          position: 'left',
+          label: 'User Guides',
         },
         {
           type: 'localeDropdown',

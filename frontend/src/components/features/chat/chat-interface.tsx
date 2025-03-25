@@ -32,8 +32,12 @@ import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { VoiceModeIcon } from "#/components/shared/buttons/volume-icon";
 import notificationSound from "#/assets/notification.mp3";
 
-function getEntryPoint(hasRepository: boolean | null): string {
+function getEntryPoint(
+  hasRepository: boolean | null,
+  hasReplayJson: boolean | null,
+): string {
   if (hasRepository) return "github";
+  if (hasReplayJson) return "replay";
   return "direct";
 }
 
@@ -55,7 +59,7 @@ export function ChatInterface() {
   const [messageToSend, setMessageToSend] = React.useState<string | null>(null);
   const [autoMode, setAutoMode] = React.useState(false);
 
-  const { selectedRepository } = useSelector(
+  const { selectedRepository, replayJson } = useSelector(
     (state: RootState) => state.initialQuery,
   );
   const params = useParams();
@@ -64,8 +68,12 @@ export function ChatInterface() {
   const handleSendMessage = async (content: string, files: File[]) => {
     if (messages.length === 0) {
       posthog.capture("initial_query_submitted", {
-        entry_point: getEntryPoint(selectedRepository !== null),
+        entry_point: getEntryPoint(
+          selectedRepository !== null,
+          replayJson !== null,
+        ),
         query_character_length: content.length,
+        replay_json_size: replayJson?.length,
       });
     } else {
       posthog.capture("user_message_sent", {
