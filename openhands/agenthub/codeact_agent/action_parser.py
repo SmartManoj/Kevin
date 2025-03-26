@@ -11,7 +11,6 @@ from openhands.events.action import (
     Action,
     AgentDelegateAction,
     AgentFinishAction,
-    AgentSummarizeAction,
     CmdRunAction,
     FileEditAction,
     IPythonRunCellAction,
@@ -43,8 +42,6 @@ class CodeActResponseParser(ResponseParser):
         self.default_parser = CodeActActionParserMessage()
 
     def parse(self, response) -> Action:
-        if isinstance(response, AgentSummarizeAction):
-            return response
         action_str = self.parse_response(response)
         return self.parse_action(action_str)
 
@@ -100,12 +97,6 @@ class CodeActResponseParser(ResponseParser):
             return action.content
         elif isinstance(action, BrowseURLAction):
             return f'Opening {action.url} in browser manually'
-        elif isinstance(action, AgentSummarizeAction):
-            return (
-                'Summary of all Action and Observations till now. \n'
-                f'Action: {action.summarized_actions}\n'
-                f'Observation: {action.summarized_observations}'
-            )
         elif isinstance(action, AgentFinishAction) and action.source == 'agent':
             # Gemini: Unable to submit request because it has an empty text parameter
             return action.thought or 'The task is done.'

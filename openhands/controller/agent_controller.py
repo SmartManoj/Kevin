@@ -50,7 +50,6 @@ from openhands.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentRejectAction,
-    AgentSummarizeAction,
     ChangeAgentStateAction,
     CmdRunAction,
     IPythonRunCellAction,

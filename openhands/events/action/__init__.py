@@ -30,7 +30,6 @@ __all__ = [
     'AgentFinishAction',
     'AgentRejectAction',
     'AgentDelegateAction',
-    'AgentSummarizeAction',
     'AddTaskAction',
     'ModifyTaskAction',
     'ChangeAgentStateAction',

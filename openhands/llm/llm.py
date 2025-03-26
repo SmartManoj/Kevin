@@ -60,7 +60,6 @@ from litellm.llms.openai_like.common_utils import OpenAILikeError
 from litellm.types.utils import CostPerToken, ModelResponse, Usage
 from litellm.utils import create_pretrained_tokenizer
 
-from openhands.condenser.condenser import CondenserMixin
 from openhands.core.logger import LOG_DIR
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.metrics import Metrics
@@ -122,7 +121,7 @@ MODELS_WITHOUT_STOP_WORDS = [
 ]
 
 
-class LLM(RetryMixin, DebugMixin, CondenserMixin):
+class LLM(RetryMixin, DebugMixin):
     """The LLM class represents a Language Model instance.
 
     Attributes:
@@ -326,9 +325,6 @@ class LLM(RetryMixin, DebugMixin, CondenserMixin):
                 messages[0]['role'] = 'user'
 
             if self.is_over_token_limit(messages):
-                # if kwargs['condense'] and 0:
-                #     summary_action = self.condense(messages=messages)
-                #     return summary_action
                 raise ContextWindowExceededError(
                     message='Context window exceeded',
                     model=self.config.model.split('/', 1)[1],
