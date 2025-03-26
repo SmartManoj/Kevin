@@ -2,7 +2,7 @@ import json
 import os
 from typing import Any, Literal
 
-import requests
+import httpx
 from pydantic import BaseModel
 
 from openhands.core.logger import openhands_logger as logger
@@ -65,7 +65,7 @@ def store_feedback(feedback: FeedbackDataModel) -> dict[str, str]:
             item['extras'].pop('metadata', None)
             
     # Start actual request
-    response = requests.post(
+    response = httpx.post(
         FEEDBACK_URL,
         headers={'Content-Type': 'application/json'},
         json=feedback.model_dump(),
