@@ -4,8 +4,9 @@ import time
 import traceback
 import uuid
 from enum import Enum
+from typing import Any
 
-import bashlex
+import bashlex  # type: ignore
 import libtmux
 
 from openhands.core.logger import openhands_logger as logger
@@ -19,12 +20,12 @@ from openhands.events.observation.commands import (
 from openhands.utils.shutdown_listener import should_continue
 
 
-def split_bash_commands(commands):
+def split_bash_commands(commands: str) -> list[str]:
     if not commands.strip():
         return ['']
     try:
         parsed = bashlex.parse(commands)
-    except (bashlex.errors.ParsingError, NotImplementedError):
+    except (bashlex.errors.ParsingError, NotImplementedError, TypeError):
         logger.debug(
             f'Failed to parse bash commands\n'
             f'[input]: {commands}\n'
@@ -82,7 +83,7 @@ def escape_bash_special_chars(command: str) -> str:
         parts = []
         last_pos = 0
 
-        def visit_node(node):
+        def visit_node(node: Any) -> None:
             nonlocal last_pos
             if (
                 node.kind == 'redirect'
@@ -144,7 +145,7 @@ def escape_bash_special_chars(command: str) -> str:
         remaining = command[last_pos:]
         parts.append(remaining)
         return ''.join(parts)
-    except (bashlex.errors.ParsingError, NotImplementedError):
+    except (bashlex.errors.ParsingError, NotImplementedError, TypeError):
         logger.debug(
             f'Failed to parse bash commands for special characters escape\n'
             f'[input]: {command}\n'
@@ -184,7 +185,7 @@ class BashSession:
         self.last_command = ''
         self.max_memory_mb = max_memory_mb
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.server = libtmux.Server()
         _shell_command = '/bin/bash'
         if self.username in ['root', 'openhands']:
@@ -204,7 +205,7 @@ class BashSession:
         session_name = f'openhands-{self.username}-{uuid.uuid4()}'
         self.session = self.server.new_session(
             session_name=session_name,
-            start_directory=self.work_dir,
+            start_directory=self.work_dir,  # This parameter is supported by libtmux
             kill_session=True,
             x=1000,
             y=1000,
@@ -219,7 +220,7 @@ class BashSession:
         self.window = self.session.new_window(
             window_name='bash',
             window_shell=window_command,
-            start_directory=self.work_dir,
+            start_directory=self.work_dir,  # This parameter is supported by libtmux
         )
         self.pane = self.window.active_pane
         logger.debug(f'pane: {self.pane}; history_limit: {self.session.history_limit}')
@@ -242,7 +243,7 @@ class BashSession:
         self._cwd = os.path.abspath(self.work_dir)
         self._initialized = True
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Ensure the session is closed when the object is destroyed."""
         self.close()
 
@@ -257,7 +258,7 @@ class BashSession:
         )
         return content
 
-    def close(self):
+    def close(self) -> None:
         """Clean up the session."""
         if self._closed:
             return
@@ -265,7 +266,7 @@ class BashSession:
         self._closed = True
 
     @property
-    def cwd(self):
+    def cwd(self) -> str:
         return self._cwd
 
     def _is_special_key(self, command: str) -> bool:
@@ -274,7 +275,7 @@ class BashSession:
         _command = command.strip()
         return _command.startswith('C-') and len(_command) == 3
 
-    def _clear_screen(self):
+    def _clear_screen(self) -> None:
         """Clear the tmux pane screen and history."""
         self.pane.send_keys('C-l', enter=False)
         time.sleep(0.1)
@@ -392,7 +393,43 @@ class BashSession:
             metadata=metadata,
         )
 
-    def _ready_for_next_command(self):
+    def _handle_hard_timeout_command(
+        self,
+        command: str,
+        pane_content: str,
+        ps1_matches: list[re.Match],
+        timeout: float,
+    ) -> CmdOutputObservation:
+        self.prev_status = BashCommandStatus.HARD_TIMEOUT
+        if len(ps1_matches) != 1:
+            logger.warning(
+                'Expected exactly one PS1 metadata block BEFORE the execution of a command, '
+                f'but got {len(ps1_matches)} PS1 metadata blocks:\n---\n{pane_content!r}\n---'
+            )
+        raw_command_output = self._combine_outputs_between_matches(
+            pane_content, ps1_matches
+        )
+        metadata = CmdOutputMetadata()  # No metadata available
+        metadata.suffix = (
+            f'\n[The command timed out after {timeout} seconds. '
+            "You may wait longer to see additional output by sending empty command '', "
+            'send other commands to interact with the current process, '
+            'or send keys to interrupt/kill the command.]'
+        )
+        command_output = self._get_command_output(
+            command,
+            raw_command_output,
+            metadata,
+            continue_prefix='[Below is the output of the previous command.]\n',
+        )
+
+        return CmdOutputObservation(
+            command=command,
+            content=command_output,
+            metadata=metadata,
+        )
+
+    def _ready_for_next_command(self) -> None:
         """Reset the content buffer for a new command."""
         # Clear the current content
         self._clear_screen()
@@ -495,9 +532,9 @@ class BashSession:
         if len(splited_commands) > 1:
             return ErrorObservation(
                 content=(
-                    f'ERROR: Cannot execute multiple commands at once.\n'
-                    f'Please run each command separately OR chain them into a single command via && or ;\n'
-                    f'Provided commands:\n{"\n".join(f"({i+1}) {cmd}" for i, cmd in enumerate(splited_commands))}'
+                    f"ERROR: Cannot execute multiple commands at once.\n"
+                    f"Please run each command separately OR chain them into a single command via && or ;\n"
+                    f"Provided commands:\n{'\n'.join(f'({i + 1}) {cmd}' for i, cmd in enumerate(splited_commands))}"
                 )
             )
 
@@ -570,8 +607,8 @@ class BashSession:
             logger.debug(
                 f'PANE CONTENT GOT after {time.time() - _start_time:.2f} seconds'
             )
-            logger.debug(f'BEGIN OF PANE CONTENT: {cur_pane_output.split("\n")[:10]}')
-            logger.debug(f'END OF PANE CONTENT: {cur_pane_output.split("\n")[-10:]}')
+            logger.debug(f"BEGIN OF PANE CONTENT: {cur_pane_output.split('\n')[:10]}")
+            logger.debug(f"END OF PANE CONTENT: {cur_pane_output.split('\n')[-10:]}")
             ps1_matches = CmdOutputMetadata.matches_ps1_metadata(cur_pane_output)
             if cur_pane_output != last_pane_output:
                 last_pane_output = cur_pane_output

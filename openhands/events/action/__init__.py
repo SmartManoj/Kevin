@@ -3,7 +3,6 @@ from openhands.events.action.agent import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentRejectAction,
-    AgentSummarizeAction,
     AgentThinkAction,
     ChangeAgentStateAction,
     RecallAction,

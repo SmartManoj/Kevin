@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any
 
 from openhands.core.schema import ActionType, ObservationType
 from openhands.events.observation.observation import Observation
@@ -14,11 +15,20 @@ class BrowserOutputObservation(Observation):
     set_of_marks: str = field(default='', repr=False)  # don't show in repr
     error: bool = False
     observation: str = ObservationType.BROWSE
-    goal_image_urls: list = field(default_factory=list)
+    goal_image_urls: list[str] = field(default_factory=list)
     # do not include in the memory
-    open_pages_urls: list = field(default_factory=list)
+    open_pages_urls: list[str] = field(default_factory=list)
     active_page_index: int = -1
     axtree_txt: str = ''
+    dom_object: dict[str, Any] = field(
+        default_factory=dict, repr=False
+    )  # don't show in repr
+    axtree_object: dict[str, Any] = field(
+        default_factory=dict, repr=False
+    )  # don't show in repr
+    extra_element_properties: dict[str, Any] = field(
+        default_factory=dict, repr=False
+    )  # don't show in repr
     last_browser_action: str = ''
     last_browser_action_error: str = ''
     focused_element_bid: str = ''
