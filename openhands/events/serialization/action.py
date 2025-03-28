@@ -8,6 +8,7 @@ from openhands.events.action.agent import (
     AgentRejectAction,
     AgentThinkAction,
     ChangeAgentStateAction,
+    CondensationAction,
     RecallAction,
 )
 from openhands.events.action.browse import BrowseInteractiveAction, BrowseURLAction
@@ -43,6 +44,7 @@ actions = (
     ChangeAgentStateAction,
     MessageAction,
     RegenerateAction,
+    CondensationAction,
 )
 
 ACTION_TYPE_TO_CLASS = {action_class.action: action_class for action_class in actions}  # type: ignore[attr-defined]

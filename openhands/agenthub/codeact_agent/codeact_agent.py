@@ -37,11 +37,14 @@ from openhands.events.observation import (
     IPythonRunCellObservation,
     UserRejectObservation,
 )
+from openhands.events.observation.agent import RecallObservation
 from openhands.events.observation.error import ErrorObservation
 from openhands.events.observation.observation import Observation
 from openhands.events.serialization.event import truncate_content
+from openhands.events.event import Event
 from openhands.llm.llm import LLM
 from openhands.memory.condenser import Condenser
+from openhands.memory.condenser.condenser import Condensation, View
 from openhands.memory.conversation_memory import ConversationMemory
 from openhands.runtime.plugins import (
     AgentSkillsRequirement,
@@ -350,6 +353,8 @@ class CodeActAgent(Agent):
             text += '\n[Last action has been rejected by the user]'
         elif isinstance(obs, AgentCondensationObservation):
             text = truncate_content(obs.content, max_message_chars)
+        elif isinstance(obs, RecallObservation):
+            text = obs_prefix + truncate_content(obs.content, max_message_chars)
         else:
             # If an observation message is not returned, it will cause an error
             # when the LLM tries to return the next message
@@ -387,6 +392,7 @@ class CodeActAgent(Agent):
 
     def step(self, state: State) -> Action:
         """Performs one step using the CodeAct Agent.
+
         This includes gathering info on previous steps and prompting the model to make a command to execute.
 
         Parameters:
@@ -408,9 +414,23 @@ class CodeActAgent(Agent):
         if latest_user_message and latest_user_message.content.strip() == '/exit':
             return AgentFinishAction()
 
-        response = None
-        # prepare what we want to send to the LLM
-        messages = self._get_messages(state)
+        # Condense the events from the state. If we get a view we'll pass those
+        # to the conversation manager for processing, but if we get a condensation
+        # event we'll just return that instead of an action. The controller will
+        # immediately ask the agent to step again with the new view.
+        condensed_history: list[Event] = []
+        match self.condenser.condensed_history(state):
+            case View(events=events):
+                condensed_history = events
+
+            case Condensation(action=condensation_action):
+                return condensation_action
+
+        logger.debug(
+            f'Processing {len(condensed_history)} events from a total of {len(state.history)} events'
+        )
+
+        messages = self._get_messages(condensed_history)
         try:
             last_message_content = messages[-1].content[0].text.strip().splitlines()
             if len(last_message_content) >= 3:
@@ -424,7 +444,6 @@ class CodeActAgent(Agent):
         except Exception as e:
             # logger.debug(f'Error in step: {e}')
             pass
-
         params: dict = {
             'messages': messages,
             'condense': True,
@@ -483,7 +502,7 @@ class CodeActAgent(Agent):
         else:
             return self.action_parser.parse(response)
 
-    def _get_messages(self, state: State) -> list[Message]:
+    def _get_messages(self, events: list[Event]) -> list[Message]:
         system_role = 'user' if config2.model.startswith('o1-') else 'system'
         """Constructs the message history for the LLM conversation.
 
@@ -500,7 +519,7 @@ class CodeActAgent(Agent):
         6. Adds environment reminders for non-function-calling mode
 
         Args:
-            state (State): The current state object containing conversation history and other metadata
+            events: The list of events to convert to messages
 
         Returns:
             list[Message]: A list of formatted messages ready for LLM consumption, including:
@@ -552,7 +571,7 @@ display.Image(dss())
         user_contents = []
         
         if (
-            len(state.history) == 1
+            len(events) == 1
             and config.run_as_openhands
             and config.show_workspace_contents
         ):
@@ -576,8 +595,9 @@ display.Image(dss())
         #     if summary_message:
         #         messages.extend(summary_message)
 
-        if task := state.inputs.get('task'):
-            user_contents.append(TextContent(text=task))
+        # TODO: delegation.
+        # if task := state.inputs.get('task'):
+        #     user_contents.append(TextContent(text=task))
         
         if user_contents:
             messages.append(
@@ -592,8 +612,6 @@ display.Image(dss())
         tool_call_id_to_message: dict[str, Message] = {}
 
         # Condense the events from the state.
-        events = self.condenser.condensed_history(state)
-
         is_first_message_handled = False
         for k, event in enumerate(events):
             # create a regular message from an event
