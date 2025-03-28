@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from dataclasses import dataclass, field
 from itertools import islice
@@ -52,7 +53,7 @@ class PromptManager:
         self.additional_info_template: Template = self._load_template('additional_info')
         self.microagent_info_template: Template = self._load_template('microagent_info')
         self.runtime_info = RuntimeInfo(
-            available_hosts={}, additional_agent_instructions=''
+            available_hosts={}, additional_agent_instructions='', date=datetime.now().strftime('%Y-%m-%d')
         )
 
         
