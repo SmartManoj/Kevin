@@ -49,6 +49,7 @@ response = litellm.completion(
     seed=seed,
     temperature=temperature,
     stream=bool(stream),
+    drop_params=True
 )
 if stream:
     for chunk in response:
