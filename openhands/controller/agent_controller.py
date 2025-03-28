@@ -258,7 +258,9 @@ class AgentController:
         self.event_stream.add_event(ErrorObservation(err), EventSource.ENVIRONMENT)
 
     def step(self):
-        asyncio.create_task(self._step_with_exception_handling())
+        # Create and run the task in the current event loop
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._step_with_exception_handling())
 
     async def _step_with_exception_handling(self):
         try:
