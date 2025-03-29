@@ -302,7 +302,13 @@ endif
 # Start frontend server
 start-frontend:
 	@echo "$(YELLOW)Starting frontend...$(RESET)"
-	@cd frontend && VITE_BACKEND_HOST=$(BACKEND_HOST_PORT) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run $(mode) -- --port $(FRONTEND_PORT) --host $(BACKEND_HOST)
+	@cd frontend && \
+	if grep -qi microsoft /proc/version 2>/dev/null; then \
+		SCRIPT=dev_wsl; \
+	else \
+		SCRIPT=dev; \
+	fi; \
+	VITE_BACKEND_HOST=$(BACKEND_HOST_PORT) VITE_FRONTEND_PORT=$(FRONTEND_PORT) npm run $$SCRIPT -- --port $(FRONTEND_PORT) --host $(BACKEND_HOST)
 
 # check for Windows (non-callable)
 _run_check:
@@ -340,7 +346,6 @@ docker-run:
 		export DATE=$(shell date +%Y%m%d%H%M%S); \
 		docker compose up $(OPTIONS); \
 	fi
-
 
 
 # Setup config.toml
