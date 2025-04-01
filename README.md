@@ -82,8 +82,7 @@ Learn more at [docs.all-hands.dev](https://docs.all-hands.dev), or jump to the [
 ## ⚡ Quick Start
 
 ```bash
-git clone https://github.com/SmartManoj/Kevin
-cd Kevin
+git clone https://github.com/SmartManoj/Kevin && cd Kevin
 make build
 make run
 ```
