@@ -19,6 +19,7 @@ from openhands.events.observation.agent import (
 )
 from openhands.events.serialization import event_to_dict
 from openhands.events.stream import AsyncEventStreamWrapper
+from openhands.server.data_models import conversation_info
 from openhands.server.shared import server_config
 from openhands.server.shared import (
     ConversationStoreImpl,
@@ -29,7 +30,7 @@ from openhands.server.shared import (
 )
 from openhands.server.types import AppMode
 from openhands.storage.conversation.conversation_validator import (
-    ConversationValidatorImpl,
+    create_conversation_validator,
 )
 
 
