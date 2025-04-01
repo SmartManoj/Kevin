@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sandbox-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sandbox
+  template:
+    metadata:
+      labels:
+        app: sandbox
+    spec:
+      containers:
+      - name: sandbox
+        image: ghcr.io/all-hands-ai/runtime:oh_v0.30.1_iax2at279zkys8yx_04xn50h3xi72e6zb
+        command: ["/openhands/micromamba/bin/micromamba", "run", "-n", "openhands", "poetry", "run", "python", "-u", "-m", "openhands.runtime.action_execution_server", "63730", "--working-dir", "/workspace", "--plugins", "agent_skills", "jupyter", "vscode", "vscode", "--username", "openhands", "--user-id", "1000"]
+        ports:
+        - containerPort: 63730
+        - containerPort: 63731
+        env:
+        - name: VSCODE_PORT
+          value: "63731"
+        - name: VSCODE_CONNECTION_TOKEN
+          value: "d5d0d35b-6693-4dbf-bc08-1a9f82bef097"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: port
+          value: "63730"
