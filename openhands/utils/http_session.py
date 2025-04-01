@@ -7,7 +7,7 @@ import httpx
 
 from openhands.core.logger import openhands_logger as logger
 
-CLIENT = httpx.Client(timeout=os.getenv("HTTP_SESSION_TIMEOUT", 10))
+CLIENT = httpx.Client(timeout=os.getenv("HTTP_SESSION_TIMEOUT", 60))
 
 
 @dataclass
