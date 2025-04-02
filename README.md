@@ -1,10 +1,9 @@
 ### 📢 Announcement
 
-Three airline companies operate flights from Dodola island. Each company has a different schedule of departures. The first company departs every 100 days, the second every 120 days and the third every 150 days. What is the greatest positive integer d for which it is true that there will be d consecutive days without a flight from Dodola island, regardless of the departure times of the various airlines?
+![ARC Prize 2025](https://pbs.twimg.com/media/Gm1P6s4bMAAeM2r?format=png&name=medium)
+Checkout [ARC Prize 2025](https://arcprize.org/)
 
-Checkout [AI Mathematical Olympiad - Progress Prize 2](https://www.kaggle.com/competitions/ai-mathematical-olympiad-progress-prize-2)
-
-It is a $10mn fund to spur the open development of AI models.
+Join the $1M+ global competition.
 
 ---
 
