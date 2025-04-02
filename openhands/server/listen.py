@@ -1,3 +1,4 @@
+import os
 import socketio
 
 from openhands.server.app import app as base_app
@@ -5,9 +6,9 @@ from openhands.server.listen_socket import sio
 from openhands.server.middleware import (
     AttachConversationMiddleware,
     CacheControlMiddleware,
-    GitHubTokenMiddleware,
     InMemoryRateLimiter,
     LocalhostCORSMiddleware,
+    ProviderTokenMiddleware,
     RateLimitMiddleware,
 )
 from openhands.server.static import SPAStaticFiles
@@ -29,9 +30,9 @@ base_app.add_middleware(CacheControlMiddleware)
 #     rate_limiter=InMemoryRateLimiter(requests=10, seconds=1),
 # )
 base_app.middleware('http')(AttachConversationMiddleware(base_app))
-base_app.middleware('http')(GitHubTokenMiddleware(base_app))
 from starlette.middleware.sessions import SessionMiddleware
 
-base_app.add_middleware(SessionMiddleware, secret_key="your-secret-key-here")
+base_app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "your-secret-key-here"))
+base_app.middleware('http')(ProviderTokenMiddleware(base_app))
 
 app = socketio.ASGIApp(sio, other_asgi_app=base_app)
