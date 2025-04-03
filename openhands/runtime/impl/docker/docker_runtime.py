@@ -50,7 +50,7 @@ def _is_retryable_wait_until_alive_error(exception):
         return _is_retryable_wait_until_alive_error(cause)
 
     return isinstance(
-        exception, (ConnectionError, httpx.NetworkError, httpx.RemoteProtocolError)
+        exception, (httpx.ReadError, httpx.NetworkError, httpx.RemoteProtocolError)
     )
 
 
