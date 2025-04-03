@@ -10,6 +10,7 @@ from openhands.events.action import (
     NullAction,
 )
 from openhands.events.action.agent import RecallAction
+from openhands.events.async_event_store_wrapper import AsyncEventStoreWrapper
 from openhands.events.observation import (
     NullObservation,
 )
@@ -18,10 +19,8 @@ from openhands.events.observation.agent import (
     RecallObservation,
 )
 from openhands.events.serialization import event_to_dict
-from openhands.events.stream import AsyncEventStreamWrapper
-from openhands.server.data_models import conversation_info
-from openhands.server.shared import server_config
 from openhands.server.shared import (
+    server_config,
     ConversationStoreImpl,
     SettingsStoreImpl,
     config,
@@ -98,8 +97,8 @@ async def connect(connection_id: str, environ):
     agent_state_changed = None
     if event_stream is None:
         raise ConnectionRefusedError('Failed to join conversation')
-    async_stream = AsyncEventStreamWrapper(event_stream, latest_event_id + 1)
-    async for event in async_stream:
+    async_store = AsyncEventStoreWrapper(event_stream, latest_event_id + 1)
+    async for event in async_store:
         logger.info(f'oh_event: {event.__class__.__name__}')
         if isinstance(
             event,
