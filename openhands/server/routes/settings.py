@@ -17,6 +17,12 @@ app = APIRouter(prefix='/api')
 async def load_settings(request: Request) -> GETSettingsModel | JSONResponse:
     try:
         user_id = get_user_id(request)
+        # app mode is sass return 401
+        if not user_id and server_config.app_mode == AppMode.SAAS:
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={'error': f'Unauthorized for user {user_id}'},
+            )
         settings_store = await SettingsStoreImpl.get_instance(config, user_id)
         settings = await settings_store.load()
         if not settings:

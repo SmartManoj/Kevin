@@ -17,8 +17,6 @@ from pydantic.json import pydantic_encoder
 from openhands.events.action.action import Action
 from openhands.events.action.commands import CmdRunAction
 from openhands.events.stream import EventStream
-from openhands.integrations.github.github_service import GithubServiceImpl
-from openhands.integrations.gitlab.gitlab_service import GitLabServiceImpl
 from openhands.integrations.service_types import (
     AuthenticationError,
     GitService,
@@ -27,6 +25,7 @@ from openhands.integrations.service_types import (
     User,
 )
 from openhands.server.types import AppMode
+from openhands.core.logger import openhands_logger as logger
 
 
 class ProviderToken(BaseModel):
@@ -144,10 +143,17 @@ class ProviderHandler:
                 f'provider_tokens must be a MappingProxyType, got {type(provider_tokens).__name__}'
             )
 
-        self.service_class_map: dict[ProviderType, type[GitService]] = {
-            ProviderType.GITHUB: GithubServiceImpl,
-            ProviderType.GITLAB: GitLabServiceImpl,
-        }
+        # Initialize with empty service class map
+        self.service_class_map: dict[ProviderType, type[GitService]] = {}
+        
+        # Dynamically import service classes to avoid circular imports
+        if ProviderType.GITHUB in provider_tokens:
+            from openhands.integrations.github.github_service import GithubServiceImpl
+            self.service_class_map[ProviderType.GITHUB] = GithubServiceImpl
+            
+        if ProviderType.GITLAB in provider_tokens:
+            from openhands.integrations.gitlab.gitlab_service import GitLabServiceImpl
+            self.service_class_map[ProviderType.GITLAB] = GitLabServiceImpl
 
         self.external_auth_id = external_auth_id
         self.external_auth_token = external_auth_token
@@ -177,7 +183,7 @@ class ProviderHandler:
             try:
                 service = self._get_service(provider)
                 return await service.get_user()
-            except Exception:
+            except Exception as e:
                 continue
         raise AuthenticationError('Need valid provider token')
 
@@ -340,3 +346,11 @@ class ProviderHandler:
         Map ProviderType value to the environment variable name in the runtime
         """
         return f'{provider.value}_token'.lower()
+
+
+if __name__ == '__main__':
+    ph = ProviderHandler(MappingProxyType({ProviderType.GITHUB: ProviderToken(token=SecretStr(''), user_id='')}))
+    service_class = ph.service_class_map[ProviderType.GITHUB]
+    print(service_class)
+
+ 

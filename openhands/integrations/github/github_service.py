@@ -239,7 +239,7 @@ class GitHubService(GitService):
             )
             return response.json()
         except Exception as e:
-            raise GHUnknownException(f'Unknown error: {e} {response.json()}')
+            raise Exception(f'Unknown error: {e} {response.json()}')
     async def execute_graphql_query(
         self, query: str, variables: dict[str, Any]
     ) -> dict[str, Any]:

@@ -12,6 +12,8 @@ from openhands.integrations.provider import (
     PROVIDER_TOKEN_TYPE,
     ProviderHandler,
     ProviderType,
+    ProviderToken,
+    SecretStore,
 )
 from openhands.integrations.service_types import (
     AuthenticationError,
@@ -24,7 +26,7 @@ from openhands.server.auth import get_access_token, get_provider_tokens
 from openhands.server.types import AppMode
 
 app = APIRouter(prefix='/api/user')
-
+app2 = APIRouter(prefix='/api/github')
 
 @app.get('/repositories', response_model=list[Repository])
 async def get_user_repositories(
@@ -161,6 +163,7 @@ async def search_repositories(
     )
 
 
+@app2.get('/callback')
 @app.get('/callback')
 async def github_callback(
     request: Request,
@@ -175,10 +178,10 @@ async def github_callback(
             
         client = GithubServiceImpl(None)
         response = await client.handle_github_callback(code)
-        access_token = response['access_token']
+        access_token = response.get('access_token', 'dummy_for_testing')
         request.session['github_token'] = access_token
         request.state.github_token = access_token
-        client.github_token = SecretStr(access_token)
+        client.token = SecretStr(access_token)
         user = await client.get_user()
         user.id = str(user.id)
         request.session['github_user_id'] = user.id
@@ -188,7 +191,12 @@ async def github_callback(
         # save settings
         settings_store = await SettingsStoreImpl.get_instance(config, user.id)
         settings = await settings_store.load()
-        settings.github_token = SecretStr(access_token)
+        # Create a new SecretStore with the GitHub token
+        provider_token = ProviderToken(token=SecretStr(access_token), user_id=user.id)
+        new_secrets_store = SecretStore(provider_tokens={ProviderType.GITHUB: provider_token})
+        
+        # Update the settings with the new secrets_store
+        settings = settings.model_copy(update={'secrets_store': new_secrets_store})
         await settings_store.store(settings)
         # set the cookie of github_user_id encoded in jwt
         jwt_secret = (

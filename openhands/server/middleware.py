@@ -2,16 +2,20 @@ import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
 import os
+from types import MappingProxyType
 from typing import Callable
 from urllib.parse import urlparse
 
 from fastapi import Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import SecretStr
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request as StarletteRequest
 from starlette.types import ASGIApp
 
+from openhands.integrations.provider import ProviderToken
+from openhands.integrations.provider import ProviderType
 from openhands.server import shared
 from openhands.server.auth import get_user_id
 from openhands.server.types import SessionMiddlewareInterface
@@ -200,7 +204,17 @@ class ProviderTokenMiddleware(SessionMiddlewareInterface):
         if getattr(request.state, 'provider_tokens', None) is None:
             if os.environ.get("APP_MODE") == "saas":
                 request.state.provider_tokens = request.session.get("provider_tokens")
+                request.state.github_token = request.session.get("github_token")
+                request.state.github_user_id = request.session.get("github_user_id")
                 request.state.user_id = request.session.get("user_id")
+                request.state.provider_tokens = MappingProxyType(
+                    {
+                        ProviderType.GITHUB: ProviderToken(
+                            token=SecretStr(request.state.github_token),
+                            user_id=request.state.github_user_id,
+                        )
+                    }
+                )
             elif (
                 settings
                 and settings.secrets_store

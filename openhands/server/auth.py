@@ -1,7 +1,7 @@
 from fastapi import Request
 from pydantic import SecretStr
 
-from openhands.integrations.provider2 import PROVIDER_TOKEN_TYPE, ProviderType
+from openhands.integrations.provider import PROVIDER_TOKEN_TYPE, ProviderType
 
 
 def get_provider_tokens(request: Request) -> PROVIDER_TOKEN_TYPE | None:

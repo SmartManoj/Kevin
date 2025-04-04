@@ -7,7 +7,7 @@ from openhands.utils.import_utils import get_impl
 
 class ServerConfig(ServerConfigInterface):
     config_cls = os.environ.get('OPENHANDS_CONFIG_CLS', None)
-    app_mode = os.environ.get('APP_MODE', AppMode.OSS)
+    app_mode = AppMode(os.environ.get('APP_MODE', AppMode.OSS.value))
     app_slug = os.environ.get('APP_SLUG', 'custom')
     posthog_client_key = os.environ.get('POSTHOG_CLIENT_KEY', 'phc_3ESMmY9SgqEAGBB6sMGK5ayYHkeUuknH2vP6FmWH9RA')
     github_client_id = os.environ.get('GITHUB_APP_CLIENT_ID', '')
