@@ -56,7 +56,7 @@ describe("Browser", () => {
       },
     });
 
-    expect(screen.getByRole("textbox")).toHaveValue("https://example.com");
-    expect(screen.getByAltText(/browser screenshot/i)).toBeInTheDocument();
+    expect(screen.getByText("https://example.com")).toBeInTheDocument();
+    expect(screen.getByAltText("BROWSER$SCREENSHOT_ALT")).toBeInTheDocument();
   });
 });

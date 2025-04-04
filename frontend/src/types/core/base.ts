@@ -14,7 +14,8 @@ export type OpenHandsEventType =
   | "modify_task"
   | "think"
   | "finish"
-  | "error";
+  | "error"
+  | "recall";
 
 interface OpenHandsBaseEvent {
   id: number;

@@ -6,8 +6,6 @@ from typing import Callable
 from uuid import UUID
 import uuid
 
-import os 
-
 import docker
 import httpx
 import tenacity
@@ -126,9 +124,13 @@ class DockerRuntime(ActionExecutionClient):
         self._vscode_port = -1
         self._app_ports: list[int] = []
 
-        if os.environ.get("DOCKER_HOST_ADDR"):
-            logger.info(f'Using DOCKER_HOST_IP: {os.environ["DOCKER_HOST_ADDR"]} for local_runtime_url')
-            self.config.sandbox.local_runtime_url = f'http://{os.environ["DOCKER_HOST_ADDR"]}'
+        if os.environ.get('DOCKER_HOST_ADDR'):
+            logger.info(
+                f'Using DOCKER_HOST_IP: {os.environ["DOCKER_HOST_ADDR"]} for local_runtime_url'
+            )
+            self.config.sandbox.local_runtime_url = (
+                f'http://{os.environ["DOCKER_HOST_ADDR"]}'
+            )
 
 
         self.base_container_image = self.config.sandbox.base_container_image

@@ -1,7 +1,7 @@
 import docker
 
 
-def stop_all_containers(prefix: str):
+def stop_all_containers(prefix: str) -> None:
     try:
         docker_client = docker.from_env()
         containers = docker_client.containers.list(all=True)

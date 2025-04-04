@@ -154,6 +154,15 @@ export interface RejectAction extends OpenHandsActionEvent<"reject"> {
   };
 }
 
+export interface RecallAction extends OpenHandsActionEvent<"recall"> {
+  source: "agent";
+  args: {
+    recall_type: "workspace_context" | "knowledge";
+    query: string;
+    thought: string;
+  };
+}
+
 export type OpenHandsAction =
   | UserMessageAction
   | AssistantMessageAction
@@ -169,4 +178,5 @@ export type OpenHandsAction =
   | FileWriteAction
   | AddTaskAction
   | ModifyTaskAction
-  | RejectAction;
+  | RejectAction
+  | RecallAction;

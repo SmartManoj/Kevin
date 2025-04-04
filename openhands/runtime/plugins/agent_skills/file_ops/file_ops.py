@@ -59,7 +59,7 @@ def _output_error(error_msg: str) -> bool:
     return False
 
 
-def _is_valid_filename(file_name) -> bool:
+def _is_valid_filename(file_name: str) -> bool:
     if not file_name or not isinstance(file_name, str) or not file_name.strip():
         return False
     invalid_chars = '<>:"/\\|?*'
@@ -74,7 +74,7 @@ def _is_valid_filename(file_name) -> bool:
     return True
 
 
-def _is_valid_path(path) -> bool:
+def _is_valid_path(path: str) -> bool:
     if not path or not isinstance(path, str):
         return False
     try:
@@ -83,7 +83,7 @@ def _is_valid_path(path) -> bool:
         return False
 
 
-def _create_paths(file_name) -> bool:
+def _create_paths(file_name: str) -> bool:
     try:
         dirname = os.path.dirname(file_name)
         if dirname:
@@ -104,7 +104,7 @@ def _check_current_file(file_path: str | None = None) -> bool:
     return True
 
 
-def _clamp(value, min_value, max_value):
+def _clamp(value: int, min_value: int, max_value: int) -> int:
     return max(min_value, min(value, max_value))
 
 
@@ -147,12 +147,16 @@ nm       ct
 
 
 def _print_window(
-    file_path, targeted_line, window, return_str=False, ignore_window=False
-):
+    file_path: str | None,
+    targeted_line: int,
+    window: int,
+    return_str: bool = False,
+    ignore_window: bool = False,
+) -> str:
     global CURRENT_LINE
     file_path = os.path.abspath(file_path)
-    if not _check_current_file(file_path):
-        return
+    if not _check_current_file(file_path) or file_path is None:
+        return ''
     with open(file_path) as file:
         content = file.read()
 
@@ -198,9 +202,10 @@ def _print_window(
             return output
         else:
             print(output)
+            return ''
 
 
-def _cur_file_header(current_file, total_lines) -> str:
+def _cur_file_header(current_file: str | None, total_lines: int) -> str:
     if not current_file:
         return ''
     return f'[File: {os.path.abspath(current_file)} ({total_lines} lines total)]\n'
@@ -264,7 +269,8 @@ def goto_line(line_number: int, file_path: str | None = None) -> None:
     global CURRENT_FILE, CURRENT_LINE, WINDOW
     if file_path:
         CURRENT_FILE = os.path.abspath(file_path)
-    _check_current_file()
+    if not _check_current_file():
+        return
 
     with open(str(CURRENT_FILE)) as file:
         total_lines = max(1, sum(1 for _ in file))
@@ -273,7 +279,6 @@ def goto_line(line_number: int, file_path: str | None = None) -> None:
         return
 
     CURRENT_LINE = _clamp(line_number, 1, total_lines)
-
     output = _cur_file_header(CURRENT_FILE, total_lines)
     output += _print_window(
         CURRENT_FILE, CURRENT_LINE, WINDOW, return_str=True, ignore_window=True
@@ -288,8 +293,8 @@ def scroll_down() -> None:
         None
     """
     global CURRENT_FILE, CURRENT_LINE, WINDOW, LAST_WINDOW
-    _check_current_file()
-
+    if not _check_current_file():
+        return
     with open(str(CURRENT_FILE)) as file:
         total_lines = max(1, sum(1 for _ in file))
     CURRENT_LINE = _clamp(CURRENT_LINE + LAST_WINDOW, 1, total_lines)
@@ -307,8 +312,8 @@ def scroll_up() -> None:
         None
     """
     global CURRENT_FILE, CURRENT_LINE, WINDOW, LAST_WINDOW
-    _check_current_file()
-
+    if not _check_current_file():
+        return
     with open(str(CURRENT_FILE)) as file:
         total_lines = max(1, sum(1 for _ in file))
     CURRENT_LINE = _clamp(CURRENT_LINE - LAST_WINDOW, 1, total_lines)
