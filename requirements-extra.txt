@@ -6,6 +6,7 @@ seleniumbase>=4.33.12
 scholarly>=1.7.11
 langchain_google_genai==2.1.1
 browser-use==0.1.40
+itsdangerous==2.2.0
 # PyPaperBot>=1.4.1
 # seleniumbase 4.33.12 depends on beautifulsoup4==4.12.3
 # pypaperbot 1.0 depends on beautifulsoup4==4.9.1
