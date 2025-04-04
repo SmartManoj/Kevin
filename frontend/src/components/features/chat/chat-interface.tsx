@@ -23,8 +23,6 @@ import { ActionSuggestions } from "./action-suggestions";
 import { ScrollToBottomButton } from "#/components/shared/buttons/scroll-to-bottom-button";
 import { IoMdChatbubbles } from "react-icons/io";
 import { playAudio } from "#/utils/play-audio";
-import { I18nKey } from "#/i18n/declaration";
-import { useTranslation } from "react-i18next";
 import { VolumeIcon } from "#/components/shared/buttons/volume-icon";
 import { FaSyncAlt } from "react-icons/fa";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
@@ -45,7 +43,6 @@ function getEntryPoint(
 
 export function ChatInterface() {
   const { send, isLoadingMessages } = useWsClient();
-  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const scrollRef = React.useRef<HTMLDivElement>(null);

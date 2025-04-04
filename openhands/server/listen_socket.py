@@ -61,6 +61,7 @@ async def connect(connection_id: str, environ):
         raise ConnectionRefusedError('No conversation_id in query params')
 
     user_id = None
+    github_user_id = None
     if server_config.app_mode != AppMode.OSS:
         cookies_str = environ.get('HTTP_COOKIE', '')
         cookies = dict(cookie.split('=', 1) for cookie in cookies_str.split('; '))
@@ -77,7 +78,7 @@ async def connect(connection_id: str, environ):
             else config.jwt_secret
         )
         decoded = jwt.decode(signed_token, jwt_secret, algorithms=['HS256'])
-        user_id = decoded['github_user_id']
+        user_id = github_user_id = decoded['github_user_id']
 
         logger.info(f'User {user_id} is connecting to conversation {conversation_id}')
 
