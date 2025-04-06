@@ -24,6 +24,7 @@ from litellm.exceptions import (
 from litellm.types.utils import CostPerToken, ModelResponse, Usage
 from litellm.utils import create_pretrained_tokenizer
 
+from openhands.core.exceptions import LLMNoResponseError
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message
 from openhands.core.message import TextContent
@@ -77,6 +78,9 @@ LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (
         InternalServerError,
         RateLimitError,
         ServiceUnavailableError,
+        litellm.Timeout,
+        litellm.InternalServerError,
+        LLMNoResponseError,
     )
 
 # cache prompt supporting models
@@ -104,6 +108,7 @@ FUNCTION_CALLING_SUPPORTED_MODELS = [
     'o1-2024-12-17',
     'o3-mini-2025-01-31',
     'o3-mini',
+    'gemini-2.5-pro',
 ]
 
 REASONING_EFFORT_SUPPORTED_MODELS = [

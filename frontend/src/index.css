@@ -65,3 +65,8 @@ code {
 [data-testid="suggestion"], [data-testid="suggestions"] {
   display: none;
 }
+/* Fast smooth scrolling for chat interface */
+.fast-smooth-scroll {
+  scroll-behavior: smooth;
+  scroll-timeline: 100ms;
+}

@@ -105,6 +105,14 @@ class SummarizeError(Exception):
 class InvalidSummaryResponseError(Exception):
     def __init__(self, message='Invalid summary response'):
         super().__init__(message)
+# This exception should be retried
+# Typically, after retry with a non-zero temperature, the LLM will return a response
+class LLMNoResponseError(Exception):
+    def __init__(
+        self,
+        message: str = 'LLM did not return a response. This is only seen in Gemini models so far.',
+    ) -> None:
+        super().__init__(message)
 
 
 class UserCancelledError(Exception):
