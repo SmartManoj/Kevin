@@ -17,7 +17,7 @@ class DebugMixin:
                 json.dump(data, f)
             # self.logged_first_request = True
 
-    def log_prompt(self, messages: list[Message] | Message):
+    def log_prompt(self, messages: list[dict[str, Any]] | dict[str, Any]) -> None:
         if not messages:
             logger.debug('No completion messages!')
             return
@@ -36,12 +36,12 @@ class DebugMixin:
         else:
             logger.debug('No completion messages!')
 
-    def log_response(self, message_back: str):
+    def log_response(self, message_back: str) -> None:
         if message_back:
             llm_response_logger.debug(message_back)
         self.log_prompt_once = True
 
-    def _format_message_content(self, message: dict[str, Any]):
+    def _format_message_content(self, message: dict[str, Any]) -> str:
         content = message['content']
         if isinstance(content, list):
             return '\n'.join(
@@ -49,18 +49,18 @@ class DebugMixin:
             )
         return str(content)
 
-    def _format_content_element(self, element: dict[str, Any]):
+    def _format_content_element(self, element: dict[str, Any] | Any) -> str:
         if isinstance(element, dict):
             if 'text' in element:
-                return element['text']
+                return str(element['text'])
             if (
                 self.vision_is_active()
                 and 'image_url' in element
                 and 'url' in element['image_url']
             ):
-                return element['image_url']['url']
+                return str(element['image_url']['url'])
         return str(element)
 
     # This method should be implemented in the class that uses DebugMixin
-    def vision_is_active(self):
+    def vision_is_active(self) -> bool:
         raise NotImplementedError
