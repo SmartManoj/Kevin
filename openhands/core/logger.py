@@ -6,8 +6,8 @@ import sys
 import traceback
 from datetime import datetime
 from types import TracebackType
-from typing import Any, Literal, Mapping, TextIO
 import warnings
+from typing import Any, Literal, Mapping, MutableMapping, TextIO
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
@@ -312,7 +312,7 @@ def get_file_handler(
     return file_handler
 
 
-def json_formatter():
+def json_formatter() -> JsonFormatter:
     return JsonFormatter(
         '{message}{levelname}',
         style='{',
@@ -517,11 +517,15 @@ llm_response_logger = _setup_llm_logger('response', current_log_level)
 class OpenHandsLoggerAdapter(logging.LoggerAdapter):
     extra: dict
 
-    def __init__(self, logger=openhands_logger, extra=None):
+    def __init__(
+        self, logger: logging.Logger = openhands_logger, extra: dict | None = None
+    ) -> None:
         self.logger = logger
         self.extra = extra or {}
 
-    def process(self, msg, kwargs):
+    def process(
+        self, msg: str, kwargs: MutableMapping[str, Any]
+    ) -> tuple[str, MutableMapping[str, Any]]:
         """
         If 'extra' is supplied in kwargs, merge it with the adapters 'extra' dict
         Starting in Python 3.13, LoggerAdapter's merge_extra option will do this.

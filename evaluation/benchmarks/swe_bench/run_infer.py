@@ -14,6 +14,10 @@ import openhands.agenthub
 from evaluation.benchmarks.swe_bench.infer_checker import check_if_resolved
 from evaluation.benchmarks.swe_bench.swe_bench2 import update_issue_description
 from evaluation.benchmarks.swe_bench.test_codes import get_test_code
+from evaluation.benchmarks.swe_bench.binary_patch_utils import (
+    remove_binary_diffs,
+    remove_binary_files_from_git,
+)
 from evaluation.benchmarks.swe_bench.resource.mapping import (
     get_instance_resource_factor,
 )
@@ -43,7 +47,12 @@ from openhands.core.logger import openhands_logger as logger
 from openhands.core.main import create_runtime, run_controller
 from openhands.events.action import CmdRunAction, IPythonRunCellAction, MessageAction
 from openhands.critic import AgentFinishedCritic
-from openhands.events.observation import CmdOutputObservation, ErrorObservation
+from openhands.events.action import CmdRunAction, FileReadAction, MessageAction
+from openhands.events.observation import (
+    CmdOutputObservation,
+    ErrorObservation,
+    FileReadObservation,
+)
 from openhands.events.serialization.event import event_from_dict, event_to_dict
 from openhands.runtime.base import Runtime
 from openhands.utils.async_utils import call_async_from_sync
@@ -188,7 +197,7 @@ def _reset_parameters(self, *args, **kwargs):
         )
 
     if 'image_assets' in instance:
-        assets = instance['image_assets']
+        assets = json.loads(instance['image_assets'])
         assert (
             'problem_statement' in assets
         ), 'problem_statement is required in image_assets'
@@ -213,8 +222,8 @@ def get_instance_docker_image(
         # swebench/sweb.eval.x86_64.django_1776_django-11333:v1
         docker_image_prefix = 'docker.io/swebench/'
         repo, name = instance_id.split('__')
-        image_name = f'swebench/sweb.eval.x86_64.{repo}_1776_{name}:latest'
-        logger.info(f'Using official SWE-Bench image: {image_name}')
+        image_name = f'swebench/sweb.eval.x86_64.{repo}_1776_{name}:latest'.lower()
+        logger.debug(f'Using official SWE-Bench image: {image_name}')
         return image_name
     else:
         # OpenHands version of the image
@@ -231,10 +240,7 @@ def get_config(
     metadata: EvalMetadata,
 ) -> AppConfig:
     # We use a different instance image for the each instance of swe-bench eval
-    use_swebench_official_image = bool(
-        ('verified' in metadata.dataset.lower() or 'lite' in metadata.dataset.lower())
-        and 'swe-gym' not in metadata.dataset.lower()
-    )
+    use_swebench_official_image = 'swe-gym' not in metadata.dataset.lower()
     base_container_image = get_instance_docker_image(
         instance['instance_id'],
         swebench_official_image=use_swebench_official_image,
@@ -320,16 +326,17 @@ def initialize_runtime(
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     assert_and_raise(obs.exit_code == 0, f'Failed to empty ~/.bashrc: {str(obs)}')
 
-    # Set instance id
+    # Set instance id and git configuration
     action = CmdRunAction(
-        command=f"""echo 'export SWE_INSTANCE_ID={instance['instance_id']}' > ~/.bashrc && echo 'export PIP_CACHE_DIR=~/.cache/pip' >> ~/.bashrc && echo "alias git='git --no-pager'" >> ~/.bashrc"""
+        command=f"""echo 'export SWE_INSTANCE_ID={instance['instance_id']}' > ~/.bashrc && echo 'export PIP_CACHE_DIR=~/.cache/pip' >> ~/.bashrc && echo "alias git='git --no-pager'" >> ~/.bashrc && git config --global core.pager "" && git config --global diff.binary false"""
     )
     action.set_hard_timeout(600)
     logger.info(action, extra={'msg_type': 'ACTION'})
     obs = runtime.run_action(action)
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     assert_and_raise(
-        obs.exit_code == 0, f'Failed to export SWE_INSTANCE_ID: {str(obs)}'
+        obs.exit_code == 0,
+        f'Failed to export SWE_INSTANCE_ID and configure git: {str(obs)}',
     )
 
     action = CmdRunAction(command="""export USER=$(whoami); echo USER=${USER} """)
@@ -587,6 +594,17 @@ def complete_runtime(
         f'Failed to git add -A: {str(obs)}',
     )
 
+    # Remove binary files from git staging
+    action = CmdRunAction(command=remove_binary_files_from_git())
+    action.set_hard_timeout(600)
+    logger.info(action, extra={'msg_type': 'ACTION'})
+    obs = runtime.run_action(action)
+    logger.info(obs, extra={'msg_type': 'OBSERVATION'})
+    assert_and_raise(
+        isinstance(obs, CmdOutputObservation) and obs.exit_code == 0,
+        f'Failed to remove binary files: {str(obs)}',
+    )
+
     n_retries = 0
     git_patch = None
     while n_retries < 5:
@@ -615,6 +633,9 @@ def complete_runtime(
             assert_and_raise(False, f'Unexpected observation type: {str(obs)}')
 
     assert_and_raise(git_patch is not None, 'Failed to get git diff (None)')
+
+    # Remove binary diffs from the patch
+    git_patch = remove_binary_diffs(git_patch)
 
     logger.info('-' * 30)
     logger.info('END Runtime Completion Fn')
@@ -907,9 +928,19 @@ if __name__ == '__main__':
             with open(cur_output_file, 'r') as f:
                 for line in f:
                     instance = json.loads(line)
-                    history = [event_from_dict(event) for event in instance['history']]
-                    critic_result = critic.evaluate(history)
-                    if not critic_result.success:
+                    try:
+                        history = [
+                            event_from_dict(event) for event in instance['history']
+                        ]
+                        critic_result = critic.evaluate(
+                            history, instance['test_result'].get('git_patch', '')
+                        )
+                        if not critic_result.success:
+                            instances_failed.append(instance['instance_id'])
+                    except Exception as e:
+                        logger.error(
+                            f'Error loading history for instance {instance["instance_id"]}: {e}'
+                        )
                         instances_failed.append(instance['instance_id'])
             logger.info(
                 f'{len(instances_failed)} instances failed the current attempt {attempt}: {instances_failed}'
@@ -938,7 +969,11 @@ if __name__ == '__main__':
             with open(cur_output_file, 'r') as f:
                 for line in f:
                     instance = json.loads(line)
-                    if instance['instance_id'] not in added_instance_ids:
+                    # Also make sure git_patch is not empty - otherwise we fall back to previous attempt (empty patch is worse than anything else)
+                    if (
+                        instance['instance_id'] not in added_instance_ids
+                        and instance['test_result']['git_patch'].strip()
+                    ):
                         fout.write(line)
                         added_instance_ids.add(instance['instance_id'])
             logger.info(

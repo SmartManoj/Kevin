@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from litellm import ChatCompletionMessageToolCall
 from pydantic import BaseModel, Field, model_serializer
@@ -18,7 +18,7 @@ class Content(BaseModel):
     type: str
     cache_prompt: bool = False
 
-    @model_serializer
+    @model_serializer(mode='plain')
     def serialize_model(
         self,
     ) -> dict[str, str | dict[str, str]] | list[dict[str, str | dict[str, str]]]:
@@ -29,7 +29,7 @@ class TextContent(Content):
     type: str = ContentType.TEXT.value
     text: str
 
-    @model_serializer
+    @model_serializer(mode='plain')
     def serialize_model(self) -> dict[str, str | dict[str, str]]:
         data: dict[str, str | dict[str, str]] = {
             'type': self.type,
@@ -52,7 +52,7 @@ class ImageContent(Content):
     type: str = ContentType.IMAGE_URL.value
     image_urls: list[str]
 
-    @model_serializer
+    @model_serializer(mode='plain')
     def serialize_model(self) -> list[dict[str, str | dict[str, str]]]:
         images: list[dict[str, str | dict[str, str]]] = []
         for url in self.image_urls:
@@ -94,8 +94,8 @@ class Message(BaseModel):
     def contains_image(self) -> bool:
         return any(isinstance(content, ImageContent) for content in self.content)
 
-    @model_serializer
-    def serialize_model(self) -> dict:
+    @model_serializer(mode='plain')
+    def serialize_model(self) -> dict[str, Any]:
         # We need two kinds of serializations:
         # - into a single string: for providers that don't support list of content items (e.g. no vision, no tool calls)
         # - into a list of content items: the new APIs of providers with vision/prompt caching/tool calls
@@ -107,18 +107,18 @@ class Message(BaseModel):
         # some providers, like HF and Groq/llama, don't support a list here, but a single string
         return self._string_serializer()
 
-    def _string_serializer(self) -> dict:
+    def _string_serializer(self) -> dict[str, Any]:
         # convert content to a single string
         content = '\n'.join(
             item.text for item in self.content if isinstance(item, TextContent)
         )
-        message_dict: dict = {'content': content, 'role': self.role}
+        message_dict: dict[str, Any] = {'content': content, 'role': self.role}
 
         # add tool call keys if we have a tool call or response
         return self._add_tool_call_keys(message_dict)
 
-    def _list_serializer(self) -> dict:
-        content: list[dict] = []
+    def _list_serializer(self) -> dict[str, Any]:
+        content: list[dict[str, Any]] = []
         role_tool_with_prompt_caching = False
         for item in self.content:
             d = item.model_dump()
@@ -143,7 +143,7 @@ class Message(BaseModel):
                 # We know d is a list for ImageContent
                 content.extend([d] if isinstance(d, dict) else d)
 
-        message_dict: dict = {'content': content, 'role': self.role}
+        message_dict: dict[str, Any] = {'content': content, 'role': self.role}
 
         if role_tool_with_prompt_caching:
             message_dict['cache_control'] = {'type': 'ephemeral'}
@@ -151,7 +151,7 @@ class Message(BaseModel):
         # add tool call keys if we have a tool call or response
         return self._add_tool_call_keys(message_dict)
 
-    def _add_tool_call_keys(self, message_dict: dict) -> dict:
+    def _add_tool_call_keys(self, message_dict: dict[str, Any]) -> dict[str, Any]:
         """Add tool call keys if we have a tool call or response.
 
         NOTE: this is necessary for both native and non-native tool calling
