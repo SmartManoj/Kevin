@@ -227,8 +227,7 @@ install-python-dependencies:
 			sudo apt update; \
 			sudo apt-get install -y python$(PYTHON_VERSION)-dev build-essential; \
 		else \
-			echo "$(RED)python$(PYTHON_VERSION)-dev is required. Please install python$(PYTHON_VERSION)-dev to continue.$(RESET)"; \
-			exit 1; \
+			echo "$(RED)Please install python$(PYTHON_VERSION)-dev if you get any dependency errors.$(RESET)"; \
 		fi; \
 	fi
 	@if [ -z "${QUIET_INSTALL}" ]; then \
