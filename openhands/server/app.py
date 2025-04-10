@@ -155,8 +155,12 @@ async def get_github_details(request: Request):
 @app.get("/version")
 async def version():
     """Get the version of the app"""
+    try:
+        short_sha = open('version.txt').read().strip()
+    except Exception:
+        short_sha = "unknown"
     return JSONResponse(
-        content={"version": __version__},
+        content={"version": __version__, "short_sha": short_sha},
         status_code=200
     )
 

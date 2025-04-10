@@ -1,4 +1,5 @@
 ARG OPENHANDS_BUILD_VERSION=dev
+ARG GIT_HASH=unknown
 FROM node:21.7.2-bookworm-slim AS frontend-builder
 
 WORKDIR /app
@@ -34,6 +35,7 @@ FROM python:3.12.3-slim AS openhands-app
 WORKDIR /app
 
 ARG OPENHANDS_BUILD_VERSION #re-declare for this section
+ARG GIT_HASH #re-declare for this section
 
 ENV RUN_AS_OPENHANDS=true
 # A random number--we need this to be different from the user's UID on the host machine
@@ -93,6 +95,9 @@ RUN find /app \! -group app -exec chgrp app {} +
 
 COPY --chown=openhands:app --chmod=770 --from=frontend-builder /app/build ./frontend/build
 COPY --chown=openhands:app --chmod=770 ./containers/app/entrypoint.sh /app/entrypoint.sh
+
+# Create version.txt with git hash
+RUN echo "$GIT_HASH" > /app/version.txt && chown openhands:app /app/version.txt && chmod 644 /app/version.txt
 
 USER root
 

@@ -168,6 +168,7 @@ echo "Building for platform(s): $platform"
 docker buildx build \
   $args \
   --build-arg OPENHANDS_BUILD_VERSION="$OPENHANDS_BUILD_VERSION" \
+  --build-arg GIT_HASH="$git_hash" \
   --cache-from=type=registry,ref=$DOCKER_REPOSITORY:$cache_tag \
   --cache-from=type=registry,ref=$DOCKER_REPOSITORY:$cache_tag_base-main \
   --platform $platform \
