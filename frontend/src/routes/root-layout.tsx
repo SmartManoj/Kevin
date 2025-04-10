@@ -129,8 +129,8 @@ export default function MainApp() {
         <Outlet />
       </div>
 
-      {/* {renderAuthModal && <AuthModal githubAuthUrl={gitHubAuthUrl} />}
-      {config.data?.APP_MODE === "oss" && consentFormIsOpen && (
+      {renderAuthModal && <AuthModal githubAuthUrl={gitHubAuthUrl} />}
+      {/* {config.data?.APP_MODE === "oss" && consentFormIsOpen && (
         <AnalyticsConsentFormModal
           onClose={() => {
             setConsentFormIsOpen(false);
