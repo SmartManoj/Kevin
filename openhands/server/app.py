@@ -152,6 +152,14 @@ async def get_github_details(request: Request):
     )
 
 
+@app.get("/version")
+async def version():
+    """Get the version of the app"""
+    return JSONResponse(
+        content={"version": __version__},
+        status_code=200
+    )
+
 if os.environ.get("APP_MODE") != "saas":
     app.include_router(config_ui_router)
 
