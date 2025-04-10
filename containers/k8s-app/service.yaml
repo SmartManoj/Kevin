@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: sandbox-service
+  name: app-service
 spec:
   selector:
-    app: sandbox
+    app: app
   ports:
     - protocol: TCP
-      port: 63730
-      targetPort: 63730
+      port: 8000
+      targetPort: 8000
   type: LoadBalancer

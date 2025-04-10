@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kevin-sandbox-service
+spec:
+  selector:
+    app: kevin-sandbox
+  ports:
+    - protocol: TCP
+      port: 63730
+      targetPort: 63730
+  type: LoadBalancer
