@@ -11,6 +11,7 @@ from openhands.core.config.config_utils import (
 )
 from openhands.core.config.extended_config import ExtendedConfig
 from openhands.core.config.llm_config import LLMConfig
+from openhands.core.config.mcp_config import MCPConfig
 from openhands.core.config.sandbox_config import SandboxConfig
 from openhands.core.config.security_config import SecurityConfig
 
@@ -56,6 +57,7 @@ class AppConfig(BaseModel):
         dont_restore_state: Whether to not restore state from cli session.
         cli_multiline_input: Whether to enable multiline input in CLI. When disabled,
             input is read line by line. When enabled, input continues until /exit command.
+        mcp: MCP configuration settings.
     """
     # custom configs
     workspace_base: str | None = './workspace'
@@ -101,6 +103,7 @@ class AppConfig(BaseModel):
     max_concurrent_conversations: int = Field(
         default=3
     )  # Maximum number of concurrent agent loops allowed per user
+    mcp: MCPConfig = Field(default_factory=MCPConfig)
 
     show_workspace_contents: bool = True
     override_UI_settings: bool = False

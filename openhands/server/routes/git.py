@@ -23,7 +23,7 @@ from openhands.integrations.service_types import (
     User,
 )
 from openhands.server.auth import get_access_token, get_provider_tokens
-from openhands.server.types import AppMode
+from openhands.server.shared import server_config
 
 app = APIRouter(prefix='/api/user')
 app2 = APIRouter(prefix='/api/github')
@@ -40,7 +40,9 @@ async def get_user_repositories(
         )
 
         try:
-            repos: list[Repository] = await client.get_repositories(sort, server_config.app_mode)
+            repos: list[Repository] = await client.get_repositories(
+                sort, server_config.app_mode
+            )
             return repos
 
         except AuthenticationError as e:

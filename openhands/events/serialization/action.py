@@ -24,6 +24,8 @@ from openhands.events.action.files import (
 )
 from openhands.events.action.message import MessageAction, RegenerateAction
 from openhands.events.action.tasks import AddTaskAction, ModifyTaskAction
+from openhands.events.action.mcp import McpAction
+from openhands.events.action.message import MessageAction
 
 actions = (
     NullAction,
@@ -45,6 +47,7 @@ actions = (
     MessageAction,
     RegenerateAction,
     CondensationAction,
+    McpAction,
 )
 
 ACTION_TYPE_TO_CLASS = {action_class.action: action_class for action_class in actions}  # type: ignore[attr-defined]
