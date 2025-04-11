@@ -234,6 +234,7 @@ install-python-dependencies:
 		echo "$(BLUE)Detected Manjaro Linux. Installing Playwright dependencies...$(RESET)"; \
 		poetry run pip install playwright; \
 		poetry run playwright install chromium; \
+	fi
 	@if [ -n "${POETRY_GROUP}" ]; then \
 		echo "Installing only POETRY_GROUP=${POETRY_GROUP}"; \
 		poetry install --only $${POETRY_GROUP}; \
