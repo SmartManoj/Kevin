@@ -26,6 +26,7 @@ concurrency:
 
 env:
   RELEVANT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  GITHUB_REPO_NAME: ${{ github.repository }}
 
 jobs:
   define-matrix:
