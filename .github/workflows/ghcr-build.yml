@@ -29,7 +29,7 @@ env:
 
 jobs:
   define-matrix:
-    runs-on: blacksmith
+    runs-on: ubuntu-latest
     outputs:
       base_image: ${{ steps.define-base-images.outputs.base_image }}
     steps:
