@@ -148,7 +148,13 @@ class Session:
         mcp_tools = await fetch_mcp_tools_from_config(self.config.mcp)
         agent = Agent.get_cls(agent_cls)(llm, agent_config)
         # store agent, language, model in environmnet for feeedback
-        git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('utf-8').strip()
+        try:
+            git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('utf-8').strip()
+        except Exception as e:
+            try:
+                git_hash = open('version.txt', 'r').read().strip()
+            except Exception as e:
+                git_hash = 'unknown'
 
         os.environ['OPENHANDS_AGENT'] = agent_cls
         os.environ['OPENHANDS_LANGUAGE'] = settings.language.upper() + ' | ' + 'Using Kevin Fork on ' + git_hash[:7]
