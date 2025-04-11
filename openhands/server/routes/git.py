@@ -26,7 +26,6 @@ from openhands.server.auth import get_access_token, get_provider_tokens
 from openhands.server.shared import server_config
 
 app = APIRouter(prefix='/api/user')
-app2 = APIRouter(prefix='/api/github')
 
 @app.get('/repositories', response_model=list[Repository])
 async def get_user_repositories(
@@ -165,7 +164,6 @@ async def search_repositories(
     )
 
 
-@app2.get('/callback')
 @app.get('/callback')
 async def github_callback(
     request: Request,
