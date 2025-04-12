@@ -145,9 +145,11 @@ class RemoteRuntime(ActionExecutionClient):
 
     def _check_existing_runtime(self) -> bool:
         try:
+            self.persist_sandbox = self.config.sandbox.persist_sandbox
+            session_id = self.user_id if self.persist_sandbox else self.sid
             response = self._send_runtime_api_request(
                 'GET',
-                f'{self.config.sandbox.remote_runtime_api_url}/sessions/{self.sid}',
+                f'{self.config.sandbox.remote_runtime_api_url}/sessions/{session_id}',
             )
             data = response.json()
             status = data.get('status')
