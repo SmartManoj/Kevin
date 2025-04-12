@@ -48,7 +48,7 @@ def strip_ansi(o: str) -> str:
 
 
 class JupyterKernel:
-    def __init__(self, url_suffix, convid, lang='python'):
+    def __init__(self, url_suffix: str, convid: str, lang: str = 'python') -> None:
         if 'https' not in url_suffix:
             self.base_url = f'http://{url_suffix}'
             self.base_ws_url = f'ws://{url_suffix}'
@@ -57,18 +57,18 @@ class JupyterKernel:
             self.base_url = url_suffix
             self.base_ws_url = url_suffix.replace('https:', 'wss:')
         self.lang = lang
-        self.kernel_id = None
-        self.ws = None
+        self.kernel_id: str | None = None
+        self.ws: tornado.websocket.WebSocketClientConnection | None = None
         self.convid = convid
         logging.info(
             f'Jupyter kernel created for conversation {convid} at {url_suffix}'
         )
 
         self.heartbeat_interval = 10000  # 10 seconds
-        self.heartbeat_callback = None
+        self.heartbeat_callback: PeriodicCallback | None = None
         self.initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         await self.execute(r'%colors nocolor')
         # pre-defined tools
         self.tools_to_run: list[str] = [
@@ -79,7 +79,7 @@ class JupyterKernel:
             logging.info(f'Tool [{tool}] initialized:\n{res}')
         self.initialized = True
 
-    async def _send_heartbeat(self):
+    async def _send_heartbeat(self) -> None:
         if not self.ws:
             return
         try:
@@ -94,7 +94,7 @@ class JupyterKernel:
                     'ConnectionRefusedError: Failed to reconnect to kernel websocket - Is the kernel still running?'
                 )
 
-    async def _connect(self):
+    async def _connect(self) -> None:
         if self.ws:
             self.ws.close()
             self.ws = None
@@ -142,7 +142,7 @@ class JupyterKernel:
         stop=stop_after_attempt(3),
         wait=wait_fixed(2),
     )
-    async def execute(self, code, timeout=120):
+    async def execute(self, code: str, timeout: int = 120) -> str:
         if not self.ws:
             await self._connect()
 
@@ -174,46 +174,49 @@ class JupyterKernel:
         )
         logging.info(f'Executed code in jupyter kernel:\n{res}')
 
-        outputs = []
+        outputs: list[str] = []
 
-        async def wait_for_messages():
+        async def wait_for_messages() -> bool:
             execution_done = False
             while not execution_done:
                 assert self.ws is not None
                 msg = await self.ws.read_message()
                 if msg is None:
                     continue
-                msg = json_decode(msg)
-                msg_type = msg['msg_type']
-                parent_msg_id = msg['parent_header'].get('msg_id', None)
+                msg_dict = json_decode(msg)
+                msg_type = msg_dict['msg_type']
+                parent_msg_id = msg_dict['parent_header'].get('msg_id', None)
 
                 if parent_msg_id != msg_id:
                     continue
 
-                logging.debug(
-                    f"MSG TYPE: {msg_type.upper()} DONE:{execution_done}\nCONTENT: {msg['content']}"
-                )
+                if os.environ.get('DEBUG'):
+                    logging.info(
+                        f"MSG TYPE: {msg_type.upper()} DONE:{execution_done}\nCONTENT: {msg_dict['content']}"
+                    )
 
                 if msg_type == 'error':
-                    traceback = '\n'.join(msg['content']['traceback'])
+                    traceback = '\n'.join(msg_dict['content']['traceback'])
                     outputs.append(traceback)
                     execution_done = True
                 elif msg_type == 'stream':
-                    outputs.append(msg['content']['text'])
+                    outputs.append(msg_dict['content']['text'])
                 elif msg_type in ['execute_result', 'display_data']:
-                    outputs.append(msg['content']['data'].get('text/plain', ''))
-                    if 'image/png' in msg['content']['data']:
+                    outputs.append(msg_dict['content']['data'].get('text/plain', ''))
+                    if 'image/png' in msg_dict['content']['data']:
                         # use markdone to display image (in case of large image)
                         outputs.append(
-                            f"\n![image](data:image/png;base64,{msg['content']['data']['image/png']})\n"
+                            f"\n![image](data:image/png;base64,{msg_dict['content']['data']['image/png']})\n"
                         )
 
                 elif msg_type == 'execute_reply':
                     execution_done = True
             return execution_done
 
-        async def interrupt_kernel():
+        async def interrupt_kernel() -> None:
             client = AsyncHTTPClient()
+            if self.kernel_id is None:
+                return
             interrupt_response = await client.fetch(
                 f'{self.base_url}/api/kernels/{self.kernel_id}/interrupt',
                 method='POST',
@@ -239,7 +242,7 @@ class JupyterKernel:
             logging.info(f'OUTPUT:\n{ret}')
         return ret
 
-    async def shutdown_async(self):
+    async def shutdown_async(self) -> None:
         if self.kernel_id:
             client = AsyncHTTPClient()
             await client.fetch(
@@ -253,10 +256,10 @@ class JupyterKernel:
 
 
 class ExecuteHandler(tornado.web.RequestHandler):
-    def initialize(self, jupyter_kernel):
+    def initialize(self, jupyter_kernel: JupyterKernel) -> None:
         self.jupyter_kernel = jupyter_kernel
 
-    async def post(self):
+    async def post(self) -> None:
         data = json_decode(self.request.body)
         code = data.get('code')
 
@@ -270,7 +273,7 @@ class ExecuteHandler(tornado.web.RequestHandler):
         self.write(output)
 
 
-def make_app(url='localhost'):
+def make_app(url: str = 'localhost') -> tornado.web.Application:
     jupyter_kernel = JupyterKernel(
         f"{url}:{os.environ.get('JUPYTER_GATEWAY_PORT')}",
         os.environ.get('JUPYTER_GATEWAY_KERNEL_ID'),

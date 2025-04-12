@@ -292,6 +292,7 @@ def get_config(
 def initialize_runtime(
     runtime: Runtime,
     instance: pd.Series,  # this argument is not required
+    metadata: EvalMetadata,
 ):
     """Initialize the runtime for the agent.
 
@@ -681,7 +682,7 @@ def process_instance(
     call_async_from_sync(runtime.connect)
 
     try:
-        initialize_runtime(runtime, instance)
+        initialize_runtime(runtime, instance, metadata)
 
         message_action = get_instruction(instance, metadata)
 
