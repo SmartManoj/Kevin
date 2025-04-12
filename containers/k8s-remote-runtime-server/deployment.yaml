@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-remote-runtime-server
+  labels:
+    app: k8s-remote-runtime-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-remote-runtime-server
+  template:
+    metadata:
+      labels:
+        app: k8s-remote-runtime-server
+    spec:
+      containers:
+        - name: k8s-remote-runtime-server
+          image: smartmanoj/remote_runtime_server:latest
+          ports:
+            - containerPort: 12345
