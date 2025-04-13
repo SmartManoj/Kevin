@@ -1,4 +1,5 @@
 import os
+import subprocess
 import traceback
 import warnings
 from contextlib import asynccontextmanager
@@ -157,7 +158,10 @@ async def version():
     try:
         short_sha = open('version.txt').read().strip()
     except Exception:
-        short_sha = "unknown"
+        try:
+            short_sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
+        except Exception:
+            short_sha = "unknown"
     return JSONResponse(
         content={"version": __version__, "short_sha": short_sha},
         status_code=200
