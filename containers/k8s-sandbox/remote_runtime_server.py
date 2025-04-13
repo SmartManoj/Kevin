@@ -1,9 +1,11 @@
 import subprocess
+import os
 
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 import uvicorn
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 app = FastAPI(title="Remote Runtime Kubernetes Server")
 
 class Data(BaseModel):
@@ -32,7 +34,7 @@ async def get_session(session_id):
         session_id = '0'
     if session_id not in ip_dict:
         # create sandbox
-        output = subprocess.run(["python", "create_sandbox.py", session_id], capture_output=True, text=True, shell=True,).stdout.strip().split("\n")
+        output = subprocess.run(["python3", "create_sandbox.py", session_id], capture_output=True, text=True).stdout.strip().split("\n")
         print(output)
         ip = output[-1]
         print(session_id, ip)
@@ -55,5 +57,5 @@ async def get_runtime(runtime_id):
         return {"runtime_id": runtime_id, "pod_status": "not_found"}
 
 if __name__ == "__main__":
-    uvicorn.run('remote_runtime_server:app', host="0.0.0.0", port=12345, reload=True)
+    uvicorn.run('remote_runtime_server:app', host="0.0.0.0", port=12345, reload=0)
 
