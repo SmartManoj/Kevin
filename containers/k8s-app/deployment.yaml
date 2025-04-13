@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
       - name: app
+        imagePullPolicy: Always
         image: ghcr.io/smartmanoj/kevin-app:kevin
         command: ["uvicorn", "openhands.server.listen:app", "--host", "0.0.0.0", "--port", "8000"]
         ports:
