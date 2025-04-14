@@ -309,6 +309,7 @@ class AgentSession:
                 headless_mode=False,
                 attach_to_existing=False,
                 env_vars=env_vars,
+                user_id=self.user_id,
             )
 
         try:
