@@ -225,9 +225,7 @@ class GitlabIssueHandler(IssueHandlerInterface):
         data = response.json()
         return str(data['default_branch'])
 
-    def create_pull_request(self, data: dict[str, Any] | None = None) -> dict[str, Any]:
-        if data is None:
-            data = {}
+    def create_pull_request(self, data: dict[str, Any]) -> dict[str, Any]:
         response = httpx.post(
             f'{self.base_url}/merge_requests', headers=self.headers, json=data
         )

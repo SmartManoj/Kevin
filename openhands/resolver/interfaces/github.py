@@ -228,9 +228,8 @@ class GithubIssueHandler(IssueHandlerInterface):
         data = response.json()
         return str(data['default_branch'])
 
-    def create_pull_request(self, data: dict[str, Any] | None = None) -> dict[str, Any]:
-        if data is None:
-            data = {}
+    def create_pull_request(self, data: dict[str, Any]) -> dict[str, Any]:
+        logger.info(f'Creating pull request with data: {data}')
         response = httpx.post(f'{self.base_url}/pulls', headers=self.headers, json=data)
         if response.status_code == 403:
             raise RuntimeError(
