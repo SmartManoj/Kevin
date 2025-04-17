@@ -369,6 +369,8 @@ class GithubPRHandler(GithubIssueHandler):
                                             nodes {
                                                 body
                                                 path
+                                                line
+                                                startLine
                                                 fullDatabaseId
                                             }
                                         }
@@ -449,8 +451,11 @@ class GithubPRHandler(GithubIssueHandler):
                         )  # Add each thread in a new line
 
                     file = review_thread.get('path')
+                    start_line = review_thread.get('startLine')
+                    line = review_thread.get('line')
                     if file and file not in files:
-                        files.append(file)
+                        file_entry = {'file': file, 'line': line, 'startLine': start_line}
+                        files.append(file_entry)
 
                 if comment_id is None or thread_contains_comment_id:
                     unresolved_thread = ReviewThread(comment=message, files=files)

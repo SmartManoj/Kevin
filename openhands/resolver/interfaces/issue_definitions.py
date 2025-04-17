@@ -142,7 +142,16 @@ class ServiceContextPR(ServiceContext):
             ]
             review_thread_files = []
             for review_thread in issue.review_threads:
-                review_thread_files.extend(review_thread.files)
+                # Add file name and line number if available, else use None for line number
+                for file in review_thread.files:
+                    if isinstance(file, dict):
+                        if file['startLine'] == file['line']:
+                            file_str = f'{file["file"]}:{file["line"]}'
+                        else:
+                            file_str = f'{file["file"]}:{file["startLine"]}-{file["line"]}'
+                        review_thread_files.append(file_str)
+                    else: # TODO: modify for GitLab
+                        review_thread_files.append(file)
             review_thread_str = json.dumps(review_threads, indent=4)
             review_thread_file_str = json.dumps(review_thread_files, indent=4)
             images.extend(extract_image_urls(review_thread_str))

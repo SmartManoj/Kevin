@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class ReviewThread(BaseModel):
     comment: str
-    files: list[str]
+    files: list[dict]
 
 
 class Issue(BaseModel):
