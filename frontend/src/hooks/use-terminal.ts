@@ -13,26 +13,41 @@ import { useWsClient } from "#/context/ws-client-provider";
 
 interface UseTerminalConfig {
   commands: Command[];
-  secrets: string[];
-  disabled: boolean;
 }
 
 const DEFAULT_TERMINAL_CONFIG: UseTerminalConfig = {
   commands: [],
-  secrets: [],
-  disabled: false,
 };
+
+const renderCommand = (command: Command, terminal: Terminal) => {
+  const { content, type } = command;
+
+  if (type === "input") {
+    terminal.write("$ ");
+    terminal.writeln(
+      parseTerminalOutput(content.replaceAll("\n", "\r\n").trim()),
+    );
+  } else {
+    terminal.write(`\n`);
+    terminal.writeln(
+      parseTerminalOutput(content.replaceAll("\n", "\r\n").trim()),
+    );
+    terminal.write(`\n`);
+  }
+};
+
+// Create a persistent reference that survives component unmounts
+// This ensures terminal history is preserved when navigating away and back
+const persistentLastCommandIndex = { current: 0 };
 
 export const useTerminal = ({
   commands,
-  secrets,
-  disabled,
 }: UseTerminalConfig = DEFAULT_TERMINAL_CONFIG) => {
   const { send } = useWsClient();
   const terminal = React.useRef<Terminal | null>(null);
   const fitAddon = React.useRef<FitAddon | null>(null);
   const ref = React.useRef<HTMLDivElement>(null);
-  const lastCommandIndex = React.useRef(0);
+  const lastCommandIndex = persistentLastCommandIndex; // Use the persistent reference
   const lastCommand = React.useRef("");
   const keyEventDisposable = React.useRef<{ dispose: () => void } | null>(null);
 
@@ -100,56 +115,38 @@ export const useTerminal = ({
   };
 
   React.useEffect(() => {
-    /* Create a new terminal instance */
     terminal.current = createTerminal();
     fitAddon.current = new FitAddon();
 
-    let resizeObserver: ResizeObserver | null = null;
     
     if (ref.current) {
-      /* Initialize the terminal in the DOM */
       initializeTerminal();
-
-      terminal.current.write("kevin@kevin-workspace:/workspace $ ");
-      /* Listen for resize events */
-      resizeObserver = new ResizeObserver(() => {
-        fitAddon.current?.fit();
-      });
-      resizeObserver.observe(ref.current);
+      // Render all commands in array
+      // This happens when we just switch to Terminal from other tabs
+      if (commands.length > 0) {
+        for (let i = 0; i < commands.length; i += 1) {
+          renderCommand(commands[i], terminal.current);
+        }
+        lastCommandIndex.current = commands.length;
+      }
     }
 
     return () => {
       terminal.current?.dispose();
-      resizeObserver?.disconnect();
     };
-  }, []);
+  }, [commands]);
 
   React.useEffect(() => {
-    /* Write commands to the terminal */
-    if (terminal.current && commands.length > 0) {
-      // commands would be cleared. Reset the last command index
-      if (lastCommandIndex.current >= commands.length) {
-        lastCommandIndex.current = 0;
-        terminal.current?.clear();
-      }
-      // Start writing commands from the last command index
+    // Render new commands when they are added to the commands array
+    if (
+      terminal.current &&
+      commands.length > 0 &&
+      lastCommandIndex.current < commands.length
+    ) {
       for (let i = lastCommandIndex.current; i < commands.length; i += 1) {
-        // eslint-disable-next-line prefer-const
-        let { content, type } = commands[i];
-        secrets.forEach((secret) => {
-          content = content.replaceAll(secret, "*".repeat(10));
-        });
-
-        terminal.current?.writeln(
-          parseTerminalOutput(content.replaceAll("\n", "\r\n").trim()),
-        );
-
-        if (type === "output") {
-          terminal.current.write(`\n$ `);
-        }
+        renderCommand(commands[i], terminal.current);
       }
-
-      lastCommandIndex.current = commands.length; // Update the position of the last command
+      lastCommandIndex.current = commands.length;
     }
   }, [commands]);
 
@@ -159,12 +156,7 @@ export const useTerminal = ({
 
   
   React.useEffect(() => {
-    if (terminal.current) {
-      // Dispose of existing listeners if they exist
-      if (keyEventDisposable.current) {
-        keyEventDisposable.current.dispose();
-        keyEventDisposable.current = null;
-      }
+    let resizeObserver: ResizeObserver | null = null;
 
       let commandBuffer = "";
       const handleContextMenu = (e: MouseEvent) => {
@@ -212,7 +204,7 @@ export const useTerminal = ({
         // right click to paste
         terminalElement.addEventListener("contextmenu", handleContextMenu);
       }
-      if (!disabled) {
+      if (terminal.current) {
         // Add new key event listener and store the disposable
         keyEventDisposable.current = terminal.current.onKey(({ key, domEvent }) => {
           if (domEvent.key === "Enter") {
@@ -243,22 +235,19 @@ export const useTerminal = ({
             commandBuffer += text;
           }),
         );
-      } else {
-        // Add a noop handler when disabled
-        keyEventDisposable.current = terminal.current.onKey((e) => {
-          e.domEvent.preventDefault();
-          e.domEvent.stopPropagation();
-        });
-      }
+      } 
+    resizeObserver = new ResizeObserver(() => {
+      fitAddon.current?.fit();
+    });
+
+    if (ref.current) {
+      resizeObserver.observe(ref.current);
     }
 
     return () => {
-      if (keyEventDisposable.current) {
-        keyEventDisposable.current.dispose();
-        keyEventDisposable.current = null;
-      }
+      resizeObserver?.disconnect();
     };
-  }, [disabled]);
+  }, []);
 
   return { ref, clearTerminal };
 };

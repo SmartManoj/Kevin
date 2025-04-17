@@ -12,7 +12,11 @@ import socketio
 import openhands.core.config2 as config2
 from openhands.controller.agent import Agent
 from openhands.core.config import AppConfig
-from openhands.core.config.condenser_config import LLMSummarizingCondenserConfig
+from openhands.core.config.condenser_config import (
+    BrowserOutputCondenserConfig,
+    CondenserPipelineConfig,
+    LLMSummarizingCondenserConfig,
+)
 from openhands.core.logger import OpenHandsLoggerAdapter
 from openhands.core.schema import AgentState
 from openhands.events.action import MessageAction, NullAction
@@ -138,8 +142,18 @@ class Session:
         agent_config = self.config.get_agent_config(agent_cls)
 
         if settings.enable_default_condenser:
-            default_condenser_config = LLMSummarizingCondenserConfig(
-                llm_config=llm.config, keep_first=3, max_size=80
+            # Default condenser chains a condenser that limits browser the total
+            # size of browser observations with a condenser that limits the size
+            # of the view given to the LLM. The order matters: with the browser
+            # output first, the summarizer will only see the most recent browser
+            # output, which should keep the summarization cost down.
+            default_condenser_config = CondenserPipelineConfig(
+                condensers=[
+                    BrowserOutputCondenserConfig(),
+                    LLMSummarizingCondenserConfig(
+                        llm_config=llm.config, keep_first=3, max_size=80
+                    ),
+                ]
             )
 
             self.logger.info(f'Enabling default condenser: {default_condenser_config}')
