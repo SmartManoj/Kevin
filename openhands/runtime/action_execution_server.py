@@ -62,6 +62,7 @@ if os.environ.get('USE_PEXPECT') == '1' or 1:
     from openhands.runtime.utils.bash_pexpect import BashSession
 else:        
     from openhands.runtime.utils.bash import BashSession
+from openhands.runtime.utils.async_bash import AsyncBashSession
 from openhands.runtime.utils.file_viewer import generate_file_viewer_html
 from openhands.runtime.utils.files import insert_lines, read_lines
 from openhands.runtime.utils.memory_monitor import MemoryMonitor
@@ -283,6 +284,16 @@ class ActionExecutor:
     async def run(
         self, action: CmdRunAction
     ) -> CmdOutputObservation | ErrorObservation:
+        if action.is_static:
+            path = action.cwd or self._initial_cwd
+            result = await AsyncBashSession.execute(action.command, path)
+            obs = CmdOutputObservation(
+                content=result.content,
+                exit_code=result.exit_code,
+                command=action.command,
+            )
+            return obs
+
         assert self.bash_session is not None
         obs = await call_sync_from_async(self.bash_session.execute, action)
         return obs

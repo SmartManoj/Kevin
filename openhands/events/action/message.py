@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from typing import Any
 
+import openhands
 from openhands.core.schema import ActionType
 from openhands.events.action.action import Action, ActionSecurityRisk
 
@@ -39,3 +41,25 @@ class RegenerateAction(Action):
 
     def __str__(self) -> str:
         return f'**RegenerateAction** (source={self.source})\n'
+@dataclass
+class SystemMessageAction(Action):
+    """
+    Action that represents a system message for an agent, including the system prompt
+    and available tools. This should be the first message in the event stream.
+    """
+
+    content: str
+    tools: list[Any] | None = None
+    openhands_version: str | None = openhands.__version__
+    action: ActionType = ActionType.SYSTEM
+
+    @property
+    def message(self) -> str:
+        return self.content
+
+    def __str__(self) -> str:
+        ret = f'**SystemMessageAction** (source={self.source})\n'
+        ret += f'CONTENT: {self.content}'
+        if self.tools:
+            ret += f'\nTOOLS: {len(self.tools)} tools available'
+        return ret

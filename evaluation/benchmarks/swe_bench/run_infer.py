@@ -4,7 +4,7 @@ import json
 import os
 import re
 import tempfile
-from typing import Any
+from typing import Any, Literal
 
 import pandas as pd
 import toml
@@ -14,6 +14,11 @@ import openhands.agenthub
 from evaluation.benchmarks.swe_bench.infer_checker import check_if_resolved
 from evaluation.benchmarks.swe_bench.swe_bench2 import update_issue_description
 from evaluation.benchmarks.swe_bench.test_codes import get_test_code
+from evaluation.benchmarks.swe_bench.resource.swt_bench_constants import (
+    MAP_REPO_TO_TEST_FRAMEWORK_VERBOSE,
+    MAP_REPO_TO_INSTALL,
+    MAP_VERSION_TO_INSTALL
+)
 from evaluation.benchmarks.swe_bench.binary_patch_utils import (
     remove_binary_diffs,
     remove_binary_files_from_git,
@@ -61,6 +66,7 @@ from openhands.utils.shutdown_listener import sleep_if_should_continue
 check_if_resolved()
 USE_HINT_TEXT = os.environ.get('USE_HINT_TEXT', 'false').lower() == 'true'
 RUN_WITH_BROWSING = os.environ.get('RUN_WITH_BROWSING', 'false').lower() == 'true'
+BenchMode = Literal["swe", "swt", "swt-ci"]
 
 
 AGENT_CLS_TO_FAKE_USER_RESPONSE_FN = {
@@ -72,120 +78,38 @@ def _get_swebench_workspace_dir_name(instance: pd.Series) -> str:
     return f'{instance.repo}__{instance.get("version", "unknown")}'.replace('/', '__')
 
 
-def get_instruction(instance: pd.Series, metadata: EvalMetadata):
-    # workspace_dir_name = _get_swebench_workspace_dir_name(instance)
-    instance.problem_statement = update_issue_description(
-        instance.problem_statement, instance.instance_id
-    )
-    # Prepare instruction
-    # Instruction based on Anthropic's official trajectory
-    # https://github.com/eschluntz/swe-bench-experiments/tree/main/evaluation/verified/20241022_tools_claude-3-5-sonnet-updated/trajs
-    repo_path = '/testbed'
-    problem_statement = instance.problem_statement
-    instruction = (
-        f'Please address the following GitHub issue for the repository, where the source code is available in the {repo_path} directory, which you have access to.\n'
-        '# Title\n'
-        f'{problem_statement}\n\n'
-        '\n$ pwd\n\n'
-        f'{repo_path}\n\n'
-    )
-    if 1:
-        if 1:
-            NEW_MRE = {
-            'QTable cannot take `dimensionless_unscaled` when creating table from `data`' : '''
-from astropy import units as u
-try:
-    u.Unit(0) # Unit with scale 0 is meaningless.
-    print("Error should have been raised.")
-except Exception as e:
-    print(f"Successfully got the exception as expected.")
-        '''.strip()
-        }
-            title = problem_statement.split('\n')[0]
-            code = NEW_MRE.get(title)
-            if code:
-                instruction = fr'# Create the following test code and make it pass (Don\'t modify the test code itself). Library code is installed in /testbed directory.\n```python\n{code}\n```\n\n'
-            if title == 'Provide a way to make a copy of a model with different parameter values, or be more flexible with parameter shape' and 0:
-                instruction = fr''' Just only add the following function to the library code.
-in astropy/modeling/core.py in Model's class add after line 2530
-def _reset_parameters(self, *args, **kwargs):
-        \"""
-        Reset parameters on the models to those specified.
-        Parameters can be specified either as positional arguments or keyword
-        arguments, as in the model initializer. Any parameters not specified
-        will be reset to their default values.
-        \"""
-        self._initialize_parameters(args, kwargs)
-        self._initialize_slices()
-\n'''
-            numbered_instructions = [
-                # f'The best solution is to just raise an error for Unit(0).',
-                f'Reproduce the MRE by create a test code (add traceback.print_exc(limit=-2) if there is many lines of traceback) in a file and run it using bash. (You should not modify the test code itself.)',
-                f'If no traceback, locate the actual relevant library file that raised this error in {repo_path} using `search_class()` or `search_function()` python skill.',
-                'Inspect the function using `show_function_at_line()` or `show_function()` skill.',
-                'Instead of a simple workaround mentioned in the issue, identify the root cause of the issue in the library source code and fix it.',
-                'Test the fix.',
-                'Apply the same changes to other relevant classes in the file.'
-                'Check for similar issues that might be related to the current issue.'
-            ]
-            for k, inst in enumerate(numbered_instructions):
-                instruction += f'Step {k + 1}: {inst}\n\n'
-            important_instructions = [
-                'Response Guides: Escape triple double quotes properly.',
-                'Inspect the metaclass __call__() if any.',
-                'If KeyError is raised for a config dictionary, it must be that config is not passed correctly in the previous call. Don\'t simply add a check for the key in the config dictionary. Use show_function_at_line() to inspect the function definition of the previous call.',
-                'If you update min function, update max function too.',
-                'Add your valuable thoughts to every action you take.',
-                'Only use one skill at a time.',
-                'On exceptions, raise Error instead of giving wrong values.',
-                'For replace_lines_content, you can specify same line number for both start_line_number and end_line_number',
-                'The traceback must be read from bottom to top, with the final entry showing where the error occurred.',
-                'Wrap the code with triple backticks if it is a multi-line code block.',
-                'Internet is disabled.',
-                'Carefully verify the line numbers and range to ensure accurate code modification.',
-                'Very Very Important: Humanity is at stake. Do not give any workaround. Please fix the issue directly with atmost sincerity 🙏🙏🙏.'
-            ]
-        instruction += '\nImportant Instructions:\n\n'
-        for k,inst in enumerate(important_instructions):
-            instruction += f'{k + 1}: {inst}\n\n'
-        
-        instruction1 = (
-            'Do not provide suggestions or workarounds. Directly fix the issue by modifying the source code.\n'
-            'Plan:\n'
-            # '*) Reproduce the issue in the test code before fixing it;\n'
-            "*) Don't search for the user files in the repo because the user's code is an MRE (Minimal Reproducible Example) and wouldn't be part of the repository. It is verified that there is no issue in the user's code and this issue lies in the source code only. Focus only on modifying the existing repository code relevant to the issue instead. Search for the relevant files to modify using search_class, search_function and open_file agent skills instead of modifying the test files itself;\n"
-            '*) Use search_class instead of search_in_dir when searching for classes to modify;\n'
-            '*) Generate a robust fix.\n'
-            'Ensure the solution is robust, adheres to best practices, and supports framework customizations and extensibility.\n'
-            'Always preserve context and avoid resetting to defaults unless explicitly necessary.\n'
-            'Always use a dynamic approach wherever possible to ensure flexibility, compatibility, and robustness.\n'
-            'Always include comprehensive error handling in code modifications.\n'
-            # '*) Verify the fix.\n'
-            '*) Add similar functions too for better handling of edgecases\n'
-            '*) Update complementary functions too for robust functionality.\n'
-            # '*) Final step: Parameterize the existing test cases instead of adding a new function to verify the fix\n'
-            '\n'
-            'Add your valuable thoughts to every action you take.\n'
-            'For every thought: add previous logic and the new logic.\n'
-            'Do one file operation at a time.\n'
-            'Examine the traceback and understand the values of the variables in the traceback.\n'
-            'Determine the root cause of the issue and implement a direct fix, rather than employing a workaround.\n'
-            'Think about edgecases and make sure your fix handles them as well\n'
-            # "Please don't blabber\n"
-        )
-    else:
-        instruction += 'Just reproduce the issue only.'
-    if (
-        USE_HINT_TEXT
-        and instance.hints_text
-        and instance.instance_id != 'astropy__astropy-14365'
-    ):
-        instruction += f'# Hints\n{instance.hints_text}\n\n'
-    instruction += (
-        'IMPORTANT: You should ONLY interact with the environment provided to you AND NEVER ASK FOR HUMAN HELP.\n'
-        'You SHOULD INCLUDE PROPER INDENTATION in your edit commands.\n'
-    )
+def get_instruction(instance: pd.Series, metadata: EvalMetadata) -> MessageAction:
+    workspace_dir_name = _get_swebench_workspace_dir_name(instance)
+    mode = metadata.details["mode"]
+    if mode.startswith('swt'):
+        test_instructions = f"The following command can be used to run the tests: `{list(MAP_REPO_TO_TEST_FRAMEWORK_VERBOSE[instance.repo].values())[0]}`. Make sure they fail in the expected way.\n" if mode.endswith("ci") else ""
+        instruction = f"""\
+<uploaded_files>
+/workspace/{workspace_dir_name}
+</uploaded_files>
+I've uploaded a python code repository in the directory {workspace_dir_name}. Consider the following issue description:
 
+<issue_description>
+{instance.problem_statement}
+</issue_description>
+
+
+Can you help me implement the necessary changes to the repository to test whether the issue in <issue_description> was resolved?
+I will take care of all changes to any of the non-test files. This means you DON'T have to modify the actual logic and ONLY have to update test logic and tests!
+Your task is to make the minimal changes to tests files in the /workspace directory to reproduce the issue in the <issue_description>, i.e., such that the generated tests fail in the current state (where the issue is unresolved) and pass when the issue will be resolved.
+Follow these steps to reproduce the issue:
+1. As a first step, it might be a good idea to explore the repo to familiarize yourself with its structure.
+2. Create a script `reproduction.py` to reproduce the error and execute it with `python reproduction.py` using the BashTool, to confirm the error
+3. Edit the sourcecode of the repo to integrate your reproduction script into the test framework
+4. Run the test framework and make sure your tests fail! Only submit FAILING tests! Never submit passing tests.
+{test_instructions}Your thinking should be thorough and so it's fine if it's very long.
+"""
+    else:
+        instruction = f"""
+<uploaded_files>
+/workspace/{workspace_dir_name}
+</uploaded_files>
+"""
     # NOTE: You can actually set slightly different instruction for different agents
     # instruction += AGENT_CLS_TO_INST_SUFFIX[metadata.agent_class]
 
@@ -446,12 +370,41 @@ def initialize_runtime(
     logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     assert_and_raise(obs.exit_code == 0, f'Failed to remove git remotes: {str(obs)}')
 
-    # delete pycache
-    action = CmdRunAction(command='rm -rf __pycache__')
-    logger.info(action, extra={'msg_type': 'ACTION'})
-    obs = runtime.run_action(action)
-    logger.info(obs, extra={'msg_type': 'OBSERVATION'})
-    assert obs.exit_code == 0
+    if metadata.details["mode"] == "swt-ci":
+        # set up repo
+        setup_commands = []
+        if instance["repo"] in MAP_REPO_TO_INSTALL:
+            setup_commands.append(MAP_REPO_TO_INSTALL[instance["repo"]])
+
+        # Run pre-install set up if provided
+        install = MAP_VERSION_TO_INSTALL.get(instance['repo'], {}).get(instance['version'], [])
+        if "pre_install" in install:
+            for pre_install in install["pre_install"]:
+                setup_commands.append(pre_install)
+
+        if "install" in install:
+            setup_commands.append(install["install"])
+
+        for command in setup_commands:
+            action = CmdRunAction(command=command)
+            action.set_hard_timeout(600)
+            logger.info(action, extra={'msg_type': 'ACTION'})
+            obs = runtime.run_action(action)
+            logger.info(obs, extra={'msg_type': 'OBSERVATION'})
+
+
+    if 'multimodal' not in metadata.dataset.lower():
+        # Only for non-multimodal datasets, we need to activate the testbed environment for Python
+        # SWE-Bench multimodal datasets are not using the testbed environment
+        action = CmdRunAction(command='which python')
+        action.set_hard_timeout(600)
+        logger.info(action, extra={'msg_type': 'ACTION'})
+        obs = runtime.run_action(action)
+        logger.info(obs, extra={'msg_type': 'OBSERVATION'})
+        assert_and_raise(
+            obs.exit_code == 0 and 'testbed' in obs.content,
+            f'Expected to find python interpreter from testbed, but got: {str(obs)}',
+        )
 
     test_code = get_test_code(instance['instance_id'])
     test_code = f'''
@@ -538,7 +491,7 @@ def complete_runtime(
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
 
         # Then run the command again
-        action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
+        action = CmdRunAction(command=f'cd /testbed')
         action.set_hard_timeout(600)
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
@@ -782,6 +735,13 @@ if __name__ == '__main__':
         default='test',
         help='split to evaluate on',
     )
+    parser.add_argument(
+        '--mode',
+        type=str,
+        default='swe',
+        choices=['swe', 'swt', 'swt-ci'],
+        help="mode to run the evaluation, either 'swe', 'swt', or 'swt-ci'",
+    )
     args, _ = parser.parse_known_args()
 
     # NOTE: It is preferable to load datasets from huggingface datasets and perform post-processing
@@ -823,7 +783,7 @@ if __name__ == '__main__':
     if llm_config is None:
         raise ValueError(f'Could not find LLM config: --llm-config {args.llm_config}')
 
-    details = {}
+    details = {"mode": args.mode}
     _agent_cls = openhands.agenthub.Agent.get_cls(args.agent_cls)
 
     dataset_descrption = (

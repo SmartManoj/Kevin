@@ -1,9 +1,8 @@
 /**
- * Generates a URL to redirect to for GitHub OAuth
- * @param clientId The GitHub OAuth client ID
+ * Generates a URL to redirect to for OAuth authentication
+ * @param identityProvider The identity provider to use (e.g., "github", "gitlab")
  * @param requestUrl The URL of the request
- * @param offline True for offline session, defaults to false
- * @returns The URL to redirect to for GitHub OAuth
+ * @returns The URL to redirect to for OAuth
  */
 export const generateGitHubAuthUrl = (clientId: string, requestUrl: URL) => {
   const redirectUri = `${requestUrl.origin}/api/user/callback`;

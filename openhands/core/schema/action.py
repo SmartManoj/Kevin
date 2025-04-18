@@ -10,6 +10,10 @@ class ActionType(str, Enum):
     """Regenerates the message.
     """
 
+    SYSTEM = 'system'
+    """Represents a system message.
+    """
+
     START = 'start'
     """Starts a new development task OR send chat from the user. Only sent by the client.
     """
