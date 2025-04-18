@@ -114,7 +114,7 @@ class DockerRuntimeBuilder(RuntimeBuilder):
             for cmd in commands:
                 try:
                     subprocess.run(
-                        cmd, shell=True, check=True, stdout=subprocess.DEVNULL
+                        'sudo' + cmd, shell=True, check=True, stdout=subprocess.DEVNULL
                     )
                 except subprocess.CalledProcessError as e:
                     logger.error(f'Image build failed:\n{e}')
