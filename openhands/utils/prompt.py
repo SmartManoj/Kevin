@@ -70,7 +70,14 @@ class PromptManager:
                 microagent_dir
             )
             
+    def add_examples_to_initial_message(self, message: Message) -> None:
+        """Add example_message to the first user message."""
+        example_message = self.get_example_user_message() or None
 
+        # Insert it at the start of the TextContent list
+        if example_message:
+            message.content.insert(0, TextContent(text=example_message))
+            
     def _load_template(self, template_name: str) -> Template:
         if self.prompt_dir is None:
             raise ValueError('Prompt directory is not set')

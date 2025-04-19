@@ -135,6 +135,12 @@ class CodeActAgent(Agent):
             prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
         )
 
+        # Create a ConversationMemory instance
+        self.conversation_memory = ConversationMemory(self.config, self.prompt_manager)
+
+        self.condenser = Condenser.from_config(self.config.condenser)
+        logger.debug(f'Using condenser: {type(self.condenser)}')
+
     def get_action_message(
         self,
         action: Action,
@@ -557,12 +563,13 @@ class CodeActAgent(Agent):
         if not self.prompt_manager:
             raise Exception('Prompt Manager not instantiated.')
 
-        # Use ConversationMemory to process events (including SystemMessageAction)
-        messages = self.conversation_memory.process_events(
-            condensed_history=events,
-            max_message_chars=self.llm.config.max_message_chars,
-            vision_is_active=self.llm.vision_is_active(),
-        )
+        if self.config.function_calling:
+            # Use ConversationMemory to process events (including SystemMessageAction)
+            messages = self.conversation_memory.process_events(
+                condensed_history=events,
+                max_message_chars=self.llm.config.max_message_chars,
+                vision_is_active=self.llm.vision_is_active(),
+            )
 
         messages: list[Message] = [
             Message(
