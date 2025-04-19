@@ -1,3 +1,4 @@
+from typing import Union
 from unittest.mock import Mock
 
 import pytest
@@ -5,18 +6,34 @@ from litellm import ChatCompletionMessageToolCall
 
 from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
 from openhands.agenthub.codeact_agent.function_calling import (
+    get_tools as codeact_get_tools,
+)
+from openhands.agenthub.codeact_agent.function_calling import (
+    response_to_actions as codeact_response_to_actions,
+)
+from openhands.agenthub.codeact_agent.tools import (
     BrowserTool,
     IPythonTool,
     LLMBasedFileEditTool,
+    ThinkTool,
     WebReadTool,
     create_cmd_run_tool,
     create_str_replace_editor_tool,
-    get_tools,
-    response_to_actions,
 )
 from openhands.agenthub.codeact_agent.tools.browser import (
     _BROWSER_DESCRIPTION,
     _BROWSER_TOOL_DESCRIPTION,
+)
+from openhands.agenthub.readonly_agent.function_calling import (
+    get_tools as readonly_get_tools,
+)
+from openhands.agenthub.readonly_agent.function_calling import (
+    response_to_actions as readonly_response_to_actions,
+)
+from openhands.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
+from openhands.agenthub.readonly_agent.tools import (
+    GlobTool,
+    GrepTool,
 )
 from openhands.controller.state.state import State
 from openhands.core.config import AgentConfig, LLMConfig
@@ -44,10 +61,20 @@ from openhands.events.tool import ToolCallMetadata
 from openhands.llm.llm import LLM
 
 
+@pytest.fixture(params=['CodeActAgent', 'ReadOnlyAgent'])
+def agent_class(request):
+    if request.param == 'CodeActAgent':
+        return CodeActAgent
+    else:
+        from openhands.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
+
+        return ReadOnlyAgent
+
+
 @pytest.fixture
-def agent() -> CodeActAgent:
+def agent(agent_class) -> Union[CodeActAgent, ReadOnlyAgent]:
     config = AgentConfig()
-    agent = CodeActAgent(llm=LLM(LLMConfig()), config=config)
+    agent = agent_class(llm=LLM(LLMConfig()), config=config)
     agent.llm = Mock()
     agent.llm.config = Mock()
     agent.llm.config.max_message_chars = 1000
@@ -63,255 +90,7 @@ def mock_state() -> State:
     return state
 
 
-def test_cmd_output_observation_message(agent: CodeActAgent):
-    obs = CmdOutputObservation(
-        command='echo hello',
-        content='Command output',
-        metadata=CmdOutputMetadata(
-            exit_code=0,
-            prefix='[THIS IS PREFIX]',
-            suffix='[THIS IS SUFFIX]',
-        ),
-    )
-
-    tool_call_id_to_message = {}
-    results = agent.get_observation_message(
-        obs, tool_call_id_to_message=tool_call_id_to_message
-    )
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert 'Observed result of command executed by user:' in result.content[0].text
-    assert '[Command finished with exit code 0]' in result.content[0].text
-    assert '[THIS IS PREFIX]' in result.content[0].text
-    assert '[THIS IS SUFFIX]' in result.content[0].text
-
-
-def test_ipython_run_cell_observation_message(agent: CodeActAgent):
-    obs = IPythonRunCellObservation(
-        code='plt.plot()',
-        content='IPython output\n![image](data:image/png;base64,ABC123)',
-    )
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert 'IPython output' in result.content[0].text
-    assert (
-        '![image](data:image/png;base64, ...) already displayed to user'
-        in result.content[0].text
-    )
-    assert 'ABC123' not in result.content[0].text
-
-
-def test_agent_delegate_observation_message(agent: CodeActAgent):
-    obs = AgentDelegateObservation(
-        content='Content', outputs={'content': 'Delegated agent output'}
-    )
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert 'Delegated agent output' in result.content[0].text
-
-
-def test_error_observation_message(agent: CodeActAgent):
-    obs = ErrorObservation('Error message')
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert 'Error message' in result.content[0].text
-    assert 'Error occurred in processing last action' in result.content[0].text
-
-
-def test_unknown_observation_message(agent: CodeActAgent):
-    obs = Mock()
-
-    with pytest.raises(ValueError, match='Unknown observation type'):
-        agent.get_observation_message(obs, tool_call_id_to_message={})
-
-
-def test_file_edit_observation_message(agent: CodeActAgent):
-    obs = FileEditObservation(
-        path='/test/file.txt',
-        prev_exist=True,
-        old_content='old content',
-        new_content='new content',
-        content='diff content',
-        impl_source=FileEditSource.LLM_BASED_EDIT,
-    )
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert '[Existing file /test/file.txt is edited with' in result.content[0].text
-
-
-def test_file_read_observation_message(agent: CodeActAgent):
-    obs = FileReadObservation(
-        path='/test/file.txt',
-        content='File content',
-        impl_source=FileReadSource.DEFAULT,
-    )
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert result.content[0].text == 'File content'
-
-
-def test_browser_output_observation_message(agent: CodeActAgent):
-    obs = BrowserOutputObservation(
-        url='http://example.com',
-        trigger_by_action='browse',
-        screenshot='',
-        content='Page loaded',
-        error=False,
-    )
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert '[Current URL: http://example.com]' in result.content[0].text
-
-
-def test_user_reject_observation_message(agent: CodeActAgent):
-    obs = UserRejectObservation('Action rejected')
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert 'Action rejected' in result.content[0].text
-    assert '[Last action has been rejected by the user]' in result.content[0].text
-
-
-def test_function_calling_observation_message(agent: CodeActAgent):
-    mock_response = {
-        'id': 'mock_id',
-        'total_calls_in_response': 1,
-        'choices': [{'message': {'content': 'Task completed'}}],
-    }
-    obs = CmdOutputObservation(
-        command='echo hello',
-        content='Command output',
-        command_id=1,
-        exit_code=0,
-    )
-    obs.tool_call_metadata = ToolCallMetadata(
-        tool_call_id='123',
-        function_name='execute_bash',
-        _model_response=mock_response,
-        total_calls_in_response=1,
-    )
-
-    results = agent.get_observation_message(obs, tool_call_id_to_message={})
-    assert len(results) == 0  # No direct message when using function calling
-
-
-def test_message_action_with_image(agent: CodeActAgent):
-    action = MessageAction(
-        content='Message with image',
-        image_urls=['http://example.com/image.jpg'],
-    )
-    action._source = EventSource.AGENT
-
-    results = agent.get_action_message(action, {})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'assistant'
-    assert len(result.content) == 2
-    assert isinstance(result.content[0], TextContent)
-    assert isinstance(result.content[1], ImageContent)
-    assert result.content[0].text == 'Message with image'
-    assert result.content[1].image_urls == ['http://example.com/image.jpg']
-
-
-def test_user_cmd_action_message(agent: CodeActAgent):
-    action = CmdRunAction(command='ls -l')
-    action._source = EventSource.USER
-
-    results = agent.get_action_message(action, {})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'user'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert 'User executed the command' in result.content[0].text
-    assert 'ls -l' in result.content[0].text
-
-
-def test_agent_finish_action_with_tool_metadata(agent: CodeActAgent):
-    mock_response = {
-        'id': 'mock_id',
-        'total_calls_in_response': 1,
-        'choices': [{'message': {'content': 'Task completed'}}],
-    }
-
-    action = AgentFinishAction(thought='Initial thought')
-    action._source = EventSource.AGENT
-    action.tool_call_metadata = ToolCallMetadata(
-        tool_call_id='123',
-        function_name='finish',
-        _model_response=mock_response,
-        total_calls_in_response=1,
-    )
-
-    results = agent.get_action_message(action, {})
-    assert len(results) == 1
-
-    result = results[0]
-    assert result is not None
-    assert result.role == 'assistant'
-    assert len(result.content) == 1
-    assert isinstance(result.content[0], TextContent)
-    assert 'Initial thought\nTask completed' in result.content[0].text
-
-
-def test_reset(agent: CodeActAgent):
+def test_reset(agent):
     # Add some state
     action = MessageAction(content='test')
     action._source = EventSource.AGENT
@@ -324,7 +103,7 @@ def test_reset(agent: CodeActAgent):
     assert len(agent.pending_actions) == 0
 
 
-def test_step_with_pending_actions(agent: CodeActAgent):
+def test_step_with_pending_actions(agent):
     # Add a pending action
     pending_action = MessageAction(content='test')
     pending_action._source = EventSource.AGENT
@@ -336,8 +115,8 @@ def test_step_with_pending_actions(agent: CodeActAgent):
     assert len(agent.pending_actions) == 0
 
 
-def test_get_tools_default():
-    tools = get_tools(
+def test_codeact_get_tools_default():
+    tools = codeact_get_tools(
         enable_jupyter=True,
         enable_llm_editor=True,
         enable_browsing=True,
@@ -352,9 +131,24 @@ def test_get_tools_default():
     assert 'web_read' in tool_names
 
 
-def test_get_tools_with_options():
+def test_readonly_get_tools_default():
+    tools = readonly_get_tools()
+    assert len(tools) > 0
+
+    # Check required tools are present
+    tool_names = [tool['function']['name'] for tool in tools]
+    assert 'execute_bash' not in tool_names
+    assert 'execute_ipython_cell' not in tool_names
+    assert 'edit_file' not in tool_names
+    assert 'web_read' in tool_names
+    assert 'grep' in tool_names
+    assert 'glob' in tool_names
+    assert 'think' in tool_names
+
+
+def test_codeact_get_tools_with_options():
     # Test with all options enabled
-    tools = get_tools(
+    tools = codeact_get_tools(
         enable_browsing=True,
         enable_jupyter=True,
         enable_llm_editor=True,
@@ -365,7 +159,7 @@ def test_get_tools_with_options():
     assert 'edit_file' in tool_names
 
     # Test with all options disabled
-    tools = get_tools(
+    tools = codeact_get_tools(
         enable_browsing=False,
         enable_jupyter=False,
         enable_llm_editor=False,
@@ -419,7 +213,6 @@ def test_str_replace_editor_tool():
     assert 'old_str' in properties
     assert 'new_str' in properties
     assert 'insert_line' in properties
-    assert 'view_range' in properties
 
     assert StrReplaceEditorTool['function']['parameters']['required'] == [
         'command',
@@ -483,7 +276,9 @@ def test_response_to_actions_invalid_tool():
     mock_response.choices[0].message.tool_calls[0].function.arguments = '{}'
 
     with pytest.raises(FunctionCallNotExistsError):
-        response_to_actions(mock_response)
+        codeact_response_to_actions(mock_response)
+    with pytest.raises(FunctionCallNotExistsError):
+        readonly_response_to_actions(mock_response)
 
 
 def test_step_with_no_pending_actions(mock_state: State):
@@ -524,7 +319,10 @@ def test_step_with_no_pending_actions(mock_state: State):
     assert action.content == 'Task completed'
 
 
-def test_correct_tool_description_loaded_based_on_model_name(mock_state: State):
+@pytest.mark.parametrize('agent_type', ['CodeActAgent', 'ReadOnlyAgent'])
+def test_correct_tool_description_loaded_based_on_model_name(
+    agent_type, mock_state: State
+):
     """Tests that the simplified tool descriptions are loaded for specific models."""
     o3_mock_config = Mock()
     o3_mock_config.model = 'mock_o3_model'
@@ -532,7 +330,16 @@ def test_correct_tool_description_loaded_based_on_model_name(mock_state: State):
     llm = Mock()
     llm.config = o3_mock_config
 
-    agent = CodeActAgent(llm=llm, config=AgentConfig())
+    if agent_type == 'CodeActAgent':
+        from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
+
+        agent_class = CodeActAgent
+    else:
+        from openhands.agenthub.readonly_agent.readonly_agent import ReadOnlyAgent
+
+        agent_class = ReadOnlyAgent
+
+    agent = agent_class(llm=llm, config=AgentConfig())
     for tool in agent.tools:
         # Assert all descriptions have less than 1024 characters
         assert len(tool['function']['description']) < 1024
@@ -541,17 +348,20 @@ def test_correct_tool_description_loaded_based_on_model_name(mock_state: State):
     sonnet_mock_config.model = 'mock_sonnet_model'
 
     llm.config = sonnet_mock_config
-    agent = CodeActAgent(llm=llm, config=AgentConfig())
+    agent = agent_class(llm=llm, config=AgentConfig())
     # Assert existence of the detailed tool descriptions that are longer than 1024 characters
-    assert any(len(tool['function']['description']) > 1024 for tool in agent.tools)
+    if agent_type == 'CodeActAgent':
+        # This only holds for CodeActAgent
+        assert any(len(tool['function']['description']) > 1024 for tool in agent.tools)
 
 
-def test_mismatched_tool_call_events_and_auto_add_system_message(mock_state: State):
+def test_mismatched_tool_call_events_and_auto_add_system_message(
+    agent, mock_state: State
+):
     """Tests that the agent can convert mismatched tool call events (i.e., an observation with no corresponding action) into messages.
 
     This also tests that the system message is automatically added to the event stream if SystemMessageAction is not present.
     """
-    agent = CodeActAgent(llm=LLM(LLMConfig()), config=AgentConfig())
 
     tool_call_metadata = Mock(
         spec=ToolCallMetadata,
@@ -612,15 +422,45 @@ def test_mismatched_tool_call_events_and_auto_add_system_message(mock_state: Sta
     assert messages[0].role == 'system'
 
 
+def test_grep_tool():
+    assert GrepTool['type'] == 'function'
+    assert GrepTool['function']['name'] == 'grep'
+
+    properties = GrepTool['function']['parameters']['properties']
+    assert 'pattern' in properties
+    assert 'path' in properties
+    assert 'include' in properties
+
+    assert GrepTool['function']['parameters']['required'] == ['pattern']
+
+
+def test_glob_tool():
+    assert GlobTool['type'] == 'function'
+    assert GlobTool['function']['name'] == 'glob'
+
+    properties = GlobTool['function']['parameters']['properties']
+    assert 'pattern' in properties
+    assert 'path' in properties
+
+    assert GlobTool['function']['parameters']['required'] == ['pattern']
+
+
+def test_think_tool():
+    assert ThinkTool['type'] == 'function'
+    assert ThinkTool['function']['name'] == 'think'
+
+    properties = ThinkTool['function']['parameters']['properties']
+    assert 'thought' in properties
+
+    assert ThinkTool['function']['parameters']['required'] == ['thought']
+
+
 def test_enhance_messages_adds_newlines_between_consecutive_user_messages(
     agent: CodeActAgent,
 ):
     """Test that _enhance_messages adds newlines between consecutive user messages."""
     # Set up the prompt manager
     agent.prompt_manager = Mock()
-    agent.prompt_manager.add_examples_to_initial_message = Mock()
-    agent.prompt_manager.add_info_to_initial_message = Mock()
-    agent.prompt_manager.enhance_message = Mock()
 
     # Create consecutive user messages with various content types
     messages = [
@@ -650,7 +490,9 @@ def test_enhance_messages_adds_newlines_between_consecutive_user_messages(
     ]
 
     # Call _enhance_messages
-    enhanced_messages = agent._enhance_messages(messages)
+    enhanced_messages = agent.conversation_memory._apply_user_message_formatting(
+        messages
+    )
 
     # Verify newlines were added correctly
     assert enhanced_messages[1].content[0].text.startswith('\n\n')

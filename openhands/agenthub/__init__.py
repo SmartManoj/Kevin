@@ -8,6 +8,7 @@ from openhands.agenthub import (  # noqa: E402
     codeact_agent,
     dummy_agent,
     planner_agent,
+    readonly_agent,
     visualbrowsing_agent,
     browser_use_agent,
 )
@@ -21,4 +22,5 @@ __all__ = [
     'browsing_agent',
     'visualbrowsing_agent',
     'browser_use_agent',
+    'readonly_agent',
 ]

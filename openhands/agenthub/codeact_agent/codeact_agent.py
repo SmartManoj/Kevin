@@ -387,6 +387,8 @@ class CodeActAgent(Agent):
             )
         ]
 
+        self.response_to_actions_fn = codeact_function_calling.response_to_actions
+
     def reset(self) -> None:
         """Resets the CodeAct Agent."""
         super().reset()
@@ -519,7 +521,6 @@ class CodeActAgent(Agent):
         else:
             return self.action_parser.parse(response)
 
-        
 
     def _get_messages(self, events: list[Event]) -> list[Message]:
         system_role = 'user' if config2.model.startswith('o1-') else 'system'
@@ -556,32 +557,9 @@ class CodeActAgent(Agent):
         if not self.prompt_manager:
             raise Exception('Prompt Manager not instantiated.')
 
-        # Check if there's a SystemMessageAction in the events
-        has_system_message = any(
-            isinstance(event, SystemMessageAction) for event in events
-        )
-
-        # Legacy behavior: If no SystemMessageAction is found, add one
-        if not has_system_message:
-            logger.warning(
-                f'[{self.name}] No SystemMessageAction found in events. '
-                'Adding one for backward compatibility. '
-                'This is deprecated behavior and will be removed in a future version.'
-            )
-            system_message = self.get_system_message()
-            if system_message:
-                # Create a copy and insert at the beginning of the list
-                processed_events = list(events)
-                processed_events.insert(0, system_message)
-                logger.debug(
-                    f'[{self.name}] Added SystemMessageAction for backward compatibility'
-                )
-        else:
-            processed_events = events
-
         # Use ConversationMemory to process events (including SystemMessageAction)
         messages = self.conversation_memory.process_events(
-            condensed_history=processed_events,
+            condensed_history=events,
             max_message_chars=self.llm.config.max_message_chars,
             vision_is_active=self.llm.vision_is_active(),
         )
@@ -719,39 +697,3 @@ class CodeActAgent(Agent):
                         break
 
         return messages
-
-    def _enhance_messages(self, messages: list[Message]) -> list[Message]:
-        """Enhances the user message with additional context based on keywords matched.
-
-        Args:
-            messages (list[Message]): The list of messages to enhance
-
-        Returns:
-            list[Message]: The enhanced list of messages
-        """
-        assert self.prompt_manager, 'Prompt Manager not instantiated.'
-
-        results: list[Message] = []
-        is_first_message_handled = False
-        prev_role = None
-
-        for msg in messages:
-            if msg.role == 'user' and not is_first_message_handled:
-                is_first_message_handled = True
-                # compose the first user message with examples
-                self.prompt_manager.add_examples_to_initial_message(msg)
-
-            elif msg.role == 'user':
-                # Add double newline between consecutive user messages
-                if prev_role == 'user' and len(msg.content) > 0:
-                    # Find the first TextContent in the message to add newlines
-                    for content_item in msg.content:
-                        if isinstance(content_item, TextContent):
-                            # If the previous message was also from a user, prepend two newlines to ensure separation
-                            content_item.text = '\n\n' + content_item.text
-                            break
-
-            results.append(msg)
-            prev_role = msg.role
-
-        return results

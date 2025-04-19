@@ -108,6 +108,10 @@ FUNCTION_CALLING_SUPPORTED_MODELS = [
     'o1-2024-12-17',
     'o3-mini-2025-01-31',
     'o3-mini',
+    'o3',
+    'o3-2025-04-16',
+    'o4-mini',
+    'o4-mini-2025-04-16',
     'gemini-2.5-pro',
     'gpt-4.1',
 ]
@@ -115,8 +119,12 @@ FUNCTION_CALLING_SUPPORTED_MODELS = [
 REASONING_EFFORT_SUPPORTED_MODELS = [
     'o1-2024-12-17',
     'o1',
+    'o3',
+    'o3-2025-04-16',
     'o3-mini-2025-01-31',
     'o3-mini',
+    'o4-mini',
+    'o4-mini-2025-04-16',
 ]
 
 MODELS_WITHOUT_STOP_WORDS = [
