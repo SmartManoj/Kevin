@@ -40,6 +40,11 @@ export const organizeModelsAndProviders = (models: string[]) => {
       return;
     }
 
+    // '1024-x-1024/dall-e-2', 'hd/1024-x-1792/dall-e-3' ; ignore if -x- and hd in provider
+    if (provider.includes("-x-") || provider === "hd") {
+      return;
+    }
+
     const key = provider || "openai";
     if (!object[key]) {
       object[key] = { separator, models: [] };
