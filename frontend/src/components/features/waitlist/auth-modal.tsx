@@ -64,7 +64,7 @@ export function AuthModal({ githubAuthUrl, appMode }: AuthModalProps) {
             {t(I18nKey.GITHUB$CONNECT_TO_GITHUB)}
           </BrandButton>
 
-          <BrandButton
+          {/* <BrandButton
             isDisabled={!isTosAccepted}
             type="button"
             variant="primary"
@@ -73,7 +73,7 @@ export function AuthModal({ githubAuthUrl, appMode }: AuthModalProps) {
             startContent={<GitLabLogo width={20} height={20} />}
           >
             {t(I18nKey.GITLAB$CONNECT_TO_GITLAB)}
-          </BrandButton>
+          </BrandButton> */}
         </div>
       </ModalBody>
     </ModalBackdrop>
