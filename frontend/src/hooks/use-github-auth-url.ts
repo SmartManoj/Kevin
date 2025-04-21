@@ -9,5 +9,5 @@ interface UseGitHubAuthUrlConfig {
 export const useGitHubAuthUrl = (config: UseGitHubAuthUrlConfig) =>
   useAuthUrl({
     appMode: config.appMode,
-    identityProvider: "github",
+    identityProvider: config.gitHubClientId ?? "",
   });
