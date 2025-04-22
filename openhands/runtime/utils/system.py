@@ -1,7 +1,10 @@
 import random
 import socket
 import time
+import threading
 
+# Global lock for thread-safe port allocation
+_port_lock = threading.Lock()
 
 def check_port_available(port: int) -> bool:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -13,7 +16,6 @@ def check_port_available(port: int) -> bool:
         return False
     finally:
         sock.close()
-
 
 allocated_ports = set()
 
@@ -36,9 +38,10 @@ def find_available_tcp_port(
     rng.shuffle(ports)
 
     for port in ports[:max_attempts]:
-        if port not in allocated_ports and check_port_available(port):
-            allocated_ports.add(port)
-            return port
+        with _port_lock:  # Ensure atomic port check and allocation
+            if port not in allocated_ports and check_port_available(port):
+                allocated_ports.add(port)
+                return port
     return -1
 
 
