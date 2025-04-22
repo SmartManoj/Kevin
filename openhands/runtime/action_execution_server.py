@@ -13,6 +13,7 @@ import mimetypes
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -889,6 +890,14 @@ if __name__ == '__main__':
             return {'status': 'not initialized'}
         return {'status': 'ok'}
 
+    @app.get('/version')
+    async def version():
+        try:
+            short_sha = open('version.txt').read().strip()
+        except Exception:
+            
+            short_sha = "unknown"
+        return {'version': short_sha}
     # ================================
     # VSCode-specific operations
     # ================================

@@ -3,6 +3,7 @@ import hashlib
 import os
 import shutil
 import string
+import subprocess
 import tempfile
 from enum import Enum
 from pathlib import Path
@@ -270,9 +271,16 @@ def prep_build_folder(
             '*.md',
         ),
     )
-
+    file = Path(openhands_source_dir, 'version.txt')
+    if not file.exists():
+        try:
+            short_sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('utf-8').strip()
+        except Exception:
+            short_sha = "unknown"
+        with open(file, 'w') as f:
+            f.write(short_sha)
     # Copy pyproject.toml and poetry.lock files
-    for file in ['pyproject.toml', 'poetry.lock', 'requirements-extra.txt']:
+    for file in ['pyproject.toml', 'poetry.lock', 'requirements-extra.txt', 'version.txt']:
         src = Path(openhands_source_dir, file)
         if not src.exists():
             src = Path(project_root, file)
