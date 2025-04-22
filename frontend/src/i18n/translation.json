@@ -4479,7 +4479,7 @@
         "tr": "Çalışma zamanına bağlanırken bir hata oluştu. Lütfen sayfayı yenileyin."
     },
     "STATUS$ERROR_LLM_OUT_OF_CREDITS": {
-        "en": "You're out of OpenHands Credits",
+        "en": "You're out of Kevin Credits",
         "ja": "OpenHandsクレジットが不足しています",
         "zh-CN": "您的OpenHands点数已用完",
         "zh-TW": "您的OpenHands點數已用完",
@@ -5345,7 +5345,7 @@
         "de": "Guthaben zu Ihrem Konto hinzufügen"
     },
     "BILLING$YOUVE_GOT_50": {
-        "en": "You've got $50 in free OpenHands credits",
+        "en": "You've got $50 in free Kevin credits",
         "ja": "OpenHandsの無料クレジット$50を獲得しました",
         "zh-CN": "您获得了 $50 的 OpenHands 免费额度",
         "zh-TW": "您獲得了 $50 的 OpenHands 免費額度",
@@ -6170,7 +6170,7 @@
         "de": "Ihr aktueller Arbeitsbereich ist kein git-Repository."
     },
     "DIFF_VIEWER$ASK_OH": {
-        "en": "Ask OpenHands to initialize a git repo to activate this UI.",
+        "en": "Ask Kevin to initialize a git repo to activate this UI.",
         "ja": "このUIを有効にするために、OpenHandsにgitリポジトリを初期化するよう依頼します。",
         "zh-CN": "请OpenHands初始化git存储库以激活此UI。",
         "zh-TW": "請OpenHands初始化git存儲庫以啟用此UI。",
@@ -6185,7 +6185,7 @@
         "de": "Bitten Sie OpenHands, ein git-Repository zu initialisieren, um diese Benutzeroberfläche zu aktivieren."
     },
     "DIFF_VIEWER$NO_CHANGES": {
-        "en": "OpenHands hasn't made any changes yet...",
+        "en": "Kevin hasn't made any changes yet...",
         "ja": "OpenHandsはまだ変更を加えていません...",
         "zh-CN": "OpenHands尚未进行任何更改...",
         "zh-TW": "OpenHands尚未進行任何更改...",

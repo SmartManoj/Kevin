@@ -5,7 +5,7 @@ import json
 with open(f, 'r', encoding='utf-8') as file:
     data = json.load(file, strict=False)
 
-if 0:
+if 1:
     for key, value in data.items():
         if 'OpenHands' in value['en']:
             data[key]['en'] = value['en'].replace('OpenHands', 'Kevin')
