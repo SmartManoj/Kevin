@@ -7,6 +7,8 @@ enum ActionType {
 
   // Regenerates the last message from the agent.
   REGENERATE = "regenerate",
+  // Represents a system message for an agent, including the system prompt and available tools.
+  SYSTEM = "system",
 
   // Reads the contents of a file.
   READ = "read",

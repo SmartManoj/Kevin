@@ -284,11 +284,6 @@ class AgentController:
             # self.status_callback('error', err_id, type(e).__name__ + ': ' + str(e))
         self.event_stream.add_event(ErrorObservation(err), EventSource.ENVIRONMENT)
 
-    def step(self):
-        # Create and run the task in the current event loop
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._step_with_exception_handling())
-
     async def _step_with_exception_handling(self):
         try:
             await self._step()
@@ -411,7 +406,7 @@ class AgentController:
                 f'Stepping agent after event: {type(event).__name__}',
                 extra={'msg_type': 'STEPPING_AGENT'},
             )
-            self.step()
+            await self._step_with_exception_handling()
         elif isinstance(event, MessageAction) and event.source == EventSource.USER:
             # If we received a user message but aren't stepping, log why
             self.log(
