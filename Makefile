@@ -43,6 +43,7 @@ endif
 	@$(MAKE) -s check-netcat
 	@$(MAKE) -s check-nodejs
 	@$(MAKE) -s check-npm
+	@$(MAKE) -s check-tmux
 	@$(MAKE) -s check-poetry
 	@echo "$(GREEN)Dependencies checked successfully.$(RESET)"
 
@@ -161,6 +162,15 @@ check-docker:
 				exit 1; \
 			fi; \
 		fi; \
+	fi
+
+check-tmux:
+	@echo "$(YELLOW)Checking tmux installation...$(RESET)"
+	@if command -v tmux > /dev/null; then \
+		echo "$(BLUE)$(shell tmux -V) is already installed.$(RESET)"; \
+	else \
+		echo "$(RED)tmux is not installed. Please install tmux to continue.$(RESET)"; \
+		exit 1; \
 	fi
 
 check-poetry:
