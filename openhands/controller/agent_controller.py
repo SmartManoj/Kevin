@@ -407,7 +407,7 @@ class AgentController:
         should_step = self.should_step(event)
         if should_step:
             self.log(
-                'info',
+                'debug',
                 f'Stepping agent after event: {type(event).__name__}',
                 extra={'msg_type': 'STEPPING_AGENT'},
             )
@@ -1002,7 +1002,7 @@ class AgentController:
                 action_type = type(prev_action).__name__
                 elapsed_time = time.time() - timestamp
                 self.log(
-                    'info',
+                    'debug',
                     f'Cleared pending action after {elapsed_time:.2f}s: {action_type} (id={action_id})',
                     extra={'msg_type': 'PENDING_ACTION_CLEARED'},
                 )
@@ -1011,7 +1011,7 @@ class AgentController:
             action_id = getattr(action, 'id', 'unknown')
             action_type = type(action).__name__
             self.log(
-                'info',
+                'debug',
                 f'Set pending action: {action_type} (id={action_id})',
                 extra={'msg_type': 'PENDING_ACTION_SET'},
             )
