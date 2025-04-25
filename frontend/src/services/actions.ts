@@ -163,7 +163,7 @@ export function handleAssistantMessage(message: Record<string, unknown>) {
   } else if (message.text_for_audio) {
     generateAudio(message.text_for_audio as string);
   } else {
-    const errorMsg = "Unknown message type received";
+    const errorMsg = `Unknown message type received: ${JSON.stringify(message)}`;
     trackError({
       message: errorMsg,
       source: "chat",
