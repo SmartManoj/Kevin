@@ -5678,19 +5678,19 @@
         "de": "Guthaben hinzufügen"
     },
     "PAYMENT$MANAGE_CREDITS": {
-        "en": "Manage Credits",
-        "ja": "クレジットを管理",
-        "zh-CN": "管理信用",
-        "zh-TW": "管理信用",
-        "ko-KR": "크레딧 관리",
-        "no": "Administrer kreditt",
-        "it": "Gestisci crediti",
-        "pt": "Gerenciar créditos",
-        "es": "Administrar créditos",
-        "ar": "إدارة الرصيد",
-        "fr": "Gérer les crédits",
-        "tr": "Kredileri yönet",
-        "de": "Guthaben verwalten"
+        "en": "Available Agent Time",
+        "ja": "利用可能なエージェント時間",
+        "zh-CN": "可用代理时间",
+        "zh-TW": "可用代理時間",
+        "ko-KR": "사용 가능한 에이전트 시간",
+        "no": "Tilgjengelig agenttid",
+        "it": "Tempo agente disponibile",
+        "pt": "Tempo de agente disponível",
+        "es": "Tiempo de agente disponible",
+        "ar": "وقت الوكيل المتاح",
+        "fr": "Temps de l'agent disponible",
+        "tr": "Mevcut agent zamanı",
+        "de": "Verfügbare Agentenzeit"
     },
     "AUTH$SIGN_IN_WITH_GITHUB": {
         "en": "Sign in with GitHub",
