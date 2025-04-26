@@ -17,8 +17,8 @@ from starlette.types import ASGIApp
 from openhands.integrations.provider import ProviderToken
 from openhands.integrations.provider import ProviderType
 from openhands.server import shared
-from openhands.server.auth import get_user_id
 from openhands.server.types import SessionMiddlewareInterface
+from openhands.server.user_auth import get_user_id
 
 
 class LocalhostCORSMiddleware(CORSMiddleware):
@@ -152,9 +152,10 @@ class AttachConversationMiddleware(SessionMiddlewareInterface):
         """
         Attach the user's session based on the provided authentication token.
         """
+        user_id = await get_user_id(request)
         request.state.conversation = (
             await shared.conversation_manager.attach_to_conversation(
-                request.state.sid, get_user_id(request)
+                request.state.sid, user_id
             )
         )
         if not request.state.conversation:
