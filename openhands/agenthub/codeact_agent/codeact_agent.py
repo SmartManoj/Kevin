@@ -56,6 +56,8 @@ from openhands.events.observation.error import ErrorObservation
 from openhands.events.observation.observation import Observation
 from openhands.events.serialization.event import truncate_content
 from openhands.events.action.message import SystemMessageAction
+from openhands.core.message import Message
+from openhands.events.action import Action, AgentFinishAction, MessageAction
 from openhands.events.event import Event
 from openhands.llm.llm import LLM
 from openhands.memory.condenser import Condenser
@@ -488,7 +490,8 @@ class CodeActAgent(Agent):
             f'Processing {len(condensed_history)} events from a total of {len(state.history)} events'
         )
 
-        messages = self._get_messages(condensed_history)
+        initial_user_message = self._get_initial_user_message(state.history)
+        messages = self._get_messages(condensed_history, initial_user_message)
         try:
             last_message_content = messages[-1].content[0].text.strip().splitlines()
             if len(last_message_content) >= 3:
@@ -599,8 +602,29 @@ class CodeActAgent(Agent):
             return self.action_parser.parse(response)
 
 
-    def _get_messages(self, events: list[Event]) -> list[Message]:
-        system_role = 'user' if config2.model.startswith('o1-') else 'system'
+    def _get_initial_user_message(self, history: list[Event]) -> MessageAction:
+        """Finds the initial user message action from the full history."""
+        initial_user_message: MessageAction | None = None
+        for event in history:
+            if isinstance(event, MessageAction) and event.source == 'user':
+                initial_user_message = event
+                break
+
+        if initial_user_message is None:
+            # This should not happen in a valid conversation
+            logger.error(
+                f'CRITICAL: Could not find the initial user MessageAction in the full {len(history)} events history.'
+            )
+            # Depending on desired robustness, could raise error or create a dummy action
+            # and log the error
+            raise ValueError(
+                'Initial user message not found in history. Please report this issue.'
+            )
+        return initial_user_message
+
+    def _get_messages(
+        self, events: list[Event], initial_user_message: MessageAction
+    ) -> list[Message]:
         """Constructs the message history for the LLM conversation.
 
         This method builds a structured conversation history by processing events from the state
@@ -634,130 +658,13 @@ class CodeActAgent(Agent):
         if not self.prompt_manager:
             raise Exception('Prompt Manager not instantiated.')
 
-        if self.config.function_calling:
-            # Use ConversationMemory to process events (including SystemMessageAction)
-            messages = self.conversation_memory.process_events(
-                condensed_history=events,
-                max_message_chars=self.llm.config.max_message_chars,
-                vision_is_active=self.llm.vision_is_active(),
-            )
-
-        messages: list[Message] = [
-            Message(
-                role=system_role,
-                content=[
-                    TextContent(
-                        text=self.prompt_manager.get_system_message(),
-                        cache_prompt=self.llm.is_caching_prompt_active(),
-                    )
-                ],
-                condensable=False,
-            ),
-        ]
-        user_contents = []
-        
-        if (
-            len(events) == 1
-            and config.run_as_openhands
-            and config.show_workspace_contents
-        ):
-            workspace_contents = ', '.join(os.listdir(config.workspace_base))
-            if workspace_contents:
-                user_contents.append(
-                    TextContent(
-                        text=f'WORKSPACE CONTENTS: {workspace_contents}\n\n----------\n'
-                    )
-                )
-
-        custom_instructions = config.custom_instructions
-        if custom_instructions:
-            user_contents.append(
-                TextContent(text=custom_instructions)
-            )
-        # if state.history.summary:
-        #     summary_message = self.get_action_message(
-        #         state.history.summary, pending_tool_call_action_messages={}
-        #     )
-        #     if summary_message:
-        #         messages.extend(summary_message)
-
-        # TODO: delegation.
-        # if task := state.inputs.get('task'):
-        #     user_contents.append(TextContent(text=task))
-        
-        if user_contents:
-            messages.append(
-                Message(
-                    role='user',
-                    content=user_contents,
-                    condensable=False,
-                    cache_prompt=self.llm.is_caching_prompt_active(),
-                ),
-            )
-        pending_tool_call_action_messages: dict[str, Message] = {}
-        tool_call_id_to_message: dict[str, Message] = {}
-
-        # Condense the events from the state.
-        is_first_message_handled = False
-        for k, event in enumerate(events):
-            # create a regular message from an event
-            if isinstance(event, Action):
-                # SLM_Tweak
-                # if ipython action, check next observation and modify the code
-                if isinstance(event, IPythonRunCellAction):
-                    if k + 1 < len(events):
-                        next_obs = events[k + 1]
-                        if isinstance(next_obs, IPythonRunCellObservation):
-                            event.code = next_obs.code
-                messages_to_add = self.get_action_message(
-                    action=event,
-                    pending_tool_call_action_messages=pending_tool_call_action_messages,
-                )
-            elif isinstance(event, Observation):
-                messages_to_add = self.get_observation_message(
-                    obs=event,
-                    tool_call_id_to_message=tool_call_id_to_message,
-                )
-            elif isinstance(event, (LogEvent, AudioEvent)):
-                continue
-            else:
-                raise ValueError(f'Unknown event type: {type(event)}')
-
-            # Check pending tool call action messages and see if they are complete
-            _response_ids_to_remove = []
-            for (
-                response_id,
-                pending_message,
-            ) in pending_tool_call_action_messages.items():
-                assert pending_message.tool_calls is not None, (
-                    'Tool calls should NOT be None when function calling is enabled & the message is considered pending tool call. '
-                    f'Pending message: {pending_message}'
-                )
-                if all(
-                    tool_call.id in tool_call_id_to_message
-                    for tool_call in pending_message.tool_calls
-                ):
-                    # If complete:
-                    # -- 1. Add the message that **initiated** the tool calls
-                    messages_to_add.append(pending_message)
-                    # -- 2. Add the tool calls **results***
-                    for tool_call in pending_message.tool_calls:
-                        messages_to_add.append(tool_call_id_to_message[tool_call.id])
-                        tool_call_id_to_message.pop(tool_call.id)
-                    _response_ids_to_remove.append(response_id)
-            # Cleanup the processed pending tool messages
-            for response_id in _response_ids_to_remove:
-                pending_tool_call_action_messages.pop(response_id)
-
-            for msg in messages_to_add:
-                if msg:
-                    # already handled the first user message
-                    if msg.role == 'user' and not is_first_message_handled:
-                        is_first_message_handled = True
-                        # compose the first user message with examples
-                        self.prompt_manager.add_examples_to_initial_message(msg)
-
-                    messages.append(msg)
+        # Use ConversationMemory to process events (including SystemMessageAction)
+        messages = self.conversation_memory.process_events(
+            condensed_history=events,
+            initial_user_action=initial_user_message,
+            max_message_chars=self.llm.config.max_message_chars,
+            vision_is_active=self.llm.vision_is_active(),
+        )
 
         if self.llm.is_caching_prompt_active():
             # NOTE: this is only needed for anthropic
