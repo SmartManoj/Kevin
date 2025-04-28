@@ -90,7 +90,7 @@ async def connect(connection_id: str, environ):
         if get_credits(user_id) <= 0:
             logger.error(f'User {user_id} has no credits')
             raise ConnectionRefusedError('User has no credits')
-        conversation_store = await ConversationStoreImpl.get_instance(config, user_id, github_user_id)
+        conversation_store = await ConversationStoreImpl.get_instance(config, user_id)
         metadata = await conversation_store.get_metadata(conversation_id)
 
         if metadata.user_id != str(user_id):
