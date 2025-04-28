@@ -40,7 +40,7 @@ class GitHubService(BaseGitService, GitService):
         self.user_id = user_id
         self.external_token_manager = external_token_manager
 
-        if token:
+        if token.get_secret_value():
             self.token = token
 
         if base_domain:

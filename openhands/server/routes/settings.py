@@ -18,9 +18,11 @@ from openhands.server.settings import (
     Settings,
 )
 from openhands.server.shared import config
-from openhands.server.user_auth import (
+from openhands.server.auth import (
     get_provider_tokens,
-    get_user_id,
+    get_user_id
+)
+from openhands.server.user_auth import (
     get_user_settings,
     get_user_settings_store,
 )
