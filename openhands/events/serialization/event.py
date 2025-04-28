@@ -5,7 +5,6 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from openhands.core.logger import openhands_logger as logger
 from openhands.events import Event, EventSource
 from openhands.events.event import AudioEvent, LogEvent
 from openhands.events.observation.observation import Observation
