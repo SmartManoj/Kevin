@@ -9,4 +9,9 @@ spec:
     - protocol: TCP
       port: 63710
       targetPort: 63710
+      name: action-execution-server
+    - protocol: TCP
+      port: 63711
+      targetPort: 63711
+      name: vscode
   type: LoadBalancer
