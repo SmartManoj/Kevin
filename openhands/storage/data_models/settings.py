@@ -48,7 +48,7 @@ class Settings(BaseModel):
         """
         context = info.context
         if context and context.get('expose_secrets', False):
-            return llm_api_key.get_secret_value()
+            return llm_api_key.get_secret_value() if llm_api_key else None
 
         return pydantic_encoder(llm_api_key) if llm_api_key else None
 

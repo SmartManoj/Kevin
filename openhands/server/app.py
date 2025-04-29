@@ -139,6 +139,10 @@ async def set_github_details(request: Request):
 @app.get("/get_github_details")
 async def get_github_details(request: Request):
     """Get the github token"""
+    if pts := getattr(request.state, 'provider_tokens', None):
+        pts = [pt.value for pt in pts]
+    else:
+        pts = None
     return JSONResponse(
         content={
             "github_token_from_session": request.session.get("github_token"),
@@ -147,6 +151,7 @@ async def get_github_details(request: Request):
             "github_token_from_state": getattr(request.state, 'github_token', None),
             "github_user_id_from_state": getattr(request.state, 'github_user_id', None),
             "user_id_from_state": getattr(request.state, 'user_id', None),
+            "provider_tokens_from_state": pts,
         },
         status_code=200
     )

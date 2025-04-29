@@ -203,13 +203,15 @@ class ProviderTokenMiddleware(SessionMiddlewareInterface):
         # TODO: To avoid checks like this we should re-add the abilty to have completely different middleware in SAAS as in OSS
         if getattr(request.state, 'provider_tokens', None) is None:
             if os.environ.get("APP_MODE") == "saas":
-                request.state.provider_tokens = request.session.get("provider_tokens")
                 request.state.github_token = request.session.get("github_token")
                 request.state.github_user_id = request.session.get("github_user_id")
                 request.state.user_id = request.session.get("user_id")
-                request.state.provider_tokens = MappingProxyType(
-                    {
-                        ProviderType.GITHUB: ProviderToken(
+                token = request.state.github_token
+                user_id = request.state.github_user_id
+                if token and user_id:
+                    request.state.provider_tokens = MappingProxyType(
+                        {
+                            ProviderType.GITHUB: ProviderToken(
                             token=SecretStr(request.state.github_token),
                             user_id=request.state.github_user_id,
                         )
