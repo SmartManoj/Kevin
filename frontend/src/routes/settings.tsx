@@ -32,7 +32,7 @@ function SettingsScreen() {
   React.useEffect(() => {
     if (isSaas) {
       if (pathname === "/settings") {
-        navigate("/settings/git");
+        navigate("/settings/");
       }
     } else {
       const noEnteringPaths = [
