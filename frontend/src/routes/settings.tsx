@@ -15,7 +15,7 @@ function SettingsScreen() {
   const isSaas = config?.APP_MODE === "saas";
 
   const saasNavItems = [
-    { to: "/settings", text: t("SETTINGS$NAV_LLM") },
+    { to: "/settings/", text: t("SETTINGS$NAV_LLM") },
     { to: "/settings/git", text: t("SETTINGS$NAV_GIT") },
     { to: "/settings/app", text: t("SETTINGS$NAV_APPLICATION") },
     { to: "/settings/billing", text: t("SETTINGS$NAV_CREDITS") },
