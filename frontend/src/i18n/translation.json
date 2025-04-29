@@ -30,7 +30,7 @@
         "de": "Lass uns anfangen zu bauen!"
     },
     "HOME$OPENHANDS_DESCRIPTION": {
-        "en": "OpenHands makes it easy to build and maintain software using AI-driven development.",
+        "en": "Kevin makes it easy to build and maintain software using AI-driven development.",
         "ja": "OpenHandsはAI駆動の開発を使用してソフトウェアの構築と維持を容易にします。",
         "zh-CN": "OpenHands使用AI驱动的开发方式，轻松构建和维护软件。",
         "zh-TW": "OpenHands使用AI驅動的開發方式，輕鬆構建和維護軟件。",
@@ -676,7 +676,6 @@
         "tr": "Hesap ayarları",
         "de": "Kontoeinstellungen"
     },
-
     "WORKSPACE$TERMINAL_TAB_LABEL": {
         "en": "Terminal",
         "zh-CN": "终端",
@@ -1157,13 +1156,6 @@
         "tr": "Geçersiz dosya yolu. Lütfen dosya adını kontrol edin ve tekrar deneyin.",
         "ja": "ファイルパスが無効です。ファイル名を確認して、もう一度お試しください。"
     },
-
-
-
-
-
-
-
     "VSCODE$OPEN": {
         "en": "Open in VS Code Web",
         "ja": "VS Code Webで開く",
@@ -2223,10 +2215,6 @@
         "tr": "Dosyaları buraya bırakın",
         "ja": "ここにファイルをドロップ"
     },
-
-
-
-
     "EXPLORER$UPLOAD_SUCCESS_MESSAGE": {
         "en": "Successfully uploaded {{count}} file(s)",
         "zh-CN": "上传成功",
@@ -4179,7 +4167,7 @@
         "en": "API Keys"
     },
     "SETTINGS$API_KEYS_DESCRIPTION": {
-        "en": "API keys allow you to authenticate with the OpenHands API programmatically. Keep your API keys secure; anyone with your API key can access your account."
+        "en": "API keys allow you to authenticate with the Kevin API programmatically. Keep your API keys secure; anyone with your API key can access your account."
     },
     "SETTINGS$CREATE_API_KEY": {
         "en": "Create API Key"
@@ -5127,9 +5115,6 @@
         "es": "Subir archivo",
         "tr": "Dosya yükle"
     },
-
-
-
     "ACTION_MESSAGE$RUN": {
         "en": "Running <cmd>{{action.payload.args.command}}</cmd>",
         "zh-CN": "运行 <cmd>{{action.payload.args.command}}</cmd>",
