@@ -207,14 +207,14 @@ class ConversationMemory:
             (
                 AgentDelegateAction,
                 AgentThinkAction,
-                IPythonRunCellAction,
                 FileEditAction,
                 FileReadAction,
                 BrowseInteractiveAction,
                 BrowseURLAction,
                 McpAction,
             ),
-        ) or (isinstance(action, CmdRunAction) and action.source == 'agent'):
+        ) or ((isinstance(action, CmdRunAction) and action.source == 'agent') or 
+              (isinstance(action, IPythonRunCellAction) and action.source == 'agent')):
             tool_metadata = action.tool_call_metadata
             assert tool_metadata is not None, (
                 'Tool call metadata should NOT be None when function calling is enabled. Action: '
