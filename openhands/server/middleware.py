@@ -18,7 +18,7 @@ from openhands.integrations.provider import ProviderToken
 from openhands.integrations.provider import ProviderType
 from openhands.server import shared
 from openhands.server.types import SessionMiddlewareInterface
-from openhands.server.auth import get_user_id
+from openhands.server.user_auth import get_user_id
 
 
 class LocalhostCORSMiddleware(CORSMiddleware):
