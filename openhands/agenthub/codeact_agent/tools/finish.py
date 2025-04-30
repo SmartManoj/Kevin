@@ -22,7 +22,7 @@ FinishTool = ChatCompletionToolParam(
         description=_FINISH_DESCRIPTION,
         parameters={
             'type': 'object',
-            'required': ['message', 'task_completed'],
+            # 'required': ['message', 'task_completed'],
             'properties': {
                 'message': {
                     'type': 'string',
