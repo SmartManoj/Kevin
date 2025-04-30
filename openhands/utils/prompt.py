@@ -61,14 +61,14 @@ class PromptManager:
         self.use_bash = use_bash
         self.use_browser = use_browser
 
-        if microagent_dir:
+        # if microagent_dir:
             # This loads micro-agents from the microagent_dir
             # which is typically the OpenHands/microagents (i.e., the PUBLIC microagents)
 
             # Only load KnowledgeMicroAgents
-            repo_microagents, knowledge_microagents, _ = load_microagents_from_dir(
-                microagent_dir
-            )
+            # repo_microagents, knowledge_microagents, _ = load_microagents_from_dir(
+            #     microagent_dir
+            # )
             
     def add_examples_to_initial_message(self, message: Message) -> None:
         """Add example_message to the first user message."""
