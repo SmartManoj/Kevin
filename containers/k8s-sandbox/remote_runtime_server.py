@@ -31,7 +31,7 @@ ip_dict = {}
 async def get_session(session_id):
     print(f"Getting session {session_id}")
     if session_id == 'None':
-        session_id = '0'
+        return {"error": "Relogin required"}
     if session_id not in ip_dict:
         # create sandbox
         output = subprocess.run(["python3", "create_sandbox.py", session_id], capture_output=True, text=True).stdout.strip().split("\n")
