@@ -5825,7 +5825,7 @@
         "de": "Guthaben hinzufügen"
     },
     "PAYMENT$MANAGE_CREDITS": {
-        "en": "Manage Credits",
+        "en": "Available Agent Time",
         "ja": "クレジットを管理",
         "zh-CN": "管理信用",
         "zh-TW": "管理信用",
@@ -6801,5 +6801,11 @@
         "de": "Fehler beim Akzeptieren der Nutzungsbedingungen",
         "it": "Errore nell'accettazione dei Termini di Servizio",
         "pt": "Erro ao aceitar os Termos de Serviço"
+    },
+    "CHAT_INTERFACE$AUTO_MESSAGE": {
+        "en": "You have full access to this system. Please continue working on the task on whatever approach you think is suitable.\nIf you think you have solved the task, you can give <finish> to end the interaction.\nIMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n"
+    },
+    "CHAT_INTERFACE$AUTO_MESSAGE_SENT": {
+        "en": "Sent the default Auto Msg 🤖"
     }
 }
