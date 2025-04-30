@@ -196,7 +196,7 @@ class ProviderTokenMiddleware(SessionMiddlewareInterface):
 
     async def __call__(self, request: Request, call_next: Callable):
         settings_store = await shared.SettingsStoreImpl.get_instance(
-            shared.config, get_user_id(request)
+            shared.config, await get_user_id(request)
         )
         settings = await settings_store.load()
 
