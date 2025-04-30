@@ -8,7 +8,7 @@ import { useUserConversation } from "./query/use-user-conversation";
  *
  * @param suffix Optional suffix to append to the title (default: "OpenHands")
  */
-export function useDocumentTitleFromState(suffix = "OpenHands") {
+export function useDocumentTitleFromState(suffix = "Kevin") {
   const params = useParams();
   const { data: conversation } = useUserConversation(
     params.conversationId ?? null,
