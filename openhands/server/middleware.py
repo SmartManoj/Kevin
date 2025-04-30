@@ -18,7 +18,7 @@ from openhands.integrations.provider import ProviderToken
 from openhands.integrations.provider import ProviderType
 from openhands.server import shared
 from openhands.server.types import SessionMiddlewareInterface
-from openhands.server.user_auth import get_user_id
+from openhands.server.auth import get_user_id
 
 
 class LocalhostCORSMiddleware(CORSMiddleware):
@@ -196,7 +196,7 @@ class ProviderTokenMiddleware(SessionMiddlewareInterface):
 
     async def __call__(self, request: Request, call_next: Callable):
         settings_store = await shared.SettingsStoreImpl.get_instance(
-            shared.config, await get_user_id(request)
+            shared.config, get_user_id(request)
         )
         settings = await settings_store.load()
 
