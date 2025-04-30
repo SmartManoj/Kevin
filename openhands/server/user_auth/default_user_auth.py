@@ -14,16 +14,18 @@ from openhands.storage.settings.settings_store import SettingsStore
 class DefaultUserAuth(UserAuth):
     """Default user authentication mechanism"""
 
+    user_id: str | None = None
+    access_token: SecretStr | None = None
     _settings: Settings | None = None
     _settings_store: SettingsStore | None = None
 
     async def get_user_id(self) -> str | None:
         """The default implementation does not support multi tenancy, so user_id is always None"""
-        return None
+        return self.user_id
 
     async def get_access_token(self) -> SecretStr | None:
         """The default implementation does not support multi tenancy, so access_token is always None"""
-        return None
+        return self.access_token.get_secret_value() if self.access_token else None
 
     async def get_user_settings_store(self):
         settings_store = self._settings_store
@@ -54,4 +56,6 @@ class DefaultUserAuth(UserAuth):
     @classmethod
     async def get_instance(cls, request: Request) -> UserAuth:
         user_auth = DefaultUserAuth()
+        user_auth.user_id = request.state.github_user_id
+        user_auth.access_token = SecretStr(request.state.github_token)
         return user_auth

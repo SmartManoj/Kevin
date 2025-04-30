@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 from pydantic import (
     BaseModel,
@@ -25,9 +26,9 @@ class Settings(BaseModel):
     max_iterations: int | None = None
     security_analyzer: str | None = None
     confirmation_mode: bool | None = None
-    llm_model: str | None = None
-    llm_api_key: SecretStr | None = None
-    llm_base_url: str | None = None
+    llm_model: str | None = os.getenv('LLM_MODEL')
+    llm_api_key: SecretStr | None = SecretStr(os.getenv('LLM_API_KEY'))
+    llm_base_url: str | None = os.getenv('LLM_BASE_URL')
     remote_runtime_resource_factor: int | None = None
     secrets_store: SecretStore = Field(default_factory=SecretStore, frozen=True)
     enable_default_condenser: bool = True
