@@ -21,7 +21,7 @@ from openhands.events.action import (
 )
 from openhands.events.action.mcp import McpAction
 from openhands.events.action.message import SystemMessageAction
-from openhands.events.event import Event, RecallType
+from openhands.events.event import AudioEvent, Event, LogEvent, RecallType
 from openhands.events.observation import (
     AgentCondensationObservation,
     AgentDelegateObservation,
@@ -104,6 +104,8 @@ class ConversationMemory:
                     current_index=i,
                     events=events,
                 )
+            elif isinstance(event, (LogEvent, AudioEvent)):
+                continue
             else:
                 raise ValueError(f'Unknown event type: {type(event)}')
 

@@ -248,3 +248,4 @@ port_db.sqlite
 *.pem
 start.sh
 containers/k8s-app/secret.yaml
+.litellm_cache

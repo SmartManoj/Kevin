@@ -1,18 +1,22 @@
 import copy
 import os
+import time
 import warnings
 from functools import partial
-from time import sleep
-from typing import Any, Union, Callable
+from typing import Any, Callable
 
 import httpx
 
-from openhands.core import config2
 from openhands.core.config import LLMConfig
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import litellm
+    
+    if os.getenv('DEBUG_LITTELM'):
+        os.environ['LITELLM_LOG'] = 'DEBUG'
+    else:
+        litellm.suppress_debug_info = True
 
 from litellm import ChatCompletionMessageToolCall, ModelInfo, PromptTokensDetails
 from litellm import Message as LiteLLMMessage
@@ -27,57 +31,27 @@ from litellm.utils import create_pretrained_tokenizer
 from openhands.core.exceptions import LLMNoResponseError
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message
-from openhands.core.message import TextContent
+from openhands.llm.debug_mixin import DebugMixin
 from openhands.llm.fn_call_converter import (
     STOP_WORDS,
     convert_fncall_messages_to_non_fncall_messages,
     convert_non_fncall_messages_to_fncall_messages,
 )
-
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore')
-    import litellm
-
-    if os.getenv('DEBUG_LITTELM'):
-        os.environ['LITELLM_LOG'] = 'DEBUG'
-    else:
-        litellm.suppress_debug_info = True
-from litellm import ChatCompletionMessageToolCall, ModelInfo, PromptTokensDetails
-from litellm import Message as LiteLLMMessage
-from litellm import completion as litellm_completion
-from litellm import completion_cost as litellm_completion_cost
-
-# from litellm.caching import Cache
-from litellm.exceptions import (
-    APIConnectionError,
-    APIError,
-    ContextWindowExceededError,
-    InternalServerError,
-    RateLimitError,
-    ServiceUnavailableError,
-    Timeout,
-)
-from litellm.llms.openai_like.common_utils import OpenAILikeError
-from litellm.types.utils import CostPerToken, ModelResponse, Usage
-from litellm.utils import create_pretrained_tokenizer
-
-from openhands.core.logger import LOG_DIR
-from openhands.core.logger import openhands_logger as logger
+from litellm.caching import Cache
 from openhands.core.metrics import Metrics
-from openhands.llm.debug_mixin import DebugMixin
 from openhands.llm.retry_mixin import RetryMixin
 
 __all__ = ['LLM']
 
 # tuple of exceptions to retry on
 LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (
-        APIConnectionError,
+        litellm.APIConnectionError,
         # FIXME: APIError is useful on 502 from a proxy for example,
         # but it also retries on other errors that are permanent
-        APIError,
-        InternalServerError,
-        RateLimitError,
-        ServiceUnavailableError,
+        litellm.APIError,
+        litellm.InternalServerError,
+        litellm.RateLimitError,
+        litellm.ServiceUnavailableError,
         litellm.Timeout,
         litellm.InternalServerError,
         LLMNoResponseError,
@@ -104,7 +78,6 @@ FUNCTION_CALLING_SUPPORTED_MODELS = [
     'claude-3-5-haiku-20241022',
     'gpt-4o-mini',
     'gpt-4o',
-    'grok-beta',
     'o1-2024-12-17',
     'o3-mini-2025-01-31',
     'o3-mini',
@@ -166,8 +139,8 @@ class LLM(RetryMixin, DebugMixin):
         self.reload_counter = 0
         self.api_idx = 0
 
-        # if self.config.enable_cache:
-        #     litellm.cache = Cache()
+        if self.config.enable_cache:
+            litellm.cache = Cache(type="disk")
 
         self.model_info: ModelInfo | None = None
         self.retry_listener = retry_listener
@@ -197,8 +170,6 @@ class LLM(RetryMixin, DebugMixin):
             logger.debug(
                 f'{self.config.api_key=}'
             )
-        if self.config.drop_params:
-            litellm.drop_params = self.config.drop_params
 
         if self.config.model.startswith('ollama'):
             max_input_tokens = self.config.max_input_tokens
@@ -213,11 +184,6 @@ class LLM(RetryMixin, DebugMixin):
             #  temperature, top_p and n are fixed at 1, while presence_penalty and frequency_penalty are fixed at 0.
             self.config.temperature = 1
             self.config.top_p = 1
-        # Compatibility flag: use string serializer for DeepSeek models
-        # See this issue: https://github.com/All-Hands-AI/OpenHands/issues/5818
-        self._use_string_serializer = False
-        if 'deepseek' in self.config.model:
-            self._use_string_serializer = True
 
         # if using a custom tokenizer, make sure it's loaded and accessible in the format expected by litellm
         if self.config.custom_tokenizer is not None:
@@ -255,26 +221,10 @@ class LLM(RetryMixin, DebugMixin):
             custom_llm_provider=self.config.custom_llm_provider,
             timeout=self.config.timeout,
             top_p=self.config.top_p,
-            caching=self.config.enable_cache,
             drop_params=self.config.drop_params,
             seed=self.config.seed,
             **kwargs,
         )
-
-        def is_hallucination(text) -> bool:
-            lines = text.strip().split('\n')
-            if len(lines) < 2:
-                return False
-            line_index = -2
-            while line_index >= -len(lines):
-                second_last_line = lines[line_index].strip()
-                if second_last_line.strip():
-                    break
-                line_index -= 1
-            repetition_count = sum(
-                1 for line in lines if line.strip() == second_last_line
-            )
-            return repetition_count >= 5
 
         self._completion_unwrapped = self._completion
 
@@ -288,13 +238,10 @@ class LLM(RetryMixin, DebugMixin):
         )
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wrapper for the litellm completion function. Logs the input and output of the completion function."""
-            messages: list[Message] | Message = []
             from openhands.io import json
 
+            messages: list[dict[str, Any]] | dict[str, Any] = []
             mock_function_calling = not self.is_function_calling_active()
-
-            if self.config.model.split('/')[-1].startswith('o1-mini'):
-                kwargs['messages'].append(Message(role='assistant', content=[TextContent(text='DO NOT PRODUCE INVALID CONTENT')]))
 
             # some callers might send the model and messages directly
             # litellm allows positional args, like completion(model, messages, **kwargs)
@@ -313,10 +260,9 @@ class LLM(RetryMixin, DebugMixin):
 
             # ensure we work with a list of messages
             messages = messages if isinstance(messages, list) else [messages]
-            if isinstance(messages[0], Message):
-                messages = self.format_messages_for_llm(messages)
-                kwargs['messages'] = messages
-            # original_fncall_messages = copy.deepcopy(messages)
+
+            # handle conversion of to non-function calling messages if needed
+            original_fncall_messages = copy.deepcopy(messages)
             mock_fncall_tools = None
             # if the agent or caller has defined tools, and we mock via prompting, convert the messages
             if mock_function_calling and 'tools' in kwargs:
@@ -347,15 +293,7 @@ class LLM(RetryMixin, DebugMixin):
                 # Message types: user and assistant messages only, system messages are not supported.
                 messages[0]['role'] = 'user'
 
-            if self.is_over_token_limit(messages):
-                raise ContextWindowExceededError(
-                    message='Context window exceeded',
-                    model=self.config.model.split('/', 1)[1],
-                    llm_provider=self.config.model.split('/', 1)[0],
-                )
-
-            kwargs.pop('condense', None)
-
+            # if we have no messages, something went very wrong
             if not messages:
                 raise ValueError(
                     'The messages list is empty. At least one message is required.'
@@ -364,165 +302,108 @@ class LLM(RetryMixin, DebugMixin):
             # log the entire LLM prompt
             self.log_prompt(messages)
 
-            if self.is_caching_prompt_active():
-                # Anthropic-specific prompt caching
-                if 'claude-3' in self.config.model:
-                    kwargs['extra_headers'] = {
-                        'anthropic-beta': 'prompt-caching-2024-07-31',
-                    }
-            source = kwargs.pop('origin', None)
-            resp = {}
-            if (
-                continue_on_step_env := os.environ.get('CONTINUE_ON_STEP')
-            ) and source == 'Agent':
-                # int
-                continue_on_step = int(continue_on_step_env)
-                self.reload_counter += 1
-                if self.reload_counter < continue_on_step:
-                    model_config = os.getenv('model_config')
-                    if model_config:
-                        with open(
-                            'evaluation/benchmarks/swe_bench/config.toml', 'r'
-                        ) as f:
-                            environ = f.read()
-                            import toml
-
-                            config = toml.loads(environ)
-                            selection_id = config['selected_ids'][0]
-                        session = (
-                            model_config.split('.')[-1]
-                            + '_'
-                            + selection_id.split('-')[-1]
-                        )
-                    else:
-                        session = 'default'
-                    log_directory = os.path.join(LOG_DIR, 'llm', session)
-                    filename = f'{self.reload_counter:03}_response.log'
-                    file_name = os.path.join(log_directory, filename)
-                    if os.path.exists(file_name):
-                        logger.info('Using cached response')
-                        with open(file_name, 'r') as f:
-                            message_back = f.read()
-                        with open(file_name, 'w') as f:
-                            f.write('')
-                        if message_back:
-                            resp = {'choices': [{'message': {'content': message_back}}]}
-                            
-           
-
             # set litellm modify_params to the configured value
             # True by default to allow litellm to do transformations like adding a default message, when a message is empty
             # NOTE: this setting is global; unlike drop_params, it cannot be overridden in the litellm completion partial
             litellm.modify_params = self.config.modify_params
 
-            if resp:
-                pass
-            else:
-                kwargs2 = kwargs.copy()
-                for _ in range(5):
-                    if os.getenv('attempt_number'):
-                        attempt_number = int(os.getenv('attempt_number', '-1'))
-                        if attempt_number != -1 and 'gemini/' in config2.model:
-                            try:
-                                from api_keys import api_keys
+            # if we're not using litellm proxy, remove the extra_body
+            if 'litellm_proxy' not in self.config.model:
+                kwargs.pop('extra_body', None)
 
-                                self.api_idx = (self.api_idx + 1) % len(api_keys)
-                                print('Using API key', self.api_idx)
-                                kwargs['api_key'] = api_keys[self.api_idx]
-                            except Exception as e:
-                                print('Error in changing API key', e)
-                                pass
-                            os.environ['attempt_number'] = '-1'
-                    logger.debug(f'Calling LLM ...')
-                    self.log_first_request(*args, **kwargs)
-                    resp = self._completion_unwrapped(*args, **kwargs)
-                    # # non_fncall_response = copy.deepcopy(resp)
-                    # if mock_function_calling:
-                    #     # assert len(resp.choices) == 1
-                    #     assert mock_fncall_tools is not None
-                    #     non_fncall_response_message = resp.choices[0].message  # type: ignore
-                    #     fn_call_messages_with_response = (
-                    #         convert_non_fncall_messages_to_fncall_messages(
-                    #             messages + [non_fncall_response_message],
-                    #             mock_fncall_tools,
-                    #         )
-                    #     )  # type: ignore
-                    #     fn_call_response_message = fn_call_messages_with_response[-1]
-                    #     if not isinstance(fn_call_response_message, LiteLLMMessage):
-                    #         fn_call_response_message = LiteLLMMessage(
-                    #             **fn_call_response_message
-                    #         )
-                    #     resp.choices[0].message = fn_call_response_message  # type: ignore
-                    message_back = resp['choices'][0]['message']['content'] or ''
-                    self_analyse = int(os.environ.get('SELF_ANALYSE', '0'))
-                    if self_analyse:
-                        logger.info(f'{self_analyse=}')
-                        kwargs2['messages'].append(
-                            {'role': 'assistant', 'content': message_back}
-                        )
-                        self_analyse_question = (
-                            'If the above approach is wrong, just reply yes.'
-                        )
-                        kwargs2['messages'].append(
-                            {'role': 'user', 'content': self_analyse_question}
-                        )
-                        self_analyse_response = self._completion_unwrapped(
-                            *args, **kwargs2
-                        )
-                        self_analyse_response_content = self_analyse_response[
-                            'choices'
-                        ][0]['message']['content'].strip()
-                        print(f'{self_analyse_response_content=}')
-                        if self_analyse_response_content == 'yes':
-                            logger.info(
-                                f'Response is incorrect. {self_analyse_response_content}'
-                            )
-                            new_messages = [
-                                {'role': 'assistant', 'content': message_back},
-                                {'role': 'user', 'content': self_analyse_question},
-                                {
-                                    'role': 'assistant',
-                                    'content': self_analyse_response_content,
-                                },
-                                {
-                                    'role': 'user',
-                                    'content': 'Then, please correctly respond.',
-                                },
-                            ]
-                            kwargs['messages'].extend(new_messages)
-                            continue
-                    if message_back and message_back != 'None':
-                        if is_hallucination(message_back):
-                            logger.warning(f'Hallucination detected!\n{message_back}')
-                            sleep(2)
-                            continue
-                        break
-                    else:
-                        msg = 'Why are you not responding to the user?'
-                        kwargs['messages'].append({'role': 'user', 'content': msg})
-                        logger.warning('No completion messages!')
+            # Record start time for latency measurement
+            start_time = time.time()
+            # we don't support streaming here, thus we get a ModelResponse
+            logger.debug(
+                f'LLM: calling litellm completion with model: {self.config.model}, base_url: {self.config.base_url}, args: {args}, kwargs: {kwargs}'
+            )
+            resp: ModelResponse = self._completion_unwrapped(*args, **kwargs)
 
-                message_back = resp['choices'][0]['message']['content'] or ''
+            # Calculate and record latency
+            latency = time.time() - start_time
+            response_id = resp.get('id', 'unknown')
+            self.metrics.add_response_latency(latency, response_id)
 
-                # think model tweaks; add <think> to the beginning of the response if it's not there
-                if not message_back.startswith('<think>') and '</think>' in message_back:
-                    message_back = '<think>\n' + message_back
-                    resp['choices'][0]['message']['content'] = message_back
+            non_fncall_response = copy.deepcopy(resp)
 
-                tool_calls: list[ChatCompletionMessageToolCall] = resp['choices'][0][
-                    'message'
-                ].get('tool_calls', [])  # type: ignore
-                if tool_calls:
-                    for tool_call in tool_calls:
-                        fn_name: str = tool_call.function.name  # type: ignore
-                        fn_args: str = tool_call.function.arguments  # type: ignore
-                        message_back += f'\nFunction call: {fn_name}({fn_args})'
+            # if we mocked function calling, and we have tools, convert the response back to function calling format
+            if mock_function_calling and mock_fncall_tools is not None:
+                if len(resp.choices) < 1:
+                    raise LLMNoResponseError(
+                        'Response choices is less than 1 - This is only seen in Gemini models so far. Response: '
+                        + str(resp)
+                    )
+
+                non_fncall_response_message = resp.choices[0].message
+                fn_call_messages_with_response = (
+                    convert_non_fncall_messages_to_fncall_messages(
+                        messages + [non_fncall_response_message], mock_fncall_tools
+                    )
+                )
+                fn_call_response_message = fn_call_messages_with_response[-1]
+                if not isinstance(fn_call_response_message, LiteLLMMessage):
+                    fn_call_response_message = LiteLLMMessage(
+                        **fn_call_response_message
+                    )
+                resp.choices[0].message = fn_call_response_message
+
+            # Check if resp has 'choices' key with at least one item
+            if not resp.get('choices') or len(resp['choices']) < 1:
+                raise LLMNoResponseError(
+                    'Response choices is less than 1 - This is only seen in Gemini models so far. Response: '
+                    + str(resp)
+                )
+
+            message_back: str = resp['choices'][0]['message']['content'] or ''
+            tool_calls: list[ChatCompletionMessageToolCall] = resp['choices'][0][
+                'message'
+            ].get('tool_calls', [])
+            if tool_calls:
+                for tool_call in tool_calls:
+                    fn_name = tool_call.function.name
+                    fn_args = tool_call.function.arguments
+                    message_back += f'\nFunction call: {fn_name}({fn_args})'
 
             # log the LLM response
             self.log_response(message_back)
-            if not os.environ.get('DISABLE_METRICS'):
-                # post-process to log costs
-                self._post_completion(resp)
+
+            # post-process the response first to calculate cost
+            cost = self._post_completion(resp)
+
+            # log for evals or other scripts that need the raw completion
+            if self.config.log_completions:
+                assert self.config.log_completions_folder is not None
+                log_file = os.path.join(
+                    self.config.log_completions_folder,
+                    # use the metric model name (for draft editor)
+                    f'{self.metrics.model_name.replace("/", "__")}-{time.time()}.json',
+                )
+
+                # set up the dict to be logged
+                _d = {
+                    'messages': messages,
+                    'response': resp,
+                    'args': args,
+                    'kwargs': {
+                        k: v
+                        for k, v in kwargs.items()
+                        if k not in ('messages', 'client')
+                    },
+                    'timestamp': time.time(),
+                    'cost': cost,
+                }
+
+                # if non-native function calling, save messages/response separately
+                if mock_function_calling:
+                    # Overwrite response as non-fncall to be consistent with messages
+                    _d['response'] = non_fncall_response
+
+                    # Save fncall_messages/response separately
+                    _d['fncall_messages'] = original_fncall_messages
+                    _d['fncall_response'] = resp
+                with open(log_file, 'w') as f:
+                    f.write(json.dumps(_d))
+
             return resp
 
         self._completion = wrapper
@@ -623,7 +504,14 @@ class LLM(RetryMixin, DebugMixin):
             if self.model_info is not None:
                 # max_output_tokens has precedence over max_tokens, if either exists.
                 # litellm has models with both, one or none of these 2 parameters!
-                self.config.max_output_tokens = self.model_info.get('max_output_tokens') or self.model_info.get('max_tokens')
+                if 'max_output_tokens' in self.model_info and isinstance(
+                    self.model_info['max_output_tokens'], int
+                ):
+                    self.config.max_output_tokens = self.model_info['max_output_tokens']
+                elif 'max_tokens' in self.model_info and isinstance(
+                    self.model_info['max_tokens'], int
+                ):
+                    self.config.max_output_tokens = self.model_info['max_tokens']
             if 'claude-3-7-sonnet' in self.config.model:
                 self.config.max_output_tokens = 64000  # litellm set max to 128k, but that requires a header to be set
 
@@ -677,9 +565,6 @@ class LLM(RetryMixin, DebugMixin):
         Returns:
             boolean: True if prompt caching is supported and enabled for the given model.
         """
-        if self.config.model.startswith('gemini'):
-            # GeminiException - Gemini Context Caching only supports 1 message/block of continuous messages. Cause: Environment reminder is added in the prompt?
-            return False
         return (
             self.config.caching_prompt is True
             and (
@@ -774,7 +659,7 @@ class LLM(RetryMixin, DebugMixin):
 
         return cur_cost
 
-    def get_token_count(self, messages=None, text=None) -> int:
+    def get_token_count(self, messages: list[dict] | list[Message]) -> int:
         """Get the number of tokens in a list of messages. Use dicts for better token counting.
 
         Args:
@@ -796,11 +681,12 @@ class LLM(RetryMixin, DebugMixin):
         # try to get the token count with the default litellm tokenizers
         # or the custom tokenizer if set for this LLM configuration
         try:
-            return litellm.token_counter(
-                model=self.config.model,
-                messages=messages,
-                custom_tokenizer=self.tokenizer,
-                text=text,
+            return int(
+                litellm.token_counter(
+                    model=self.config.model,
+                    messages=messages,
+                    custom_tokenizer=self.tokenizer,
+                )
             )
         except Exception as e:
             # limit logspam in case token count is not supported
@@ -904,36 +790,7 @@ class LLM(RetryMixin, DebugMixin):
     def reset(self) -> None:
         self.metrics.reset()
 
-    def is_over_token_limit(self, messages: list[Message]) -> bool:
-        """
-        Estimates the token count of the given events using litellm tokenizer and returns True if over the max_input_tokens value.
-
-        Parameters:
-        - messages: List of messages to estimate the token count for.
-
-        Returns:
-        - Estimated token count.
-        """
-        # max_input_tokens will always be set in init to some sensible default
-        # 0 in config.llm disables the check
-        MAX_TOKEN_COUNT_PADDING = 512
-        if not self.config.max_input_tokens:
-            return False
-        token_count = self.get_token_count(messages=messages) + MAX_TOKEN_COUNT_PADDING
-        output = token_count >= self.config.max_input_tokens
-        if output or 1:
-            logger.info(f'Token count: {token_count}')
-        return output
-
-    def get_text_messages(self, messages: list[Message]) -> list[dict]:
-        text_messages = []
-        for message in messages:
-            text_messages.append(message.model_dump())
-        return text_messages
-
-    def format_messages_for_llm(
-        self, messages: Union[Message, list[Message]]
-    ) -> list[dict]:
+    def format_messages_for_llm(self, messages: Message | list[Message]) -> list[dict]:
         if isinstance(messages, Message):
             messages = [messages]
 
@@ -947,11 +804,3 @@ class LLM(RetryMixin, DebugMixin):
 
         # let pydantic handle the serialization
         return [message.model_dump() for message in messages]
-
-
-if __name__ == '__main__':
-    from openhands.core.config.utils import get_llm_config_arg
-    config = get_llm_config_arg('hf')
-    llm = LLM(config=config)
-    messages = [Message(role='user', content=[TextContent(text='Hello, world!')])]
-    print(llm.format_messages_for_llm(messages))

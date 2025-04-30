@@ -1,4 +1,3 @@
-from datetime import datetime
 import os
 from dataclasses import dataclass, field
 from itertools import islice
@@ -8,7 +7,6 @@ from jinja2 import Template
 from openhands.controller.state.state import State
 from openhands.core.message import Message, TextContent
 from openhands.events.observation.agent import MicroagentKnowledge
-from openhands.microagent.microagent import load_microagents_from_dir
 
 
 @dataclass
@@ -39,45 +37,13 @@ class PromptManager:
     def __init__(
         self,
         prompt_dir: str,
-        microagent_dir: str | None = None,
-        agent_skills_docs: str = '',
-        disabled_microagents: list[str] | None = None,
-        use_bash: bool = True,
-        use_browser: bool = False,
     ):
         self.prompt_dir: str = prompt_dir
-        self.agent_skills_docs: str = agent_skills_docs
-        self.repository_info: RepositoryInfo | None = None
         self.system_template: Template = self._load_template('system_prompt')
         self.user_template: Template = self._load_template('user_prompt')
         self.additional_info_template: Template = self._load_template('additional_info')
         self.microagent_info_template: Template = self._load_template('microagent_info')
-        self.runtime_info = RuntimeInfo(
-            available_hosts={}, additional_agent_instructions='', date=datetime.now().strftime('%Y-%m-%d')
-        )
 
-        
-
-        self.use_bash = use_bash
-        self.use_browser = use_browser
-
-        # if microagent_dir:
-            # This loads micro-agents from the microagent_dir
-            # which is typically the OpenHands/microagents (i.e., the PUBLIC microagents)
-
-            # Only load KnowledgeMicroAgents
-            # repo_microagents, knowledge_microagents, _ = load_microagents_from_dir(
-            #     microagent_dir
-            # )
-            
-    def add_examples_to_initial_message(self, message: Message) -> None:
-        """Add example_message to the first user message."""
-        example_message = self.get_example_user_message() or None
-
-        # Insert it at the start of the TextContent list
-        if example_message:
-            message.content.insert(0, TextContent(text=example_message))
-            
     def _load_template(self, template_name: str) -> Template:
         if self.prompt_dir is None:
             raise ValueError('Prompt directory is not set')
@@ -88,11 +54,7 @@ class PromptManager:
             return Template(file.read())
 
     def get_system_message(self) -> str:
-        return self.system_template.render(
-            agent_skills_docs=self.agent_skills_docs,
-            use_bash=self.use_bash,
-            use_browser=self.use_browser,
-        ).strip()
+        return self.system_template.render().strip()
 
     def get_example_user_message(self) -> str:
         """This is an initial user message that can be provided to the agent
@@ -109,31 +71,15 @@ class PromptManager:
 
     def build_workspace_context(
         self,
-        message: Message,
-    ) -> None:
-        """Adds information about the repository and runtime to the initial user message.
-
-        Args:
-            message: The initial user message to add information to.
-        """
-        repo_instructions = ''
-        assert (
-            len(self.repo_microagents) <= 1
-        ), f'Expecting at most one repo microagent, but found {len(self.repo_microagents)}: {self.repo_microagents.keys()}'
-        for microagent in self.repo_microagents.values():
-            # We assume these are the repo instructions
-            if repo_instructions:
-                repo_instructions += '\n\n'
-            repo_instructions += microagent.content
-
-        server_keywords = ['fastapi', 'flask', 'django']
-        is_runtime_info_needed = any(keyword in repo_instructions for keyword in server_keywords)
-
-
-        additional_info = self.additional_info_template.render(
+        repository_info: RepositoryInfo | None,
+        runtime_info: RuntimeInfo | None,
+        repo_instructions: str = '',
+    ) -> str:
+        """Renders the additional info template with the stored repository/runtime info."""
+        return self.additional_info_template.render(
+            repository_info=repository_info,
             repository_instructions=repo_instructions,
-            repository_info=self.repository_info,
-            runtime_info=self.runtime_info if is_runtime_info_needed else None,
+            runtime_info=runtime_info,
         ).strip()
 
     def build_microagent_info(
@@ -164,5 +110,5 @@ class PromptManager:
             None,
         )
         if latest_user_message:
-            reminder_text = f'\n\nENVIRONMENT REMINDER: You have {state.max_iterations - state.iteration +2} turns left to complete the task. When finished reply with <finish></finish>.'
+            reminder_text = f'\n\nENVIRONMENT REMINDER: You have {state.max_iterations - state.iteration} turns left to complete the task. When finished reply with <finish></finish>.'
             latest_user_message.content.append(TextContent(text=reminder_text))

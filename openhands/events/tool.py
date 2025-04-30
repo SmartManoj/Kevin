@@ -7,5 +7,5 @@ class ToolCallMetadata(BaseModel):
     function_name: str  # Name of the function that was called
     tool_call_id: str  # ID of the tool call
 
-    _model_response: ModelResponse
+    model_response: ModelResponse
     total_calls_in_response: int

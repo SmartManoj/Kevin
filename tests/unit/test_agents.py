@@ -338,8 +338,8 @@ def test_mismatched_tool_call_events_and_auto_add_system_message(
 
     tool_call_metadata = Mock(
         spec=ToolCallMetadata,
-        _model_response=Mock(
-            id='_model_response',
+        model_response=Mock(
+            id='model_response',
             choices=[
                 Mock(
                     message=Mock(

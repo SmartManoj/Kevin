@@ -214,7 +214,7 @@ def response_to_actions(response: ModelResponse) -> list[Action]:
             action.tool_call_metadata = ToolCallMetadata(
                 tool_call_id=tool_call.id,
                 function_name=tool_call.function.name,
-                _model_response=response,
+                model_response=response,
                 total_calls_in_response=len(assistant_msg.tool_calls),
             )
             actions.append(action)
