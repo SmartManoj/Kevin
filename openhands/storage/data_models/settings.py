@@ -21,7 +21,7 @@ class Settings(BaseModel):
     Persisted settings for OpenHands sessions
     """
 
-    language: str | None = None
+    language: str | None = 'en'
     agent: str | None = None
     max_iterations: int | None = None
     security_analyzer: str | None = None
