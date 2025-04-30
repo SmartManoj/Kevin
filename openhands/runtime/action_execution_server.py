@@ -8,13 +8,9 @@ NOTE: this will be executed inside the docker sandbox.
 import argparse
 import asyncio
 import base64
-import json
 import mimetypes
 import os
-import re
 import shutil
-import subprocess
-import sys
 import tempfile
 import time
 import traceback
@@ -27,7 +23,10 @@ from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import APIKeyHeader
-# from openhands_aci.utils.diff import get_diff
+from openhands_aci.editor.editor import OHEditor
+from openhands_aci.editor.exceptions import ToolError
+from openhands_aci.editor.results import ToolResult
+from openhands_aci.utils.diff import get_diff
 from pydantic import BaseModel
 from starlette.background import BackgroundTask
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -52,22 +51,17 @@ from openhands.events.observation import (
     FileEditObservation,
     FileReadObservation,
     FileWriteObservation,
+    IPythonRunCellObservation,
     Observation,
 )
-from openhands.events.observation.commands import IPythonRunCellObservation
 from openhands.events.serialization import event_from_dict, event_to_dict
 from openhands.runtime.browser import browse
 from openhands.runtime.browser.browser_env import BrowserEnv
 from openhands.runtime.file_viewer_server import start_file_viewer_server
 from openhands.runtime.plugins import ALL_PLUGINS, JupyterPlugin, Plugin, VSCodePlugin
-
-if os.environ.get('USE_PEXPECT') == '1' or 1:
-    from openhands.runtime.utils.bash_pexpect import BashSession
-else:        
-    from openhands.runtime.utils.bash import BashSession
-
 from openhands.runtime.utils import find_available_tcp_port
 from openhands.runtime.utils.async_bash import AsyncBashSession
+from openhands.runtime.utils.bash import BashSession
 from openhands.runtime.utils.files import insert_lines, read_lines
 from openhands.runtime.utils.memory_monitor import MemoryMonitor
 from openhands.runtime.utils.runtime_init import init_user_and_working_directory
@@ -90,6 +84,57 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
         raise HTTPException(status_code=403, detail='Invalid API Key')
     return api_key
 
+
+def _execute_file_editor(
+    editor: OHEditor,
+    command: str,
+    path: str,
+    file_text: str | None = None,
+    view_range: list[int] | None = None,
+    old_str: str | None = None,
+    new_str: str | None = None,
+    insert_line: int | None = None,
+    enable_linting: bool = False,
+) -> tuple[str, tuple[str | None, str | None]]:
+    """Execute file editor command and handle exceptions.
+
+    Args:
+        editor: The OHEditor instance
+        command: Editor command to execute
+        path: File path
+        file_text: Optional file text content
+        view_range: Optional view range tuple (start, end)
+        old_str: Optional string to replace
+        new_str: Optional replacement string
+        insert_line: Optional line number for insertion
+        enable_linting: Whether to enable linting
+
+    Returns:
+        tuple: A tuple containing the output string and a tuple of old and new file content
+    """
+    result: ToolResult | None = None
+    try:
+        result = editor(
+            command=command,
+            path=path,
+            file_text=file_text,
+            view_range=view_range,
+            old_str=old_str,
+            new_str=new_str,
+            insert_line=insert_line,
+            enable_linting=enable_linting,
+        )
+    except ToolError as e:
+        result = ToolResult(error=e.message)
+
+    if result.error:
+        return f'ERROR:\n{result.error}', (None, None)
+
+    if not result.output:
+        logger.warning(f'No output from file_editor for {path}')
+        return '', (None, None)
+
+    return result.output, (result.old_content, result.new_content)
 
 
 class ActionExecutor:
@@ -118,15 +163,12 @@ class ActionExecutor:
         self.bash_session: BashSession | None = None
         self.lock = asyncio.Lock()
         self.plugins: dict[str, Plugin] = {}
-        self.file_editor = ''
-        # self.file_editor = OHEditor(workspace_root=self._initial_cwd)
+        self.file_editor = OHEditor(workspace_root=self._initial_cwd)
         self.browser: BrowserEnv | None = None
         self.browser_init_task: asyncio.Task | None = None
         self.browsergym_eval_env = browsergym_eval_env
         self.start_time = time.time()
         self.last_execution_time = self.start_time
-        self.last_code = ''
-        self.is_last_code_error = False
         self._initialized = False
 
         self.max_memory_gb: int | None = None
@@ -204,19 +246,15 @@ class ActionExecutor:
         )
         logger.debug('All plugins initialized')
 
-        code = 'from IPython.display import Image'
-        obs = await self.run_ipython(IPythonRunCellAction(code=code))
-        logger.debug(f'Image import initialized: {obs}')
         # This is a temporary workaround
         # TODO: refactor AgentSkills to be part of JupyterPlugin
         # AFTER ServerRuntime is deprecated
         logger.debug('Initializing AgentSkills')
         if 'agent_skills' in self.plugins and 'jupyter' in self.plugins:
-            self.kernel_init_code = (
-                'from openhands.runtime.plugins.agent_skills.agentskills import *'
-            )
             obs = await self.run_ipython(
-                IPythonRunCellAction(code=self.kernel_init_code)
+                IPythonRunCellAction(
+                    code='from openhands.runtime.plugins.agent_skills.agentskills import *\n'
+                )
             )
             logger.debug(f'AgentSkills initialized: {obs}')
 
@@ -232,9 +270,9 @@ class ActionExecutor:
 
     async def _init_plugin(self, plugin: Plugin):
         assert self.bash_session is not None
-        logger.debug(f'Initializing plugin: {plugin.name}')
         await plugin.initialize(self.username)
         self.plugins[plugin.name] = plugin
+        logger.debug(f'Initializing plugin: {plugin.name}')
 
         if isinstance(plugin, JupyterPlugin):
             await self.run_ipython(
@@ -244,29 +282,12 @@ class ActionExecutor:
             )
 
     async def _init_bash_commands(self):
-        is_local_runtime = os.environ.get('LOCAL_RUNTIME_MODE') == '1'
         INIT_COMMANDS = [
-            'git config --file ./.git_config user.name "Kevin AI Agent" && git config --file ./.git_config user.email "kevin@zebralock.ai" && alias git="git --no-pager" && export GIT_CONFIG=$(pwd)/.git_config'
-            if is_local_runtime
-            else 'git config --global user.name "Kevin AI Agent" && git config --global user.email "kevin@zebralock.ai" && alias git="git --no-pager"'
+            'git config --file ./.git_config user.name "openhands" && git config --file ./.git_config user.email "openhands@all-hands.dev" && alias git="git --no-pager" && export GIT_CONFIG=$(pwd)/.git_config'
+            if os.environ.get('LOCAL_RUNTIME_MODE') == '1'
+            else 'git config --global user.name "openhands" && git config --global user.email "openhands@all-hands.dev" && alias git="git --no-pager"'
         ]
-        INIT_COMMANDS += [
-            'export TERM=xterm-256color',
-            'set +H',
-        ]
-        if not is_local_runtime:
-            INIT_COMMANDS += [
-                'cd /workspace',
-                "export PATH=/openhands/poetry/$(ls /openhands/poetry | sed -n '2p')/bin:$PATH",
-            ]
-        else:
-            INIT_COMMANDS += [
-                "export PATH=/testbed/.venv/bin::$PATH",
-            ]
         logger.debug(f'Initializing by running {len(INIT_COMMANDS)} bash commands...')
-        # if root user, skip last command
-        if self.username == 'root' and not is_local_runtime:
-            INIT_COMMANDS.pop()
         for command in INIT_COMMANDS:
             action = CmdRunAction(command=command)
             action.set_hard_timeout(300)
@@ -302,71 +323,6 @@ class ActionExecutor:
         obs = await call_sync_from_async(self.bash_session.execute, action)
         return obs
 
-    async def chdir(self):
-        assert self.bash_session is not None
-        if 'jupyter' not in self.plugins:
-            return
-        _jupyter_plugin: JupyterPlugin = self.plugins['jupyter']  # type: ignore
-        reset_jupyter_cwd_code = f'import os; os.chdir("{self.bash_session.cwd}")'
-        _aux_action = IPythonRunCellAction(code=reset_jupyter_cwd_code)
-        _reset_obs: IPythonRunCellObservation = await _jupyter_plugin.run(_aux_action)
-        logger.debug(
-            f'Changed working directory in IPython to: {self.bash_session.cwd}. Output: {_reset_obs}'
-        )
-        self._jupyter_cwd = self.bash_session.cwd
-
-    async def restart_kernel(self) -> str:
-        if 'agent_skills' not in self.plugins:
-            return ''
-
-        jupyter_plugin: JupyterPlugin = self.plugins['jupyter']  # type: ignore
-        restart_kernel_code = (
-            'import IPython\nIPython.Application.instance().kernel.do_shutdown(True)'
-        )
-        act = IPythonRunCellAction(code=restart_kernel_code)
-        obs = await jupyter_plugin.run(act)
-        output = obs.content
-        if "{'status': 'ok', 'restart': True}" != output.strip():
-            print(output)
-            output = '\n[Failed to restart the kernel]'
-        else:
-            output = '\n[Kernel restarted successfully]'
-
-        await self.chdir()
-        # re-init the kernel after restart
-        logger.info(f'Re-initializing the kernel with {self.kernel_init_code}')
-        act = IPythonRunCellAction(code=self.kernel_init_code)
-        obs = await jupyter_plugin.run(act)
-        logger.info(f'Kernel re-initialized. Output: {obs}')
-        return output
-
-    def parse_pip_output(self, code, output) -> str:
-        print(output)
-        package_names = code.split(' ', 2)[-1]
-        parsed_output = output
-        if 'Successfully installed' in output:
-            parsed_output = '[Package installed successfully]'
-            if (
-                'Note: you may need to restart the kernel to use updated packages.'
-                in output
-            ):
-                # parsed_output += await self.restart_kernel()
-                pass
-            else:
-                # restart kernel if installed via bash too
-                # await self.restart_kernel()
-                pass
-        else:
-            package_names = package_names.split()
-            if all(
-                f'Requirement already satisfied: {package_name}' in output
-                for package_name in package_names
-            ):
-                plural = 's' if len(package_names) > 1 else ''
-                parsed_output = f'[Package{plural} already installed]'
-
-        return parsed_output
-
     async def run_ipython(self, action: IPythonRunCellAction) -> Observation:
         assert self.bash_session is not None
         if 'jupyter' in self.plugins:
@@ -375,106 +331,29 @@ class ActionExecutor:
             # current working directory in Bash
             jupyter_cwd = getattr(self, '_jupyter_cwd', None)
             if self.bash_session.cwd != jupyter_cwd:
-                await self.chdir()
-            obs: Observation | None = None
-            if action.code.startswith('%%writefile /tmp/test_task.py'):
-                obs = ErrorObservation(
-                    "[The content in this file is absolutely correct. Also, you can't modify this test file. You must pass this test case. You should correct the codebase instead.]"
+                logger.debug(
+                    f'{self.bash_session.cwd} != {jupyter_cwd} -> reset Jupyter PWD'
                 )
-            # not a shell command; false positive
-            # elif action.code.startswith('!python'):
-            #     obs = ErrorObservation(
-            #         "[Don't use Django shell commands in Jupyter Notebook as file changes will not be reflected. Directly run the code in the terminal using <execute_bash>.]"
-            #     )
-            elif (
-                (self.username == 'root')
-                and action.code == self.last_code
-                and self.is_last_code_error
-            ):
-                obs = ErrorObservation(
-                    '[You are trying to run the same code twice. Please focus and run the correct code.]'
+                reset_jupyter_cwd_code = (
+                    f'import os; os.chdir("{self.bash_session.cwd}")'
                 )
+                _aux_action = IPythonRunCellAction(code=reset_jupyter_cwd_code)
+                _reset_obs: IPythonRunCellObservation = await _jupyter_plugin.run(
+                    _aux_action
+                )
+                logger.debug(
+                    f'Changed working directory in IPython to: {self.bash_session.cwd}. Output: {_reset_obs}'
+                )
+                self._jupyter_cwd = self.bash_session.cwd
 
-            if obs:
-                return obs
-            action.code = action.code.replace('!pip', '%pip')
-            obs = await _jupyter_plugin.run(action)
-            if 'pip install' in action.code:
-                obs.content = self.parse_pip_output(action.code, obs.content)
+            obs: IPythonRunCellObservation = await _jupyter_plugin.run(action)
             obs.content = obs.content.rstrip()
-            matches = re.findall(
-                r'<oh_aci_output_[0-9a-f]{32}>(.*?)</oh_aci_output_[0-9a-f]{32}>',
-                obs.content,
-                re.DOTALL,
-            )
-            if matches:
-                results: list[str] = []
-                if len(matches) == 1:
-                    # Use specific actions/observations types
-                    match = matches[0]
-                    try:
-                        result_dict = json.loads(match)
-                        if result_dict.get('path'):  # Successful output
-                            if (
-                                result_dict['new_content'] is not None
-                            ):  # File edit commands
-                                # diff = get_diff(
-                                #     old_contents=result_dict['old_content']
-                                #     or '',  # old_content is None when file is created
-                                #     new_contents=result_dict['new_content'],
-                                #     filepath=result_dict['path'],
-                                # )
-                                diff = ''
-                                return FileEditObservation(
-                                    content=diff,
-                                    path=result_dict['path'],
-                                    old_content=result_dict['old_content'],
-                                    new_content=result_dict['new_content'],
-                                    prev_exist=result_dict['prev_exist'],
-                                    impl_source=FileEditSource.OH_ACI,
-                                    formatted_output_and_error=result_dict[
-                                        'formatted_output_and_error'
-                                    ],
-                                )
-                            else:  # File view commands
-                                return FileReadObservation(
-                                    content=result_dict['formatted_output_and_error'],
-                                    path=result_dict['path'],
-                                    impl_source=FileReadSource.OH_ACI,
-                                )
-                        else:  # Error output
-                            results.append(result_dict['formatted_output_and_error'])
-                    except json.JSONDecodeError:
-                        # Handle JSON decoding errors if necessary
-                        results.append(
-                            f"Invalid JSON in 'openhands-aci' output: {match}"
-                        )
-                else:
-                    for match in matches:
-                        try:
-                            result_dict = json.loads(match)
-                            results.append(result_dict['formatted_output_and_error'])
-                        except json.JSONDecodeError:
-                            # Handle JSON decoding errors if necessary
-                            results.append(
-                                f"Invalid JSON in 'openhands-aci' output: {match}"
-                            )
 
-                # Combine the results (e.g., join them) or handle them as required
-                obs.content = '\n'.join(str(result) for result in results)
-            self.last_code = action.code
-            self.is_last_code_error = 'Traceback (most recent call last)' in obs.content
-            # SLM_Tweak
-            # if 'NameError:' in obs.content:
-            #     last_line = obs.content.split('\n')[-1]
-            #     variable_name = last_line.split("'")[1]
-            #     action.code = action.code.replace(variable_name, f"'{variable_name}'")
-            #     return await self.run_ipython(action)
-            if self.username != 'root':
-                if 'Traceback (most recent call last)' in obs.content:
-                    obs.content += '\n\n[Hint: Use `search_in_stack_overflow(error_message)` to search for solutions.]'
-            # obs.content += f'\n[Jupyter current working directory: {self.bash_session.pwd}]'
-            # obs.content += f'\n[Jupyter Python interpreter: {_jupyter_plugin.python_interpreter_path}]'
+            if action.include_extra:
+                obs.content += (
+                    f'\n[Jupyter current working directory: {self.bash_session.cwd}]'
+                )
+                obs.content += f'\n[Jupyter Python interpreter: {_jupyter_plugin.python_interpreter_path}]'
             return obs
         else:
             raise RuntimeError(
@@ -495,7 +374,12 @@ class ActionExecutor:
             return ErrorObservation('ERROR_BINARY_FILE')
 
         if action.impl_source == FileReadSource.OH_ACI:
-            result_str = ''
+            result_str, _ = _execute_file_editor(
+                self.file_editor,
+                command='view',
+                path=action.path,
+                view_range=action.view_range,
+            )
 
             return FileReadObservation(
                 content=result_str,
@@ -534,16 +418,6 @@ class ActionExecutor:
                     encoded_video = f'data:{mime_type};base64,{encoded_video}'
 
                 return FileReadObservation(path=filepath, content=encoded_video)
-            elif filepath.lower().endswith(('.mp3', '.wav')):
-                with open(filepath, 'rb') as file:
-                    audio_data = file.read()
-                    encoded_audio = base64.b64encode(audio_data).decode('utf-8')
-                    mime_type, _ = mimetypes.guess_type(filepath)
-                    if mime_type is None:
-                        mime_type = 'audio/mpeg'  # default to MP3 if MIME type cannot be determined
-                    encoded_audio = f'data:{mime_type};base64,{encoded_audio}'
-
-                return FileReadObservation(path=filepath, content=encoded_audio)
 
             with open(filepath, 'r', encoding='utf-8') as file:  # noqa: ASYNC101
                 lines = read_lines(file.readlines(), action.start, action.end)
@@ -578,44 +452,16 @@ class ActionExecutor:
 
         mode = 'w' if not file_exists else 'r+'
         try:
-            if not os.path.exists(os.path.dirname(filepath)):
-                os.makedirs(os.path.dirname(filepath))
-
-            file_exists = os.path.exists(filepath)
-            if file_exists:
-                file_stat = os.stat(filepath)
-            else:
-                file_stat = None
-
-            mode = 'w' if not file_exists else 'r+'
             with open(filepath, mode, encoding='utf-8') as file:  # noqa: ASYNC101
                 if mode != 'w':
                     all_lines = file.readlines()
-                    new_file = insert_lines(
-                        insert, all_lines, action.start, action.end
-                    )
+                    new_file = insert_lines(insert, all_lines, action.start, action.end)
                 else:
                     new_file = [i + '\n' for i in insert]
 
                 file.seek(0)
                 file.writelines(new_file)
                 file.truncate()
-
-            # Handle file permissions
-            if sys.platform != 'win32':
-                if file_exists:
-                    assert file_stat is not None
-                    # restore the original file permissions if the file already exists
-                    os.chmod(filepath, file_stat.st_mode)
-                    os.chown(filepath, file_stat.st_uid, file_stat.st_gid)
-                else:
-                    # set the new file permissions if the file is new
-                    os.chmod(filepath, 0o644)
-                    os.chown(filepath, self.user_id, self.user_id)
-
-            file.seek(0)
-            file.writelines(new_file)
-            file.truncate()
 
         except FileNotFoundError:
             return ErrorObservation(f'File not found: {filepath}')
@@ -645,7 +491,16 @@ class ActionExecutor:
 
     async def edit(self, action: FileEditAction) -> Observation:
         assert action.impl_source == FileEditSource.OH_ACI
-        result_str = ''
+        result_str, (old_content, new_content) = _execute_file_editor(
+            self.file_editor,
+            command=action.command,
+            path=action.path,
+            file_text=action.file_text,
+            old_str=action.old_str,
+            new_str=action.new_str,
+            insert_line=action.insert_line,
+            enable_linting=False,
+        )
 
         return FileEditObservation(
             content=result_str,
@@ -653,7 +508,11 @@ class ActionExecutor:
             old_content=action.old_str,
             new_content=action.new_str,
             impl_source=FileEditSource.OH_ACI,
-            diff='',
+            diff=get_diff(
+                old_contents=old_content or '',
+                new_contents=new_content or '',
+                filepath=action.path,
+            ),
         )
 
     async def browse(self, action: BrowseURLAction) -> Observation:
