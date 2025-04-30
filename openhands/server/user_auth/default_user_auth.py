@@ -56,6 +56,6 @@ class DefaultUserAuth(UserAuth):
     @classmethod
     async def get_instance(cls, request: Request) -> UserAuth:
         user_auth = DefaultUserAuth()
-        user_auth.user_id = request.state.github_user_id
-        user_auth.access_token = SecretStr(request.state.github_token)
+        user_auth.user_id = getattr(request.state, 'github_user_id', None)
+        user_auth.access_token = SecretStr(getattr(request.state, 'github_token', None))
         return user_auth
