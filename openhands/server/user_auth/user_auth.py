@@ -58,5 +58,6 @@ async def get_user_auth(request: Request) -> UserAuth:
     impl_name = server_config.user_auth_class
     impl = get_impl(UserAuth, impl_name)
     user_auth = await impl.get_instance(request)
-    request.state.user_auth = user_auth
+    if user_auth.user_id:
+        request.state.user_auth = user_auth
     return user_auth

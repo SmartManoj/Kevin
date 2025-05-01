@@ -63,6 +63,10 @@ class RemoteRuntime(ActionExecutionClient):
             user_id,
             git_provider_tokens,
         )
+        if user_id is None:
+            raise ValueError(
+                'Login error: Please relogin.'
+            )
         if self.config.sandbox.api_key is None:
             raise ValueError(
                 'API key is required to use the remote runtime. '

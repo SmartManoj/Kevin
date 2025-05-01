@@ -4,6 +4,7 @@ import traceback
 import warnings
 from contextlib import asynccontextmanager
 from fastapi.params import Depends
+from openhands.server.user_auth import get_user_id
 from pydantic import SecretStr
 
 from fastapi.responses import RedirectResponse
@@ -152,6 +153,7 @@ async def get_github_details(request: Request):
             "github_user_id_from_state": getattr(request.state, 'github_user_id', None),
             "user_id_from_state": getattr(request.state, 'user_id', None),
             "provider_tokens_from_state": pts,
+            "user_id": await get_user_id(request)
         },
         status_code=200
     )
