@@ -4,11 +4,12 @@ load_dotenv()
 
 
 from openhands.agenthub import (  # noqa: E402
+    browser_use_agent,
     browsing_agent,
     codeact_agent,
     dummy_agent,
+    readonly_agent,
     visualbrowsing_agent,
-    browser_use_agent,
 )
 from openhands.controller.agent import Agent  # noqa: E402
 
@@ -19,4 +20,5 @@ __all__ = [
     'browsing_agent',
     'visualbrowsing_agent',
     'browser_use_agent',
+    'readonly_agent',
 ]
