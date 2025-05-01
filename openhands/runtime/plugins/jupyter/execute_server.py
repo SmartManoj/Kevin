@@ -127,6 +127,7 @@ class JupyterKernel:
             ),
             connect_timeout=250.0, request_timeout=300.0
         )
+        logging.info(f'Connecting to kernel websocket: {ws_req}')
         self.ws = await websocket_connect(ws_req)
         logging.info('Connected to kernel websocket')
 
