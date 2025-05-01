@@ -462,6 +462,10 @@ class RemoteRuntime(ActionExecutionClient):
             raise
 
         except httpx.HTTPError as e:
+            if isinstance(e, httpx.ConnectError):
+                raise AgentRuntimeDisconnectedError(
+                    'Sandbox is being created. Please reload the page.'
+                ) from e
             if e.response.status_code in (404, 502, 504):
                 if e.response.status_code == 404:
                     raise AgentRuntimeDisconnectedError(
