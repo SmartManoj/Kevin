@@ -21,7 +21,7 @@ ThinkTool = ChatCompletionToolParam(
             'properties': {
                 'thought': {'type': 'string', 'description': 'The thought to log.'},
             },
-            'required': ['thought'],
+            # 'required': ['thought'],
         },
     ),
 )
