@@ -355,6 +355,12 @@ class LLM(RetryMixin, DebugMixin):
                 )
 
             message_back: str = resp['choices'][0]['message']['content'] or ''
+
+            # replace <think> tag with <thought> tag if it is missing
+            if '<think>' in message_back and '<thought>' not in message_back:
+                message_back = message_back.replace('<think>', '<thought>')
+                resp['choices'][0]['message']['content'] = message_back
+
             tool_calls: list[ChatCompletionMessageToolCall] = resp['choices'][0][
                 'message'
             ].get('tool_calls', [])
