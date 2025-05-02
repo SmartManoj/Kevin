@@ -23,7 +23,7 @@ from openhands.integrations.service_types import (
     User,
 )
 from openhands.server.shared import server_config
-from openhands.server.auth import (
+from openhands.server.user_auth import (
     get_access_token,
     get_provider_tokens,
     get_user_id,

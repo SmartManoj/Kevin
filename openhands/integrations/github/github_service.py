@@ -18,7 +18,7 @@ from openhands.integrations.service_types import (
     UnknownException,
     User,
 )
-from openhands.server.auth import get_github_token
+from openhands.server.user_auth import get_github_token
 from openhands.server.types import AppMode
 from openhands.utils.import_utils import get_impl
 

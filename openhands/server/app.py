@@ -11,7 +11,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
 
 from openhands.integrations.provider import PROVIDER_TOKEN_TYPE, ProviderHandler
-from openhands.server.auth import get_access_token, get_provider_tokens
+from openhands.server.user_auth import get_access_token, get_provider_tokens
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from openhands.db import get_credits
-from openhands.server.auth import get_user_id
+from openhands.server.user_auth import get_user_id
 
 
 app = APIRouter(prefix='/api/billing')
