@@ -36,7 +36,14 @@ const config: Config = {
     mermaid: true,
   },
   themes: ['@docusaurus/theme-mermaid'],
-  plugins: [],
+  plugins: [
+    [
+      require.resolve('docusaurus-lunr-search'),
+      {
+        languages: ['en', 'zh', 'fr', 'ja', 'pt']
+      }
+    ]
+  ],
   presets: [
     [
       'classic',
@@ -89,9 +96,13 @@ const config: Config = {
           position: 'left',
         },
         {
+          type: 'search',
+          position: 'left',
+        },
+        {
           href: "https://zebralock.ai",
-          label: "Company",
-          position: "right",
+          label: 'Company',
+          position: 'right',
         },
         {
           href: "https://github.com/SmartManoj/Kevin",

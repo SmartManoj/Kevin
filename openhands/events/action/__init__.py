@@ -17,7 +17,7 @@ from openhands.events.action.files import (
 )
 from openhands.events.action.message import MessageAction, RegenerateAction
 from openhands.events.action.tasks import AddTaskAction, ModifyTaskAction
-from openhands.events.action.mcp import McpAction
+from openhands.events.action.mcp import MCPAction
 from openhands.events.action.message import MessageAction, SystemMessageAction
 
 __all__ = [
@@ -42,5 +42,5 @@ __all__ = [
     'ActionConfirmationStatus',
     'AgentThinkAction',
     'RecallAction',
-    'McpAction',
+    'MCPAction',
 ]

@@ -19,7 +19,7 @@ from openhands.events.action import (
     IPythonRunCellAction,
     MessageAction,
 )
-from openhands.events.action.mcp import McpAction
+from openhands.events.action.mcp import MCPAction
 from openhands.events.action.message import SystemMessageAction
 from openhands.events.event import AudioEvent, Event, LogEvent, RecallType
 from openhands.events.observation import (
@@ -186,7 +186,7 @@ class ConversationMemory:
                 - BrowseInteractiveAction: For browsing the web
                 - AgentFinishAction: For ending the interaction
                 - MessageAction: For sending messages
-                - McpAction: For interacting with the MCP server
+                - MCPAction: For interacting with the MCP server
             pending_tool_call_action_messages: Dictionary mapping response IDs to their corresponding messages.
                 Used in function calling mode to track tool calls that are waiting for their results.
 
@@ -211,7 +211,7 @@ class ConversationMemory:
                 FileReadAction,
                 BrowseInteractiveAction,
                 BrowseURLAction,
-                McpAction,
+                MCPAction,
             ),
         ) or ((isinstance(action, CmdRunAction) and action.source == 'agent') or 
               (isinstance(action, IPythonRunCellAction) and action.source == 'agent')):
