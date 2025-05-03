@@ -162,6 +162,22 @@ export function handleAssistantMessage(message: Record<string, unknown>) {
     store.dispatch(setCurrentStep(message.log));
   } else if (message.text_for_audio) {
     generateAudio(message.text_for_audio as string);
+  } else if (message.error) {
+    // Handle error messages from the server
+    const errorMessage =
+      typeof message.message === "string"
+        ? message.message
+        : String(message.message || "Unknown error");
+    trackError({
+      message: errorMessage,
+      source: "websocket",
+      metadata: { raw_message: message },
+    });
+    store.dispatch(
+      addErrorMessage({
+        message: errorMessage,
+      }),
+    );
   } else {
     const errorMsg = `Unknown message type received: ${JSON.stringify(message)}`;
     trackError({
