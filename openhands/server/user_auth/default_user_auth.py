@@ -29,7 +29,7 @@ class DefaultUserAuth(UserAuth):
 
     async def get_access_token(self) -> SecretStr | None:
         """The default implementation does not support multi tenancy, so access_token is always None"""
-        return self.access_token.get_secret_value() if self.access_token else None
+        return self.access_token.get_secret_value() if self.access_token is not None else None
 
     async def get_user_settings_store(self):
         settings_store = self._settings_store
