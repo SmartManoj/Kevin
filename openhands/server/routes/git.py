@@ -8,12 +8,12 @@ from openhands.server.shared import SettingsStoreImpl, config
 
 from openhands.server.shared import server_config
 from openhands.integrations.github.github_service import GithubServiceImpl
+from openhands.storage.settings.secret_store import UserSecrets
 from openhands.integrations.provider import (
     PROVIDER_TOKEN_TYPE,
     ProviderHandler,
     ProviderType,
     ProviderToken,
-    SecretStore,
 )
 from openhands.integrations.service_types import (
     AuthenticationError,
@@ -167,7 +167,7 @@ async def github_callback(
         settings = await settings_store.load()
         # Create a new SecretStore with the GitHub token
         provider_token = ProviderToken(token=SecretStr(access_token), user_id=user.id)
-        new_secrets_store = SecretStore(provider_tokens={ProviderType.GITHUB: provider_token})
+        new_secrets_store = UserSecrets(provider_tokens={ProviderType.GITHUB: provider_token})
         
         # Update the settings with the new secrets_store
         settings = settings.model_copy(update={'secrets_store': new_secrets_store})
