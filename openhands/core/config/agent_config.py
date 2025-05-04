@@ -47,8 +47,6 @@ class AgentConfig(BaseModel):
         default_factory=lambda: NoOpCondenserConfig(type='noop')
     )
 
-    model_config = {'extra': 'forbid'}
-
     @classmethod
     def from_toml_section(cls, data: dict) -> dict[str, AgentConfig]:
         """
