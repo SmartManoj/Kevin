@@ -11,7 +11,7 @@ from openhands.integrations.service_types import ProviderType
 from openhands.storage.data_models.settings import Settings
 
 
-class POSTSettingsModel(Settings):
+class POSTProviderModel(BaseModel):
     """
     Settings for POST requests
     """
@@ -19,7 +19,7 @@ class POSTSettingsModel(Settings):
     provider_tokens: dict[ProviderType, ProviderToken] = {}
 
 
-class POSTSettingsCustomSecrets(BaseModel):
+class POSTCustomSecrets(BaseModel):
     """
     Adding new custom secret
     """
@@ -38,7 +38,7 @@ class GETSettingsModel(Settings):
     llm_api_key_set: bool
 
 
-class GETSettingsCustomSecrets(BaseModel):
+class GETCustomSecrets(BaseModel):
     """
     Custom secrets names
     """

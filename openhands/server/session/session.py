@@ -31,6 +31,7 @@ from openhands.events.observation import (
 from openhands.db import get_credits, set_credits
 from openhands.events.observation.error import ErrorObservation
 from openhands.events.observation.agent import RecallObservation
+from openhands.events.observation.error import ErrorObservation
 from openhands.events.serialization import event_from_dict, event_to_dict
 from openhands.events.stream import EventStreamSubscriber
 from openhands.llm.llm import LLM
