@@ -8,6 +8,6 @@ app = APIRouter(prefix='/api/billing')
 
 @app.get('/credits')
 async def get_credits_route(request: Request):
-    user_id = get_user_id(request)
+    user_id = await get_user_id(request)
     print('getting credits for', user_id)
     return {"credits": get_credits(user_id)}
