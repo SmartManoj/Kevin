@@ -50,9 +50,9 @@ class Settings(BaseModel):
         """
         context = info.context
         if context and context.get('expose_secrets', False):
-            return llm_api_key.get_secret_value() if llm_api_key else None
+            return llm_api_key.get_secret_value() if llm_api_key is not None else ""
 
-        return pydantic_encoder(llm_api_key) if llm_api_key else None
+        return pydantic_encoder(llm_api_key) if llm_api_key is not None else ""
 
     @model_validator(mode='before')
     @classmethod

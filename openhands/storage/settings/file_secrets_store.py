@@ -23,7 +23,7 @@ class FileSecretsStore(SecretsStore):
             secrets = UserSecrets(**kwargs)
             return secrets
         except FileNotFoundError:
-            return None
+            return UserSecrets()
 
     async def store(self, secrets: UserSecrets) -> None:
         json_str = secrets.model_dump_json(context={'expose_secrets': True})
@@ -33,5 +33,5 @@ class FileSecretsStore(SecretsStore):
     async def get_instance(
         cls, config: AppConfig, user_id: str | None
     ) -> FileSecretsStore:
-        file_store = get_file_store(config.file_store, config.file_store_path)
+        file_store = get_file_store(config.file_store, f"{config.file_store_path}/{user_id}")
         return FileSecretsStore(file_store)

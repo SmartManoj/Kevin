@@ -87,6 +87,7 @@ async def authenticate(request: Request,
                 )
                 await client.get_user()
             except Exception as e:
+                traceback.print_exc()
                 return JSONResponse(
                     content={"error": str(e)},
                     status_code=401

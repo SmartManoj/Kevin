@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse, RedirectResponse
 import jwt
 from pydantic import SecretStr
-from openhands.server.shared import SettingsStoreImpl, config
+from openhands.server.shared import SecretsStoreImpl, SettingsStoreImpl, config
 
 
 from openhands.server.shared import server_config
@@ -163,15 +163,14 @@ async def github_callback(
         request.session['user_id'] = user.id
         request.state.user_id = user.id
         # save settings
-        settings_store = await SettingsStoreImpl.get_instance(config, user.id)
-        settings = await settings_store.load()
+        secrets_store = await SecretsStoreImpl.get_instance(config, user.id)
+        secrets = await secrets_store.load()
         # Create a new SecretStore with the GitHub token
         provider_token = ProviderToken(token=SecretStr(access_token), user_id=user.id)
-        new_secrets_store = UserSecrets(provider_tokens={ProviderType.GITHUB: provider_token})
         
         # Update the settings with the new secrets_store
-        settings = settings.model_copy(update={'secrets_store': new_secrets_store})
-        await settings_store.store(settings)
+        secrets = secrets.model_copy(update={'provider_tokens': {ProviderType.GITHUB: provider_token}})
+        await secrets_store.store(secrets)
         # set the cookie of github_user_id encoded in jwt
         jwt_secret = (
             config.jwt_secret.get_secret_value()
