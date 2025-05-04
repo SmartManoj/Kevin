@@ -18,7 +18,6 @@ from openhands.integrations.service_types import (
     UnknownException,
     User,
 )
-from openhands.server.user_auth import get_github_token
 from openhands.server.types import AppMode
 from openhands.utils.import_utils import get_impl
 
@@ -253,9 +252,6 @@ class GitHubService(BaseGitService, GitService):
 
         return repos
 
-    @classmethod
-    def get_gh_token(cls, request: Request) -> str | None:
-        return get_github_token(request)
 
     async def handle_github_callback(self, code: str):
         try:
