@@ -95,9 +95,7 @@ class Settings(BaseModel):
         """Custom serializer for secrets store."""
 
         """Force invalidate secret store"""
-        return {
-            'provider_tokens': {}
-        }
+        return {'provider_tokens': {}}
 
     @staticmethod
     def from_config() -> Settings | None:
