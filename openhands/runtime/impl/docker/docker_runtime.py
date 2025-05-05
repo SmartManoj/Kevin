@@ -274,7 +274,11 @@ class DockerRuntime(ActionExecutionClient):
     def _init_container(self):
         self.log('debug', 'Preparing to start container...')
         self.send_status_message('STATUS$PREPARING_CONTAINER')
-        self._vscode_port = self._find_available_port(VSCODE_PORT_RANGE)
+        # Use the configured vscode_port if provided, otherwise find an available port
+        self._vscode_port = (
+            self.config.sandbox.vscode_port
+            or self._find_available_port(VSCODE_PORT_RANGE)
+        )
         self._app_ports = [
             self._find_available_port(APP_PORT_RANGE_1),
             self._find_available_port(APP_PORT_RANGE_2),
