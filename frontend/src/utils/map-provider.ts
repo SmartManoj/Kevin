@@ -3,7 +3,7 @@ export const MAP_PROVIDER = {
   openai: "OpenAI",
   azure: "Azure",
   azure_ai: "Azure AI Studio",
-  vertex_ai: "VertexAI",
+  vertex_ai: "Vertex AI",
   palm: "PaLM",
   gemini: "Gemini",
   anthropic: "Anthropic",
