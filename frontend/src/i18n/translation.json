@@ -30,7 +30,7 @@
         "de": "Lass uns anfangen zu bauen!"
     },
     "HOME$OPENHANDS_DESCRIPTION": {
-        "en": "OpenHands makes it easy to build and maintain software using AI-driven development.",
+        "en": "Kevin makes it easy to build and maintain software using AI-driven development.",
         "ja": "OpenHandsはAI駆動の開発を使用してソフトウェアの構築と維持を容易にします。",
         "zh-CN": "OpenHands使用AI驱动的开发方式，轻松构建和维护软件。",
         "zh-TW": "OpenHands使用AI驅動的開發方式，輕鬆構建和維護軟件。",
@@ -647,7 +647,7 @@
         "de": "Browser"
     },
     "BROWSER$EMPTY_MESSAGE": {
-        "en": "If you tell OpenHands to start a web server, the app will appear here.",
+        "en": "If you tell Kevin to start a web server, the app will appear here.",
         "ja": "OpenHandsにWebサーバーの起動を指示すると、ここにアプリが表示されます。",
         "zh-CN": "如果您告诉OpenHands启动Web服务器，应用将在此处显示。",
         "zh-TW": "如果您要求 OpenHands 啟動網頁伺服器，應用程式將會顯示在此處。",
@@ -706,7 +706,6 @@
         "tr": "Hesap ayarları",
         "de": "Kontoeinstellungen"
     },
-
     "WORKSPACE$TERMINAL_TAB_LABEL": {
         "en": "Terminal",
         "zh-CN": "终端",
@@ -1202,13 +1201,6 @@
         "tr": "Geçersiz dosya yolu. Lütfen dosya adını kontrol edin ve tekrar deneyin.",
         "ja": "ファイルパスが無効です。ファイル名を確認して、もう一度お試しください。"
     },
-
-
-
-
-
-
-
     "VSCODE$OPEN": {
         "en": "Open in VS Code",
         "ja": "VS Codeで開く",
@@ -1360,7 +1352,7 @@
         "tr": "Bağımlılıkları temizle"
     },
     "CONFIGURATION$OPENHANDS_WORKSPACE_DIRECTORY_INPUT_LABEL": {
-        "en": "OpenHands Workspace directory",
+        "en": "Kevin Workspace directory",
         "zh-CN": "OpenHands工作区目录",
         "de": "OpenHands Arbeitsverzeichnis",
         "ko-KR": "OpenHands 워크스페이스 디렉토리",
@@ -2268,10 +2260,6 @@
         "tr": "Dosyaları buraya bırakın",
         "ja": "ここにファイルをドロップ"
     },
-
-
-
-
     "EXPLORER$UPLOAD_SUCCESS_MESSAGE": {
         "en": "Successfully uploaded {{count}} file(s)",
         "zh-CN": "上传成功",
@@ -2738,7 +2726,7 @@
         "ja": "不変条件アナライザー"
     },
     "INVARIANT$INVARIANT_ANALYZER_MESSAGE": {
-        "en": "Invariant Analyzer continuously monitors your OpenHands agent for security issues.",
+        "en": "Invariant Analyzer continuously monitors your Kevin agent for security issues.",
         "es": "Analizador de invariantes continuamente monitorea tu agente de OpenHands por problemas de seguridad.",
         "zh-CN": "不变量分析器持续监控您的 OpenHands 代理的安全问题。",
         "zh-TW": "不變量分析器持續監控您的 OpenHands 代理的安全問題。",
@@ -2963,7 +2951,7 @@
         "tr": "Hadi inşa etmeye başlayalım!"
     },
     "LANDING$SUBTITLE": {
-        "en": "OpenHands makes it easy to build and maintain software using a simple prompt.",
+        "en": "Kevin makes it easy to build and maintain software using a simple prompt.",
         "ja": "OpenHandsは、シンプルなプロンプトを使用してソフトウェアの開発と保守を簡単にします。",
         "zh-CN": "OpenHands 使用简单的提示来轻松构建和维护软件。",
         "zh-TW": "OpenHands 使用簡單的提示來輕鬆建構和維護軟體。",
@@ -3876,7 +3864,7 @@
         "ja": "画像をアップロード"
     },
     "CHAT_INTERFACE$INITIAL_MESSAGE": {
-        "en": "Hi! I'm OpenHands, an AI Software Engineer. What would you like to build with me today?",
+        "en": "Hi! I'm Kevin, an AI Software Engineer. What would you like to build with me today?",
         "zh-CN": "你好！我是 OpenHands，一名 AI 软件工程师。今天想和我一起编写什么程序呢?",
         "de": "Hi! Ich bin OpenHands, ein KI-Softwareingenieur. Was möchten Sie heute mit mir erstellen?",
         "ko-KR": "안녕하세요! 저는 오픈데빈(OpenHands), AI 소프트웨어 엔지니어입니다. 오늘은 저와 함께 무엇을 만들어 볼까요?",
@@ -4224,7 +4212,7 @@
         "en": "API Keys"
     },
     "SETTINGS$API_KEYS_DESCRIPTION": {
-        "en": "API keys allow you to authenticate with the OpenHands API programmatically. Keep your API keys secure; anyone with your API key can access your account."
+        "en": "API keys allow you to authenticate with the Kevin API programmatically. Keep your API keys secure; anyone with your API key can access your account."
     },
     "SETTINGS$CREATE_API_KEY": {
         "en": "Create API Key"
@@ -4959,7 +4947,7 @@
         "tr": "Çalışma zamanına bağlanırken bir hata oluştu. Lütfen sayfayı yenileyin."
     },
     "STATUS$ERROR_LLM_OUT_OF_CREDITS": {
-        "en": "You're out of OpenHands Credits",
+        "en": "You're out of Kevin Credits",
         "ja": "OpenHandsクレジットが不足しています",
         "zh-CN": "您的OpenHands点数已用完",
         "zh-TW": "您的OpenHands點數已用完",
@@ -5187,9 +5175,6 @@
         "es": "Subir archivo",
         "tr": "Dosya yükle"
     },
-
-
-
     "ACTION_MESSAGE$RUN": {
         "en": "Running <cmd>{{action.payload.args.command}}</cmd>",
         "zh-CN": "运行 <cmd>{{action.payload.args.command}}</cmd>",
@@ -5795,7 +5780,7 @@
         "de": "Guthaben zu Ihrem Konto hinzufügen"
     },
     "BILLING$YOUVE_GOT_50": {
-        "en": "You've got $50 in free OpenHands credits",
+        "en": "You've got $50 in free Kevin credits",
         "ja": "OpenHandsの無料クレジット$50を獲得しました",
         "zh-CN": "您获得了 $50 的 OpenHands 免费额度",
         "zh-TW": "您獲得了 $50 的 OpenHands 免費額度",
@@ -5900,7 +5885,7 @@
         "de": "Guthaben hinzufügen"
     },
     "PAYMENT$MANAGE_CREDITS": {
-        "en": "Manage Credits",
+        "en": "Available Agent Time",
         "ja": "クレジットを管理",
         "zh-CN": "管理信用",
         "zh-TW": "管理信用",
@@ -6365,7 +6350,7 @@
         "tr": "GitLab'a bağlan"
     },
     "AUTH$SIGN_IN_WITH_IDENTITY_PROVIDER": {
-        "en": "Log in to OpenHands",
+        "en": "Log in to Kevin",
         "ja": "IDプロバイダーでサインイン",
         "zh-CN": "使用您的身份提供商登录",
         "zh-TW": "使用您的身份提供商登入",
@@ -6680,7 +6665,7 @@
         "de": "Ihr aktueller Arbeitsbereich ist kein git-Repository."
     },
     "DIFF_VIEWER$ASK_OH": {
-        "en": "Ask OpenHands to initialize a git repo to activate this UI.",
+        "en": "Ask Kevin to initialize a git repo to activate this UI.",
         "ja": "このUIを有効にするために、OpenHandsにgitリポジトリを初期化するよう依頼します。",
         "zh-CN": "请OpenHands初始化git存储库以激活此UI。",
         "zh-TW": "請OpenHands初始化git存儲庫以啟用此UI。",
@@ -6695,7 +6680,7 @@
         "de": "Bitten Sie OpenHands, ein git-Repository zu initialisieren, um diese Benutzeroberfläche zu aktivieren."
     },
     "DIFF_VIEWER$NO_CHANGES": {
-        "en": "OpenHands hasn't made any changes yet...",
+        "en": "Kevin hasn't made any changes yet...",
         "ja": "OpenHandsはまだ変更を加えていません...",
         "zh-CN": "OpenHands尚未进行任何更改...",
         "zh-TW": "OpenHands尚未進行任何更改...",
@@ -6755,7 +6740,7 @@
         "tr": "Ajan Sınıfı:"
     },
     "SYSTEM_MESSAGE_MODAL$OPENHANDS_VERSION": {
-        "en": "OpenHands Version:",
+        "en": "Kevin Version:",
         "zh-CN": "OpenHands 版本：",
         "zh-TW": "OpenHands 版本：",
         "ko-KR": "OpenHands 버전:",
@@ -6828,8 +6813,7 @@
         "pt": "Nenhuma ferramenta disponível para este agente",
         "es": "No hay herramientas disponibles para este agente",
         "tr": "Bu ajan için kullanılabilir araç yok"
-    }
-,
+    },
     "TOS$ACCEPT_TERMS_OF_SERVICE": {
         "en": "Accept Terms of Service",
         "ja": "利用規約に同意する",
@@ -6879,7 +6863,7 @@
         "pt": "Erro ao aceitar os Termos de Serviço"
     },
     "TIPS$CUSTOMIZE_MICROAGENT": {
-        "en": "You can customize OpenHands for your repo using a microagent. Ask OpenHands to put a description of the repo, including how to run the code, into .openhands/microagents/repo.md.",
+        "en": "You can customize Kevin for your repo using a microagent. Ask Kevin to put a description of the repo, including how to run the code, into .openhands/microagents/repo.md.",
         "ja": "マイクロエージェントを使用して、リポジトリ用にOpenHandsをカスタマイズできます。OpenHandsに、コードの実行方法を含むリポジトリの説明を.openhands/microagents/repo.mdに入れるよう依頼してください。",
         "zh-CN": "您可以使用微代理为您的仓库自定义OpenHands。请OpenHands将仓库的描述（包括如何运行代码）放入.openhands/microagents/repo.md。",
         "zh-TW": "您可以使用微代理為您的倉庫自定義OpenHands。請OpenHands將倉庫的描述（包括如何運行代碼）放入.openhands/microagents/repo.md。",
@@ -6894,7 +6878,7 @@
         "de": "Sie können OpenHands für Ihr Repository mit einem Mikroagenten anpassen. Bitten Sie OpenHands, eine Beschreibung des Repositorys, einschließlich der Ausführung des Codes, in .openhands/microagents/repo.md zu platzieren."
     },
     "TIPS$SETUP_SCRIPT": {
-        "en": "You can add .openhands/setup.sh to your repository to automatically run a setup script every time you start an OpenHands conversation.",
+        "en": "You can add .openhands/setup.sh to your repository to automatically run a setup script every time you start an Kevin conversation.",
         "ja": "OpenHandsの会話を開始するたびに自動的にセットアップスクリプトを実行するために、.openhands/setup.shをリポジトリに追加できます。",
         "zh-CN": "您可以将.openhands/setup.sh添加到您的仓库中，以便在每次启动OpenHands对话时自动运行设置脚本。",
         "zh-TW": "您可以將.openhands/setup.sh添加到您的倉庫中，以便在每次啟動OpenHands對話時自動運行設置腳本。",
@@ -6909,7 +6893,7 @@
         "de": "Sie können .openhands/setup.sh zu Ihrem Repository hinzufügen, um jedes Mal, wenn Sie ein OpenHands-Gespräch starten, automatisch ein Setup-Skript auszuführen."
     },
     "TIPS$VSCODE_INSTANCE": {
-        "en": "Every OpenHands conversation comes with a VS Code instance, where you can interact with the development environment.",
+        "en": "Every Kevin conversation comes with a VS Code instance, where you can interact with the development environment.",
         "ja": "すべてのOpenHands会話には、開発環境と対話できるVS Codeインスタンスが付属しています。",
         "zh-CN": "每个OpenHands对话都配有VS Code实例，您可以在其中与开发环境交互。",
         "zh-TW": "每個OpenHands對話都配有VS Code實例，您可以在其中與開發環境交互。",
@@ -6939,7 +6923,7 @@
         "de": "Stellen Sie sicher, dass Sie Ihre Arbeit regelmäßig speichern, entweder durch Pushen zu GitHub oder durch Herunterladen Ihrer Dateien über VS Code."
     },
     "TIPS$SPECIFY_FILES": {
-        "en": "When possible, include the names of files or functions OpenHands should focus on. This can help OpenHands work faster, save money, and improve accuracy.",
+        "en": "When possible, include the names of files or functions Kevin should focus on. This can help Kevin work faster, save money, and improve accuracy.",
         "ja": "可能な場合は、OpenHandsが集中すべきファイルや関数の名前を含めてください。これにより、OpenHandsの作業が速くなり、コストを節約し、精度を向上させることができます。",
         "zh-CN": "如果可能，请包含OpenHands应该关注的文件或函数的名称。这可以帮助OpenHands更快地工作，节省成本，并提高准确性。",
         "zh-TW": "如果可能，請包含OpenHands應該關注的文件或函數的名稱。這可以幫助OpenHands更快地工作，節省成本，並提高準確性。",
@@ -6954,7 +6938,7 @@
         "de": "Wenn möglich, geben Sie die Namen der Dateien oder Funktionen an, auf die sich OpenHands konzentrieren soll. Dies kann OpenHands helfen, schneller zu arbeiten, Geld zu sparen und die Genauigkeit zu verbessern."
     },
     "TIPS$HEADLESS_MODE": {
-        "en": "You can run OpenHands in headless mode to create automations, like responding to 500 errors by automatically creating a fix.",
+        "en": "You can run Kevin in headless mode to create automations, like responding to 500 errors by automatically creating a fix.",
         "ja": "OpenHandsをヘッドレスモードで実行して、500エラーに対して自動的に修正を作成するなどの自動化を作成できます。",
         "zh-CN": "您可以在无头模式下运行OpenHands来创建自动化，例如通过自动创建修复来响应500错误。",
         "zh-TW": "您可以在無頭模式下運行OpenHands來創建自動化，例如通過自動創建修復來響應500錯誤。",
@@ -6969,7 +6953,7 @@
         "de": "Sie können OpenHands im Headless-Modus ausführen, um Automatisierungen zu erstellen, wie z.B. das Reagieren auf 500-Fehler durch automatisches Erstellen einer Lösung."
     },
     "TIPS$CLI_MODE": {
-        "en": "You can run OpenHands as a CLI, similar to Claude Code.",
+        "en": "You can run Kevin as a CLI, similar to Claude Code.",
         "ja": "Claude Codeと同様に、OpenHandsをCLIとして実行できます。",
         "zh-CN": "您可以将OpenHands作为CLI运行，类似于Claude Code。",
         "zh-TW": "您可以將OpenHands作為CLI運行，類似於Claude Code。",
@@ -6984,7 +6968,7 @@
         "de": "Sie können OpenHands als CLI ausführen, ähnlich wie Claude Code."
     },
     "TIPS$GITHUB_HOOK": {
-        "en": "OpenHands Cloud offers a GitHub hook, so you can say \"@openhands fix the merge conflicts\" or \"@openhands fix the feedback on this PR\" right inside the GitHub UI.",
+        "en": "Kevin Cloud offers a GitHub hook, so you can say \"@openhands fix the merge conflicts\" or \"@openhands fix the feedback on this PR\" right inside the GitHub UI.",
         "ja": "OpenHands CloudはGitHubフックを提供しているため、GitHub UI内で「@openhands マージの競合を修正して」や「@openhands このPRのフィードバックを修正して」と言うことができます。",
         "zh-CN": "OpenHands Cloud提供GitHub钩子，因此您可以在GitHub UI中直接说\"@openhands 修复合并冲突\"或\"@openhands 修复此PR上的反馈\"。",
         "zh-TW": "OpenHands Cloud提供GitHub鉤子，因此您可以在GitHub UI中直接說\"@openhands 修復合併衝突\"或\"@openhands 修復此PR上的反饋\"。",
@@ -6999,7 +6983,7 @@
         "de": "OpenHands Cloud bietet einen GitHub-Hook, sodass Sie \"@openhands fix the merge conflicts\" oder \"@openhands fix the feedback on this PR\" direkt in der GitHub-Benutzeroberfläche sagen können."
     },
     "TIPS$BLOG_SIGNUP": {
-        "en": "Sign up for the OpenHands Blog to hear about new features and the latest releases.",
+        "en": "Sign up for the Kevin Blog to hear about new features and the latest releases.",
         "ja": "OpenHandsブログに登録して、新機能や最新リリースについての情報を入手しましょう。",
         "zh-CN": "注册OpenHands博客，了解新功能和最新版本。",
         "zh-TW": "註冊OpenHands博客，了解新功能和最新版本。",
@@ -7014,7 +6998,7 @@
         "de": "Melden Sie sich für den OpenHands Blog an, um über neue Funktionen und die neuesten Versionen informiert zu werden."
     },
     "TIPS$API_USAGE": {
-        "en": "OpenHands has an API! Create OpenHands conversations with simple cURL command.",
+        "en": "Kevin has an API! Create Kevin conversations with simple cURL command.",
         "ja": "OpenHandsにはAPIがあります！簡単なcURLコマンドでOpenHands会話を作成できます。",
         "zh-CN": "OpenHands有API！使用简单的cURL命令创建OpenHands对话。",
         "zh-TW": "OpenHands有API！使用簡單的cURL命令創建OpenHands對話。",
@@ -7057,5 +7041,11 @@
         "fr": "Astuce pro",
         "tr": "Uzman ipucu",
         "de": "Profi-Tipp"
+    },
+    "CHAT_INTERFACE$AUTO_MESSAGE": {
+        "en": "You have full access to this system. Please continue working on the task on whatever approach you think is suitable.\nIf you think you have solved the task, you can give <finish> to end the interaction.\nIMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n"
+    },
+    "CHAT_INTERFACE$AUTO_MESSAGE_SENT": {
+        "en": "Sent the default Auto Msg 🤖"
     }
 }

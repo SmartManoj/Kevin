@@ -15,5 +15,6 @@ data['CHAT_INTERFACE$AUTO_MESSAGE_SENT'] = { 'en': "Sent the default Auto Msg ðŸ
 data['PAYMENT$MANAGE_CREDITS']['en'] = "Available Agent Time"
 
 
-with open(f, 'w', encoding='utf-8') as file:
-    json.dump(data, file, indent=4, ensure_ascii=False)
+with open(f, 'w', encoding='utf-8', newline='') as file:
+    file.write(json.dumps(data, indent=4, ensure_ascii=False))
+    file.write('\n')
