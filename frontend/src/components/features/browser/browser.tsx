@@ -1,16 +1,30 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "#/store";
 import { updateBrowserTabUrl } from "#/services/browse-service";
 import { BrowserSnapshot } from "./browser-snapshot";
 import { EmptyBrowserMessage } from "./empty-browser-message";
 import { useWsClient } from "#/context/ws-client-provider";
+import { useConversation } from "#/context/conversation-context";
+import {
+  initialState as browserInitialState,
+  setUrl,
+  setScreenshotSrc,
+} from "#/state/browser-slice";
 
 export function BrowserPanel() {
   const { send } = useWsClient();
   const { url, screenshotSrc } = useSelector(
     (state: RootState) => state.browser,
   );
+  const { conversationId } = useConversation();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setUrl(browserInitialState.url));
+    dispatch(setScreenshotSrc(browserInitialState.screenshotSrc));
+  }, [conversationId]);
 
   const [editableUrl, setEditableUrl] = useState(url);
 
