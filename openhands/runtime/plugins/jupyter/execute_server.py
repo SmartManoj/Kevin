@@ -143,7 +143,7 @@ class JupyterKernel:
         retry=retry_if_exception_type((ConnectionRefusedError, tornado.websocket.WebSocketClosedError)),
         stop=stop_after_attempt(3),
         wait=wait_fixed(2),
-    )
+    )  # type: ignore
     async def execute(self, code: str, timeout: int = 120) -> str:
         if not self.ws or self.ws.stream.closed():
             await self._connect()

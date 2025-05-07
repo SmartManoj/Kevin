@@ -23,17 +23,18 @@ from openhands.integrations.provider import PROVIDER_TOKEN_TYPE, ProviderToken
 from openhands.integrations.service_types import ProviderType
 from openhands.server.session.conversation_init_data import ConversationInitData
 from openhands.server.shared import (
-    server_config,
-    ConversationStoreImpl,
+    SecretsStoreImpl,
     SettingsStoreImpl,
     config,
     conversation_manager,
+    server_config,
     sio,
 )
 from openhands.server.types import AppMode
 from openhands.storage.conversation.conversation_validator import (
     create_conversation_validator,
 )
+from openhands.storage.data_models.user_secrets import UserSecrets
 
 
 def create_provider_tokens_object(
@@ -83,6 +84,9 @@ async def connect(connection_id: str, environ):
     settings_store = await SettingsStoreImpl.get_instance(config, user_id)
     settings = await settings_store.load()
 
+    secrets_store = await SecretsStoreImpl.get_instance(config, user_id)
+    user_secrets: UserSecrets = await secrets_store.load()
+
     if not settings:
         logger.error('Settings not found')
         raise ConnectionRefusedError(
@@ -92,9 +96,12 @@ async def connect(connection_id: str, environ):
     if settings:
         session_init_args = {**settings.__dict__, **session_init_args}
 
-    session_init_args['git_provider_tokens'] = create_provider_tokens_object(
-        providers_set
-    )
+    git_provider_tokens = user_secrets.provider_tokens
+    if server_config.app_mode == AppMode.SAAS:
+        git_provider_tokens = create_provider_tokens_object(providers_set)
+
+    session_init_args['git_provider_tokens'] = git_provider_tokens
+
     conversation_init_data = ConversationInitData(**session_init_args)
 
     event_stream = await conversation_manager.join_conversation(
