@@ -8,7 +8,6 @@ from openhands.server.shared import SecretsStoreImpl, SettingsStoreImpl, config
 
 from openhands.server.shared import server_config
 from openhands.integrations.github.github_service import GithubServiceImpl
-from openhands.storage.settings.secret_store import UserSecrets
 from openhands.integrations.provider import (
     PROVIDER_TOKEN_TYPE,
     ProviderHandler,
