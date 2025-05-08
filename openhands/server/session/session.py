@@ -11,7 +11,7 @@ import socketio
 
 import openhands.core.config2 as config2
 from openhands.controller.agent import Agent
-from openhands.core.config import AppConfig
+from openhands.core.config import AppConfig, MCPConfig
 from openhands.core.config.condenser_config import (
     BrowserOutputCondenserConfig,
     CondenserPipelineConfig,
@@ -84,7 +84,7 @@ class Session:
         self.loop = asyncio.get_event_loop()
         self.user_id = user_id
 
-    async def close(self):
+    async def close(self) -> None:
         if self.sio:
             await self.sio.emit(
                 'oh_event',
@@ -101,7 +101,7 @@ class Session:
         settings: Settings,
         initial_message: MessageAction | None,
         replay_json: str | None,
-    ):
+    ) -> None:
         self.agent_session.event_stream.add_event(
             AgentStateChangedObservation('', AgentState.LOADING),
             EventSource.ENVIRONMENT,
@@ -125,6 +125,7 @@ class Session:
             or settings.sandbox_runtime_container_image
             else self.config.sandbox.runtime_container_image
         )
+        self.config.mcp = settings.mcp_config or MCPConfig()
         max_iterations = settings.max_iterations or self.config.max_iterations
 
         # This is a shallow copy of the default LLM config, so changes here will
@@ -218,10 +219,10 @@ class Session:
             'info', msg_id, f'Retrying LLM request, {retries} / {max}'
         )
 
-    def on_event(self, event: Event):
+    def on_event(self, event: Event) -> None:
         asyncio.get_event_loop().run_until_complete(self._on_event(event))
 
-    async def _on_event(self, event: Event):
+    async def _on_event(self, event: Event) -> None:
         """Callback function for events that mainly come from the agent.
         Event is the base class for any agent action and observation.
 
@@ -278,7 +279,7 @@ class Session:
             event_dict['source'] = EventSource.AGENT
             await self.send(event_dict)
 
-    async def dispatch(self, data: dict):
+    async def dispatch(self, data: dict) -> None:
         event = event_from_dict(data.copy())
         # This checks if the model supports images
         if isinstance(event, MessageAction) and event.image_urls:
@@ -296,7 +297,7 @@ class Session:
                     return
         self.agent_session.event_stream.add_event(event, EventSource.USER)
 
-    async def send(self, data: dict[str, object]):
+    async def send(self, data: dict[str, object]) -> None:
         if asyncio.get_running_loop() != self.loop:
             self.loop.create_task(self._send(data))
             return
@@ -316,11 +317,11 @@ class Session:
             self.is_alive = False
             return False
 
-    async def send_error(self, message: str):
+    async def send_error(self, message: str) -> None:
         """Sends an error message to the client."""
         await self.send({'error': True, 'message': message})
 
-    async def _send_status_message(self, msg_type: str, id: str, message: str):
+    async def _send_status_message(self, msg_type: str, id: str, message: str) -> None:
         """Sends a status message to the client."""
         if msg_type == 'error':
             agent_session = self.agent_session
@@ -335,7 +336,7 @@ class Session:
             {'status_update': True, 'type': msg_type, 'id': id, 'message': message}
         )
 
-    def queue_status_message(self, msg_type: str, id: str, message: str):
+    def queue_status_message(self, msg_type: str, id: str, message: str) -> None:
         """Queues a status message to be sent asynchronously."""
         asyncio.run_coroutine_threadsafe(
             self._send_status_message(msg_type, id, message), self.loop

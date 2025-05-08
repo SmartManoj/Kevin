@@ -194,7 +194,7 @@ class JupyterKernel:
 
                 if os.environ.get('DEBUG'):
                     logging.info(
-                        f"MSG TYPE: {msg_type.upper()} DONE:{execution_done}\nCONTENT: {msg_dict['content']}"
+                        f'MSG TYPE: {msg_type.upper()} DONE:{execution_done}\nCONTENT: {msg_dict["content"]}'
                     )
 
                 if msg_type == 'error':
@@ -208,7 +208,7 @@ class JupyterKernel:
                     if 'image/png' in msg_dict['content']['data']:
                         # use markdone to display image (in case of large image)
                         outputs.append(
-                            f"\n![image](data:image/png;base64,{msg_dict['content']['data']['image/png']})\n"
+                            f'\n![image](data:image/png;base64,{msg_dict["content"]["data"]["image/png"]})\n'
                         )
 
                 elif msg_type == 'execute_reply':
@@ -277,8 +277,8 @@ class ExecuteHandler(tornado.web.RequestHandler):
 
 def make_app(url: str = 'localhost') -> tornado.web.Application:
     jupyter_kernel = JupyterKernel(
-        f"{url}:{os.environ.get('JUPYTER_GATEWAY_PORT')}",
-        os.environ.get('JUPYTER_GATEWAY_KERNEL_ID'),
+        f'{url}:{os.environ.get("JUPYTER_GATEWAY_PORT", "8888")}',
+        os.environ.get('JUPYTER_GATEWAY_KERNEL_ID', 'default'),
     )
     asyncio.get_event_loop().run_until_complete(jupyter_kernel.initialize())
 

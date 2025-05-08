@@ -49,6 +49,9 @@ enum ActionType {
 
   // Changes the state of the agent, e.g. to paused or running
   CHANGE_AGENT_STATE = "change_agent_state",
+
+  // Interact with the MCP server.
+  MCP = "call_tool_mcp",
 }
 
 export default ActionType;

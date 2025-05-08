@@ -173,6 +173,15 @@ export interface RecallAction extends OpenHandsActionEvent<"recall"> {
   };
 }
 
+export interface MCPAction extends OpenHandsActionEvent<"call_tool_mcp"> {
+  source: "agent";
+  args: {
+    name: string;
+    arguments: Record<string, unknown>;
+    thought?: string;
+  };
+}
+
 export type OpenHandsAction =
   | UserMessageAction
   | AssistantMessageAction
@@ -190,4 +199,5 @@ export type OpenHandsAction =
   | AddTaskAction
   | ModifyTaskAction
   | RejectAction
-  | RecallAction;
+  | RecallAction
+  | MCPAction;

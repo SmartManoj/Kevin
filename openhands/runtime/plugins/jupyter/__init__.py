@@ -1,5 +1,8 @@
 import asyncio
 import os
+import subprocess
+import sys
+import time
 from dataclasses import dataclass
 
 from openhands.core.logger import openhands_logger as logger
@@ -20,7 +23,7 @@ class JupyterPlugin(Plugin):
     name: str = 'jupyter'
     kernel_gateway_port: int
     kernel_id: str
-    gateway_process: asyncio.subprocess.Process
+    gateway_process: asyncio.subprocess.Process | subprocess.Popen
     python_interpreter_path: str
 
     async def initialize(
@@ -28,7 +31,10 @@ class JupyterPlugin(Plugin):
     ) -> None:
         self.kernel_gateway_port = find_available_tcp_port(40000, 49999)
         self.kernel_id = kernel_id
-        if not os.environ.get('LOCAL_RUNTIME_MODE'):
+        is_local_runtime = os.environ.get('LOCAL_RUNTIME_MODE') == '1'
+        is_windows = sys.platform == 'win32'
+
+        if not is_local_runtime:
             # Non-LocalRuntime
             prefix = f'su - {username} -s '
             # cd to code repo, setup all env vars and run micromamba
@@ -50,18 +56,62 @@ class JupyterPlugin(Plugin):
                 )
             # The correct environment is ensured by the PATH in LocalRuntime.
             poetry_prefix = f'cd {code_repo_path}\n'
-        poetry_alias = os.environ.get('POETRY_ALIAS', 'poetry')
-        jupyter_prefix = f'{poetry_alias} run ' if os.environ.get('SKIP_POETRY') != '1' else ''
-        jupyter_launch_command = (
-            f"{prefix}/bin/bash << 'EOF'\n"
-            f'{poetry_prefix}'
-            f'{jupyter_prefix}python -m jupyter kernelgateway '
-            '--KernelGatewayApp.ip=0.0.0.0 '
-            f'--KernelGatewayApp.port={self.kernel_gateway_port}\n'
-            'EOF'
-        )
-        logger.debug(f'Jupyter launch command: {jupyter_launch_command}')
-        if not os.environ.get('JUPYTER_URL'):
+
+        if is_windows:
+            # Windows-specific command format
+            jupyter_launch_command = (
+                f'cd /d "{code_repo_path}" && '
+                'poetry run jupyter kernelgateway '
+                '--KernelGatewayApp.ip=0.0.0.0 '
+                f'--KernelGatewayApp.port={self.kernel_gateway_port}'
+            )
+            logger.debug(f'Jupyter launch command (Windows): {jupyter_launch_command}')
+
+            # Using synchronous subprocess.Popen for Windows as asyncio.create_subprocess_shell
+            # has limitations on Windows platforms
+            self.gateway_process = subprocess.Popen(  # type: ignore[ASYNC101] # noqa: ASYNC101
+                jupyter_launch_command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                shell=True,
+                text=True,
+            )
+
+            # Windows-specific stdout handling with synchronous time.sleep
+            # as asyncio has limitations on Windows for subprocess operations
+            output = ''
+            while should_continue():
+                if self.gateway_process.stdout is None:
+                    time.sleep(1)  # type: ignore[ASYNC101] # noqa: ASYNC101
+                    continue
+
+                line = self.gateway_process.stdout.readline()
+                if not line:
+                    time.sleep(1)  # type: ignore[ASYNC101] # noqa: ASYNC101
+                    continue
+
+                output += line
+                if 'at' in line:
+                    break
+
+                time.sleep(1)  # type: ignore[ASYNC101] # noqa: ASYNC101
+                logger.debug('Waiting for jupyter kernel gateway to start...')
+
+            logger.debug(
+                f'Jupyter kernel gateway started at port {self.kernel_gateway_port}. Output: {output}'
+            )
+        else:
+            # Unix systems (Linux/macOS)
+            jupyter_launch_command = (
+                f"{prefix}/bin/bash << 'EOF'\n"
+                f'{poetry_prefix}'
+                'poetry run jupyter kernelgateway '
+                '--KernelGatewayApp.ip=0.0.0.0 '
+                f'--KernelGatewayApp.port={self.kernel_gateway_port}\n'
+                'EOF'
+            )
+            logger.debug(f'Jupyter launch command: {jupyter_launch_command}')
+
             # Using asyncio.create_subprocess_shell instead of subprocess.Popen
             # to avoid ASYNC101 linting error
             self.gateway_process = await asyncio.create_subprocess_shell(
@@ -79,8 +129,10 @@ class JupyterPlugin(Plugin):
                     break
                 await asyncio.sleep(1)
                 logger.debug('Waiting for jupyter kernel gateway to start...')
-        else:
-            logger.info(f'Jupyter URL: {os.environ.get("JUPYTER_URL")}')
+
+            logger.debug(
+                f'Jupyter kernel gateway started at port {self.kernel_gateway_port}. Output: {output}'
+            )
 
         _obs = await self.run(
             IPythonRunCellAction(code='import sys; print(sys.executable)')
