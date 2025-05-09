@@ -7865,7 +7865,7 @@
         "uk": "Помилка прийняття Умов обслуговування"
     },
     "TIPS$CUSTOMIZE_MICROAGENT": {
-        "en": "You can customize Kevin for your repo using a microagent. Ask Kevin to put a description of the repo, including how to run the code, into .openhands/microagents/repo.md.",
+        "en": "You can customize Kevin for your repo using a microagent. Ask Kevin to put a description of the repo, including how to run the code, into .kevin/microagents/repo.md.",
         "ja": "マイクロエージェントを使用して、リポジトリ用にOpenHandsをカスタマイズできます。OpenHandsに、コードの実行方法を含むリポジトリの説明を.openhands/microagents/repo.mdに入れるよう依頼してください。",
         "zh-CN": "您可以使用微代理为您的仓库自定义OpenHands。请OpenHands将仓库的描述（包括如何运行代码）放入.openhands/microagents/repo.md。",
         "zh-TW": "您可以使用微代理為您的倉庫自定義OpenHands。請OpenHands將倉庫的描述（包括如何運行代碼）放入.openhands/microagents/repo.md。",
@@ -7881,7 +7881,7 @@
         "uk": "Ви можете налаштувати OpenHands для вашого репозиторію за допомогою мікроагента. Попросіть OpenHands розмістити опис репозиторію, включаючи інструкції з запуску коду, у файлі .openhands/microagents/repo.md."
     },
     "TIPS$SETUP_SCRIPT": {
-        "en": "You can add .openhands/setup.sh to your repository to automatically run a setup script every time you start an Kevin conversation.",
+        "en": "You can add .kevin/setup.sh to your repository to automatically run a setup script every time you start an Kevin conversation.",
         "ja": "OpenHandsの会話を開始するたびに自動的にセットアップスクリプトを実行するために、.openhands/setup.shをリポジトリに追加できます。",
         "zh-CN": "您可以将.openhands/setup.sh添加到您的仓库中，以便在每次启动OpenHands对话时自动运行设置脚本。",
         "zh-TW": "您可以將.openhands/setup.sh添加到您的倉庫中，以便在每次啟動OpenHands對話時自動運行設置腳本。",
@@ -7977,7 +7977,7 @@
         "uk": "Ви можете запускати OpenHands як CLI, подібно до Claude Code."
     },
     "TIPS$GITHUB_HOOK": {
-        "en": "Kevin Cloud offers a GitHub hook, so you can say \"@openhands fix the merge conflicts\" or \"@openhands fix the feedback on this PR\" right inside the GitHub UI.",
+        "en": "Kevin Cloud offers a GitHub hook, so you can say \"@kevin fix the merge conflicts\" or \"@kevin fix the feedback on this PR\" right inside the GitHub UI.",
         "ja": "OpenHands CloudはGitHubフックを提供しているため、GitHub UI内で「@openhands マージの競合を修正して」や「@openhands このPRのフィードバックを修正して」と言うことができます。",
         "zh-CN": "OpenHands Cloud提供GitHub钩子，因此您可以在GitHub UI中直接说\"@openhands 修复合并冲突\"或\"@openhands 修复此PR上的反馈\"。",
         "zh-TW": "OpenHands Cloud提供GitHub鉤子，因此您可以在GitHub UI中直接說\"@openhands 修復合併衝突\"或\"@openhands 修復此PR上的反饋\"。",
