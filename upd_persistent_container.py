@@ -17,8 +17,6 @@ full_file_names = [
     'openhands/runtime/utils/bash_pexpect.py',
     'openhands/runtime/action_execution_server.py',
     'openhands/linter/__init__.py',
-    'openhands/sel/selenium_tester.py',
-    'openhands/sel/selenium_session_details.py',
     'openhands/events/event.py',
     'sandbox.env'
 ]

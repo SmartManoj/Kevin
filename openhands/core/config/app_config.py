@@ -53,7 +53,6 @@ class AppConfig(BaseModel):
         file_uploads_restrict_file_types: Whether to restrict upload file types.
         file_uploads_allowed_extensions: Allowed file extensions. `['.*']` allows all.
         custom_instructions: Custom instructions for the agent.
-        use_selenium: Whether to use selenium.
         dont_restore_state: Whether to not restore state from cli session.
         cli_multiline_input: Whether to enable multiline input in CLI. When disabled,
             input is read line by line. When enabled, input continues until /exit command.
@@ -111,7 +110,6 @@ class AppConfig(BaseModel):
     show_workspace_contents: bool = True
     override_UI_settings: bool = False
     custom_instructions: str = ''
-    use_selenium: bool = False
     dont_restore_state: bool = False
 
     defaults_dict: ClassVar[dict] = {}

@@ -210,10 +210,6 @@ check-poetry:
 		fi; \
 	fi
 
-sel:
-	@echo "$(YELLOW)Starting Selenium...$(RESET)"
-	@python -i openhands/sel/selenium_browser.py
-
 install-python-dependencies:
 	@export DEBIAN_FRONTEND=noninteractive
 	@echo "$(GREEN)Installing Python dependencies...$(RESET)"

@@ -5,12 +5,8 @@ import arxiv
 import requests
 from fuzzywuzzy import fuzz
 from scholarly import scholarly
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 from semanticscholar import SemanticScholar
 
-from openhands.sel.selenium_tester import driver
 
 
 def clean_filename(filename: str):
@@ -89,25 +85,7 @@ def download_semantic_scholar_pdf(query: str | None = None, url: str | None = No
             print('No results found')
             return
         url = results[0].url
-    driver.get(url)
-    try:
-        s = '[data-test-id="cookie-banner__dismiss-btn"]'
-        WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, s))
-        ).click()
-    except Exception as e:
-        print(f'Error: {e}')
-    s = '[data-test-id="icon-disclosure"]'
-    WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, s))
-    ).click()
-    s = '[data-test-id="paper-link"]'
-    link = driver.find_element(By.CSS_SELECTOR, s).get_attribute('href')
-    if 'arxiv' in link:
-        print(f'Downloading from {link}')
-        download_pdf_from_url(link)
-    else:
-        print(f'Download from {link}')
+    print('Use Browser Use')
 
 
 def download_google_scholar_paper(search_query: str):
