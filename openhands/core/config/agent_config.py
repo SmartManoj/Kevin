@@ -22,6 +22,8 @@ class AgentConfig(BaseModel):
     # original configs
     llm_config: str | None = Field(default=None)
     """The name of the llm config to use. If specified, this will override global llm config."""
+    classpath: str | None = Field(default=None)
+    """The classpath of the agent to use. To be used for custom agents that are not defined in the openhands.agenthub package."""
     enable_browsing: bool = Field(default=True)
     """Whether to enable browsing tool"""
     enable_llm_editor: bool = Field(default=False)
