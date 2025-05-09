@@ -4,10 +4,6 @@ from typing import Any, Literal
 from litellm import ChatCompletionMessageToolCall
 from pydantic import BaseModel, Field, model_serializer
 
-from openhands.core.config import load_app_config
-
-config = load_app_config()
-
 
 class ContentType(Enum):
     TEXT = 'text'
