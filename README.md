@@ -13,6 +13,12 @@ The easiest way to run Kevin is to press comma (,) to [![Open in GitHub Codespac
 
 ---
 
+Similar Projects in TypeScript:
+
+- [Roo Code](https://github.com/RooVetGit/Roo-Code)
+- [Kilo Code](https://github.com/Kilo-Org/kilocode)
+
+
 ### [Refined SWE Bench Verified Lite](evaluation/benchmarks/swe_bench/Refined_SWE_BENCH.md)
 
 Gemini Models solves all 93 issues in this category. Checkout the results [here](evaluation/benchmarks/swe_bench/swe_bench_verified_lite_result.md)
