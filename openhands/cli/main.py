@@ -279,7 +279,6 @@ async def run_session(
 
 async def main(loop: asyncio.AbstractEventLoop) -> None:
     """Runs the agent in CLI mode."""
-
     args = parse_arguments()
 
     logger.setLevel(logging.WARNING)

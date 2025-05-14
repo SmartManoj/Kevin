@@ -7,11 +7,11 @@ from fastapi.params import Depends
 from openhands.server.user_auth import get_user_id
 from pydantic import SecretStr
 
-from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
 
 from openhands.integrations.provider import PROVIDER_TOKEN_TYPE, ProviderHandler
 from openhands.server.user_auth import get_access_token, get_provider_tokens
+from typing import AsyncIterator
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
@@ -40,7 +40,7 @@ from openhands.server.routes.trajectory import app as trajectory_router
 from openhands.server.shared import conversation_manager
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI):
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     async with conversation_manager:
         yield
 
@@ -54,7 +54,7 @@ app = FastAPI(
 
 
 @app.get('/health')
-async def health():
+async def health() -> str:
     return 'OK'
 
 
