@@ -3,14 +3,14 @@ import os
 import tarfile
 from glob import glob
 
-from e2b import Sandbox as E2BSandbox
+from e2b import Sandbox
 from e2b.exceptions import TimeoutException
 
 from openhands.core.config import SandboxConfig
 from openhands.core.logger import openhands_logger as logger
 
 
-class E2BBox:
+class E2BSandbox:
     closed = False
     _cwd: str = '/home/user'
     _env: dict[str, str] = {}
@@ -24,8 +24,8 @@ class E2BBox:
     ):
         self.config = copy.deepcopy(config)
         self.initialize_plugins: bool = config.initialize_plugins
-        self.sandbox = E2BSandbox(
-            api_key=e2b_api_key,
+        self.sandbox = Sandbox(
+            api_key=e2b_api_key or self.config.api_key,
             template=template,
             # It's possible to stream stdout and stderr from sandbox and from each process
             on_stderr=lambda x: logger.debug(f'E2B sandbox stderr: {x}'),
