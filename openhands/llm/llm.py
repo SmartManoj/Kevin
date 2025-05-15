@@ -198,6 +198,11 @@ class LLM(RetryMixin, DebugMixin):
         kwargs: dict[str, Any] = {
             'temperature': self.config.temperature,
         }
+        if self.config.top_k is not None:
+            # openai doesn't expose top_k
+            # litellm will handle it a bit differently than the openai-compatible params
+            kwargs['top_k'] = self.config.top_k
+
         if (
             self.config.model.lower() in REASONING_EFFORT_SUPPORTED_MODELS
             or self.config.model.split('/')[-1] in REASONING_EFFORT_SUPPORTED_MODELS
