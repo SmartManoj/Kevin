@@ -10,6 +10,7 @@ DEFAULT_PYTHON_PREFIX = [
     'poetry',
     'run',
 ]
+DEFAULT_MAIN_MODULE = 'openhands.runtime.action_execution_server'
 
 
 def get_action_execution_server_startup_command(
@@ -19,6 +20,7 @@ def get_action_execution_server_startup_command(
     python_prefix: list[str] = DEFAULT_PYTHON_PREFIX,
     override_user_id: int | None = None,
     override_username: str | None = None,
+    main_module: str = DEFAULT_MAIN_MODULE,
 ) -> list[str]:
     sandbox_config = app_config.sandbox
 
@@ -46,7 +48,7 @@ def get_action_execution_server_startup_command(
         'python',
         '-u',
         '-m',
-        'openhands.runtime.action_execution_server',
+        main_module,
         str(server_port),
         '--working-dir',
         app_config.workspace_mount_path_in_sandbox,

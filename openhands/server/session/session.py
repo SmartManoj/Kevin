@@ -17,6 +17,7 @@ from openhands.core.config.condenser_config import (
     CondenserPipelineConfig,
     LLMSummarizingCondenserConfig,
 )
+from openhands.core.exceptions import MicroagentValidationError
 from openhands.core.logger import OpenHandsLoggerAdapter
 from openhands.core.schema import AgentState
 from openhands.events.action import MessageAction, NullAction
@@ -178,10 +179,12 @@ class Session:
         git_provider_tokens = None
         selected_repository = None
         selected_branch = None
+        custom_secrets = None
         if isinstance(settings, ConversationInitData):
             git_provider_tokens = settings.git_provider_tokens
             selected_repository = settings.selected_repository
             selected_branch = settings.selected_branch
+            custom_secrets = settings.custom_secrets
 
         try:
             await self.agent_session.start(
@@ -193,20 +196,36 @@ class Session:
                 agent_to_llm_config=self.config.get_agent_to_llm_config_map(),
                 agent_configs=self.config.get_agent_configs(),
                 git_provider_tokens=git_provider_tokens,
+                custom_secrets=custom_secrets,
                 selected_repository=selected_repository,
                 selected_branch=selected_branch,
                 initial_message=initial_message,
                 replay_json=replay_json,
             )
+        except MicroagentValidationError as e:
+            self.logger.exception(f'Error creating agent_session: {e}')
+            # For microagent validation errors, provide more helpful information
+            await self.send_error(f'Failed to create agent session: {str(e)}')
+            return
+        except ValueError as e:
+            self.logger.exception(f'Error creating agent_session: {e}')
+            error_message = str(e)
+            # For ValueError related to microagents, provide more helpful information
+            if 'microagent' in error_message.lower():
+                await self.send_error(
+                    f'Failed to create agent session: {error_message}'
+                )
+            else:
+                # For other ValueErrors, just show the error class
+                await self.send_error('Failed to create agent session: ValueError')
+            return
         except Exception as e:
             self.logger.exception(f'Error creating agent_session: {e}')
             await self.send_error(f'Failed to create agent session: {e}')
             return
 
     def _create_llm(self, agent_cls: str | None) -> LLM:
-        """
-        Initialize LLM, extracted for testing.
-        """
+        """Initialize LLM, extracted for testing."""
         agent_name = agent_cls if agent_cls is not None else 'agent'
         return LLM(
             config=self.config.get_llm_config_from_agent(agent_name),
