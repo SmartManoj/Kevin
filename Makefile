@@ -5,6 +5,7 @@ SHELL=/usr/bin/env bash
 BACKEND_HOST ?= "127.0.0.1"
 BACKEND_PORT ?= 8000
 BACKEND_HOST_PORT = "$(BACKEND_HOST):$(BACKEND_PORT)"
+FRONTEND_HOST ?= "127.0.0.1"
 FRONTEND_PORT = 3001
 DEFAULT_WORKSPACE_DIR = "./workspace"
 DEFAULT_MODEL = "gpt-4o"
@@ -393,6 +394,15 @@ setup-config-prompts:
 	@read -p "Enter your LLM base URL [mostly used for local LLMs, leave blank if not needed - example: http://localhost:5001/v1/]: " llm_base_url; \
 	 if [[ ! -z "$$llm_base_url" ]]; then echo "base_url=\"$$llm_base_url\"" >> $(CONFIG_FILE).tmp; fi
 
+setup-config-basic:
+	@printf '%s\n' \
+	'[core]' \
+	'workspace_base="./workspace"' \
+	> config.toml
+	@echo "$(GREEN)config.toml created.$(RESET)"
+
+openhands-cloud-run:
+	@$(MAKE) run BACKEND_HOST="0.0.0.0" BACKEND_PORT="12000" FRONTEND_HOST="0.0.0.0" FRONTEND_PORT="12001"
 
 # Develop in container
 docker-dev:
@@ -437,5 +447,6 @@ help:
 	@echo "  $(GREEN)help$(RESET)                - Display this help message, providing information on available targets."
 
 # Phony targets
-.PHONY: build check-dependencies check-python check-netcat check-npm check-docker check-poetry install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint start-backend start-frontend start run setup-config setup-config-prompts kill help
-.PHONY: docker-dev docker-run sel post-docker-install
+.PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test build-frontend start-backend start-frontend _run_setupsetup-config 
+
+.PHONY: docker-dev docker-run sel post-docker-install check-netcat  kill help
