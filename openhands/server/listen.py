@@ -10,6 +10,7 @@ from openhands.server.middleware import (
     InMemoryRateLimiter,
     LocalhostCORSMiddleware,
     RateLimitMiddleware,
+    SessionApiKeyMiddleware,
 )
 from openhands.server.static import SPAStaticFiles
 
@@ -35,5 +36,9 @@ base_app.middleware('http')(ProviderTokenMiddleware(base_app))
 from starlette.middleware.sessions import SessionMiddleware
 
 base_app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "your-secret-key-here"))
+
+session_api_key = os.getenv('SESSION_API_KEY')
+if session_api_key:
+    base_app.middleware('http')(SessionApiKeyMiddleware(session_api_key))
 
 app = socketio.ASGIApp(sio, other_asgi_app=base_app)

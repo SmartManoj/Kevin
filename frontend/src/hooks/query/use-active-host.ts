@@ -2,8 +2,8 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import React from "react";
 import { useSelector } from "react-redux";
-import { openHands } from "#/api/open-hands-axios";
 import { AgentState } from "#/types/agent-state";
+import OpenHands from "#/api/open-hands";
 import { RootState } from "#/store";
 import { useConversation } from "#/context/conversation-context";
 
@@ -16,22 +16,8 @@ export const useActiveHost = () => {
   const { data } = useQuery({
     queryKey: [conversationId, "hosts"],
     queryFn: async () => {
-      const response = await openHands.get<{ hosts: string[] }>(
-        `/api/conversations/${conversationId}/web-hosts`,
-      );
-      let hosts = Object.keys(response.data.hosts);
-      if (window.location.hostname != "localhost") {
-        hosts = hosts.map((host) => host.replace("localhost", window.location.hostname));
-      }
-      if (!window.location.port && hosts.some((host) => host.includes("3000"))) {
-        hosts = hosts.map(function (host) {
-          const newHost = new URL(host);
-          newHost.hostname = newHost.hostname.replace("3000", newHost.port);
-          newHost.port = "";
-          return newHost.toString();
-        });
-      }
-      return { hosts: hosts };
+      const hosts = await OpenHands.getWebHosts(conversationId);
+      return { hosts };
     },
     enabled: curAgentState !== AgentState.LOADING,
     initialData: { hosts: [] },

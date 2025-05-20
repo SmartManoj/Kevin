@@ -1,5 +1,6 @@
 import asyncio
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import os
 from types import MappingProxyType
@@ -236,3 +237,24 @@ class ProviderTokenMiddleware(SessionMiddlewareInterface):
                 request.state.provider_tokens = None
 
         return await call_next(request)
+@dataclass
+class SessionApiKeyMiddleware:
+    """Middleware which ensures that all requests contain a header with the token given"""
+
+    session_api_key: str
+
+    async def __call__(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        if (
+            request.method != 'OPTIONS'
+            and request.url.path != '/alive'
+            and request.url.path != '/server_info'
+        ):
+            if self.session_api_key != request.headers.get('X-Session-API-Key'):
+                return JSONResponse(
+                    {'code': 'invalid_session_api_key'},
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                )
+        response = await call_next(request)
+        return response
