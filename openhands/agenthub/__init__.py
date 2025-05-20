@@ -10,7 +10,6 @@ from openhands.agenthub import (  # noqa: E402
     planner_agent,
     readonly_agent,
     visualbrowsing_agent,
-    browser_use_agent,
 )
 from openhands.controller.agent import Agent  # noqa: E402
 
@@ -21,6 +20,5 @@ __all__ = [
     'dummy_agent',
     'browsing_agent',
     'visualbrowsing_agent',
-    'browser_use_agent',
     'readonly_agent',
 ]
