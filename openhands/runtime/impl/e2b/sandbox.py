@@ -20,23 +20,17 @@ class E2BSandbox:
         self,
         config: SandboxConfig,
         e2b_api_key: str,
-        template: str = 'openhands',
     ):
         self.config = copy.deepcopy(config)
         self.initialize_plugins: bool = config.initialize_plugins
         self.sandbox = Sandbox(
             api_key=e2b_api_key or self.config.api_key,
-            template=template,
-            # It's possible to stream stdout and stderr from sandbox and from each process
-            on_stderr=lambda x: logger.debug(f'E2B sandbox stderr: {x}'),
-            on_stdout=lambda x: logger.debug(f'E2B sandbox stdout: {x}'),
-            cwd=self._cwd,  # Default workdir inside sandbox
         )
-        logger.debug(f'Started E2B sandbox with ID "{self.sandbox.id}"')
+        logger.debug(f'Started E2B sandbox with ID "{self.sandbox.sandbox_id}"')
 
     @property
     def filesystem(self):
-        return self.sandbox.filesystem
+        return self.sandbox._filesystem
 
     def _archive(self, host_src: str, recursive: bool = False):
         if recursive:
@@ -63,9 +57,9 @@ class E2BSandbox:
 
     def execute(self, cmd: str, timeout: int | None = None) -> tuple[int, str]:
         timeout = timeout if timeout is not None else self.config.timeout
-        process = self.sandbox.process.start(cmd, env_vars=self._env)
+        process = self.sandbox.commands._start(cmd, envs=self._env, timeout=timeout)
         try:
-            process_output = process.wait(timeout=timeout)
+            process_output = process.wait()
         except TimeoutException:
             logger.debug('Command timed out, killing process...')
             process.kill()
