@@ -11,12 +11,13 @@ import socketio
 
 import openhands.core.config2 as config2
 from openhands.controller.agent import Agent
-from openhands.core.config import AppConfig, MCPConfig
+from openhands.core.config import AppConfig
 from openhands.core.config.condenser_config import (
     BrowserOutputCondenserConfig,
     CondenserPipelineConfig,
     LLMSummarizingCondenserConfig,
 )
+from openhands.core.config.mcp_config import MCPConfig, OpenHandsMCPConfigImpl
 from openhands.core.exceptions import MicroagentValidationError
 from openhands.core.logger import OpenHandsLoggerAdapter
 from openhands.core.schema import AgentState
@@ -126,7 +127,11 @@ class Session:
             or settings.sandbox_runtime_container_image
             else self.config.sandbox.runtime_container_image
         )
-        self.config.mcp = settings.mcp_config or MCPConfig()
+        self.config.mcp = settings.mcp_config or MCPConfig(sse_servers=[], stdio_servers=[])
+        # Add OpenHands' MCP server by default
+        openhands_mcp_server = OpenHandsMCPConfigImpl.create_default_mcp_server_config(self.config.mcp_host, self.user_id)
+        if openhands_mcp_server:
+            self.config.mcp.sse_servers.append(openhands_mcp_server)
         max_iterations = settings.max_iterations or self.config.max_iterations
 
         # This is a shallow copy of the default LLM config, so changes here will
