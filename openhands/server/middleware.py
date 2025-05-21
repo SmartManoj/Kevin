@@ -205,17 +205,22 @@ class ProviderTokenMiddleware(SessionMiddlewareInterface):
         self.app = app
 
     async def __call__(self, request: Request, call_next: Callable):
+        # Set user state from session first
+        if os.environ.get("APP_MODE") == "saas":
+            request.state.github_token = request.session.get("github_token")
+            request.state.github_user_id = request.session.get("github_user_id")
+            request.state.user_id = request.session.get("user_id")
+        
+        # Now get user_id which will create and log the DefaultUserAuth instance
+        user_id = await get_user_id(request)
         settings_store = await shared.SettingsStoreImpl.get_instance(
-            shared.config, await get_user_id(request)
+            shared.config, user_id
         )
         settings = await settings_store.load()
 
         # TODO: To avoid checks like this we should re-add the abilty to have completely different middleware in SAAS as in OSS
         if getattr(request.state, 'provider_tokens', None) is None:
             if os.environ.get("APP_MODE") == "saas":
-                request.state.github_token = request.session.get("github_token")
-                request.state.github_user_id = request.session.get("github_user_id")
-                request.state.user_id = request.session.get("user_id")
                 token = request.state.github_token
                 user_id = request.state.github_user_id
                 if token and user_id:
