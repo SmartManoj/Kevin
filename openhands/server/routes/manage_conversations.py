@@ -63,9 +63,6 @@ class InitSessionRequest(BaseModel):
     suggested_task: SuggestedTask | None = None
     conversation_instructions: str | None = None
 
-    model_config = {'extra': 'forbid'}
-
-
 class InitSessionResponse(BaseModel):
     status: str
     conversation_id: str
