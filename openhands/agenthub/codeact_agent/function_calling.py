@@ -110,11 +110,11 @@ def response_to_actions(
                         f'Missing required argument "code" in tool call {tool_call.function.name}'
                     )
                 action = IPythonRunCellAction(code=arguments['code'])
-            elif tool_call.function.name in [WebReadTool['function']['name'], BrowserTool['function']['name']]:
-                action = AgentDelegateAction(
-                    agent='BrowserUseAgent',
-                    inputs=arguments,
-                )
+            # elif tool_call.function.name in [WebReadTool['function']['name'], BrowserTool['function']['name']]:
+            #     action = AgentDelegateAction(
+            #         agent='BrowserUseAgent',
+            #         inputs=arguments,
+            #     )
 
             # ================================================
             # AgentFinishAction
