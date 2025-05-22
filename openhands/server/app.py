@@ -172,7 +172,7 @@ async def version():
         except Exception:
             short_sha = "unknown"
     return JSONResponse(
-        content={"version": __version__, "short_sha": short_sha},
+        content={"version": __version__, "commit_hash": short_sha},
         status_code=200
     )
 
