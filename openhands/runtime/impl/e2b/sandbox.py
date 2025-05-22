@@ -4,7 +4,7 @@ import tarfile
 from glob import glob
 
 from e2b import Sandbox
-from e2b.exceptions import TimeoutException
+from e2b.sandbox.commands.command_handle import CommandExitException
 
 from openhands.core.config import SandboxConfig
 from openhands.core.logger import openhands_logger as logger
@@ -57,21 +57,14 @@ class E2BSandbox:
 
     def execute(self, cmd: str, timeout: int | None = None) -> tuple[int, str]:
         timeout = timeout if timeout is not None else self.config.timeout
-        process = self.sandbox.commands._start(cmd, envs=self._env, timeout=timeout)
         try:
-            process_output = process.wait()
-        except TimeoutException:
-            logger.debug('Command timed out, killing process...')
-            process.kill()
-            return -1, f'Command: "{cmd}" timed out'
-
-        logs = [m.line for m in process_output.messages]
-        logs_str = '\n'.join(logs)
-        if process.exit_code is None:
-            return -1, logs_str
-
-        assert process_output.exit_code is not None
-        return process_output.exit_code, logs_str
+            process = self.sandbox.commands.run(cmd, envs=self._env, timeout=timeout)
+            output = process.stdout
+            exit_code = process.exit_code
+        except CommandExitException as e:
+            output = e.stdout
+            exit_code = e.exit_code
+        return exit_code, output
 
     def copy_to(self, host_src: str, sandbox_dest: str, recursive: bool = False):
         """Copies a local file or directory to the sandbox."""

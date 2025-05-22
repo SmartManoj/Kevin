@@ -14,7 +14,7 @@ from openhands.events.observation import (
     FileWriteObservation,
     Observation,
 )
-from openhands.events.observation.commands import CmdOutputObservation
+from openhands.events.observation.commands import CmdOutputMetadata, CmdOutputObservation
 from openhands.events.stream import EventStream
 from openhands.runtime.base import Runtime
 from openhands.runtime.impl.e2b.filestore import E2BFileStore
@@ -105,9 +105,9 @@ class E2BRuntime(Runtime):
     def run(self, action: CmdRunAction) -> CmdOutputObservation | ErrorObservation:
         exit_code, output = self.sandbox.execute(action.command)
         if exit_code == 0:
-            return CmdOutputObservation(output, exit_code, action.command)
+            return CmdOutputObservation(content=output, command=action.command, metadata=CmdOutputMetadata(exit_code=exit_code))
         else:
             return ErrorObservation(output)
 
     def run_ipython(self, action: IPythonRunCellAction) -> Observation:
-        return NotImplementedError
+        return ErrorObservation("Not implemented yet")
