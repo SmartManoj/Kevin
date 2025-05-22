@@ -111,3 +111,11 @@ class E2BRuntime(Runtime):
 
     def run_ipython(self, action: IPythonRunCellAction) -> Observation:
         return ErrorObservation("Not implemented yet")
+
+    @property
+    def vscode_url(self) -> str | None:
+        return None
+    
+    @property
+    def web_hosts(self) -> dict[str, int]:
+        return {}

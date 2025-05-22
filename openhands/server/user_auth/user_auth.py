@@ -77,5 +77,6 @@ async def get_user_auth(request: Request) -> UserAuth:
     user_auth = await impl.get_instance(request)
     if user_auth is None:
         raise ValueError('Failed to get user auth instance')
-    request.state.user_auth = user_auth
+    if await user_auth.get_user_id():
+        request.state.user_auth = user_auth
     return user_auth

@@ -249,6 +249,58 @@ async def delete_conversation(
     return True
 
 
+class UpdateConversationRequest(BaseModel):
+    """Request model for updating a conversation."""
+    title: str
+
+
+@app.patch('/conversations/{conversation_id}')
+async def update_conversation(
+    conversation_id: str,
+    data: UpdateConversationRequest,
+    user_id: str | None = Depends(get_user_id),
+) -> JSONResponse:
+    """Update a conversation.
+    
+    Currently supports updating the title of a conversation.
+    
+    Args:
+        conversation_id: The ID of the conversation to update
+        data: The data to update the conversation with
+        user_id: The ID of the user making the request
+        
+    Returns:
+        JSONResponse: A JSON response indicating the success of the operation
+    """
+    conversation_store = await ConversationStoreImpl.get_instance(config, user_id)
+    try:
+        metadata = await conversation_store.get_metadata(conversation_id)
+        
+        # Update the title
+        metadata.title = data.title
+        
+        # Save the updated metadata
+        await conversation_store.save_metadata(metadata)
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=None,
+        )
+    except FileNotFoundError:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={'error': 'Conversation not found'},
+        )
+    except Exception as e:
+        logger.error(
+            f'Error updating conversation {conversation_id}: {str(e)}',
+            extra={'session_id': conversation_id},
+        )
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={'error': f'Error updating conversation: {str(e)}'},
+        )
+
 async def _get_conversation_info(
     conversation: ConversationMetadata,
     num_connections: int,

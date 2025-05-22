@@ -174,6 +174,12 @@ export default function MainApp() {
         <Outlet />
       </div>
 
+      {renderAuthModal && (
+        <AuthModal
+          githubAuthUrl={effectiveGitHubAuthUrl}
+          appMode={config.data?.APP_MODE}
+        />
+      )}
       {renderReAuthModal && <ReauthModal />}
       {/* {config.data?.APP_MODE === "oss" && consentFormIsOpen && (
         // <AnalyticsConsentFormModal
