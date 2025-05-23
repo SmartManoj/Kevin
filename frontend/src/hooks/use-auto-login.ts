@@ -24,7 +24,7 @@ export const useAutoLogin = () => {
   // Get the auth URLs for both providers
   const githubAuthUrl = useAuthUrl({
     appMode: config?.APP_MODE || null,
-    identityProvider: "github",
+    identityProvider: "Iv23liPvjAb0qb62jkiH", // client id; temp
   });
 
   const gitlabAuthUrl = useAuthUrl({
