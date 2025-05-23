@@ -56,7 +56,7 @@ class AppConfig(BaseModel):
         dont_restore_state: Whether to not restore state from cli session.
         cli_multiline_input: Whether to enable multiline input in CLI. When disabled,
             input is read line by line. When enabled, input continues until /exit command.
-        mcp_host: Host for OpenHands' default MCP server 
+        mcp_host: Host for OpenHands' default MCP server
         mcp: MCP configuration settings.
     """
     # custom configs
