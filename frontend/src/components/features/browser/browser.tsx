@@ -6,7 +6,7 @@ import { updateBrowserTabUrl } from "#/services/browse-service";
 import { BrowserSnapshot } from "./browser-snapshot";
 import { EmptyBrowserMessage } from "./empty-browser-message";
 import { useWsClient } from "#/context/ws-client-provider";
-import { useConversation } from "#/context/conversation-context";
+import { useConversationId } from "#/hooks/use-conversation-id";
 import {
   initialState as browserInitialState,
   setUrl,
@@ -18,7 +18,7 @@ export function BrowserPanel() {
   const { url, screenshotSrc } = useSelector(
     (state: RootState) => state.browser,
   );
-  const { conversationId } = useConversation();
+  const { conversationId } = useConversationId();
   const dispatch = useDispatch();
 
   useEffect(() => {
