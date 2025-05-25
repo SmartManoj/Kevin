@@ -2,7 +2,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import React from "react";
 import { useSelector } from "react-redux";
-import { AgentState } from "#/types/agent-state";
+import { RUNTIME_INACTIVE_STATES } from "#/types/agent-state";
 import OpenHands from "#/api/open-hands";
 import { RootState } from "#/store";
 import { useConversationId } from "#/hooks/use-conversation-id";
