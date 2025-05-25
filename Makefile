@@ -234,13 +234,12 @@ install-python-dependencies:
 	fi
 	
 	@if [ "$$consent" = "y" ]; then \
-			# https://github.com/kuangkzh/pylcs/issues/3 \
-			sudo add-apt-repository ppa:deadsnakes/ppa; \
-			sudo apt update; \
-			sudo apt-get install -y python$(PYTHON_VERSION)-dev build-essential; \
-		else \
-			echo "$(RED)Please install python$(PYTHON_VERSION)-dev if you get any dependency errors.$(RESET)"; \
-		fi; \
+		# https://github.com/kuangkzh/pylcs/issues/3 \
+		sudo add-apt-repository ppa:deadsnakes/ppa; \
+		sudo apt update; \
+		sudo apt-get install -y python$(PYTHON_VERSION)-dev build-essential; \
+	else \
+		echo "$(RED)Please install python$(PYTHON_VERSION)-dev if you get any dependency errors.$(RESET)"; \
 	fi
 	@if [ -f "/etc/manjaro-release" ]; then \
 		echo "$(BLUE)Detected Manjaro Linux. Installing Playwright dependencies...$(RESET)"; \
