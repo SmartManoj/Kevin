@@ -1,12 +1,14 @@
 from typing import Callable
 
 from openhands.core.config import AppConfig
+from openhands.core.config.mcp_config import MCPConfig
 from openhands.events.action import (
     FileReadAction,
     FileWriteAction,
 )
 from openhands.events.action.browse import BrowseInteractiveAction, BrowseURLAction
 from openhands.events.action.commands import CmdRunAction, IPythonRunCellAction
+from openhands.events.action.files import FileEditAction
 from openhands.events.action.mcp import MCPAction
 from openhands.events.observation import (
     ErrorObservation,
@@ -119,3 +121,9 @@ class E2BRuntime(Runtime):
     @property
     def web_hosts(self) -> dict[str, int]:
         return {}
+    
+    def get_mcp_config(self, extra_stdio_servers = None) -> MCPConfig:
+        pass
+
+    def edit(self, action: FileEditAction) -> Observation:
+        pass
