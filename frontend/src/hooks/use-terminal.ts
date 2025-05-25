@@ -43,12 +43,9 @@ export const useTerminal = ({
   const fitAddon = React.useRef<FitAddon | null>(null);
   const ref = React.useRef<HTMLDivElement>(null);
   const lastCommandIndex = persistentLastCommandIndex; // Use the persistent reference
-  const lastCommand = React.useRef("");
   const keyEventDisposable = React.useRef<{ dispose: () => void } | null>(null);
   const disabled = RUNTIME_INACTIVE_STATES.includes(curAgentState);
 
-  const commandHistory = React.useRef<string[]>([]);
-  const currentCommandIndex = React.useRef<number>(-1);
   const createTerminal = () =>
     new Terminal({
       fontFamily: "Menlo, Monaco, 'Courier New', monospace",
@@ -98,6 +95,15 @@ export const useTerminal = ({
     return true;
   };
 
+  const handleEnter = (command: string) => {
+    terminal.current?.write("\r\n");
+    // Don't write the command again as it will be added to the commands array
+    // and rendered by the useEffect that watches commands
+    send(getTerminalCommand(command));
+    // Don't add the prompt here as it will be added when the command is processed
+    // and the commands array is updated
+  };
+
   const handleBackspace = (command: string) => {
     terminal.current?.write("\b \b");
     return command.slice(0, -1);
@@ -108,7 +114,6 @@ export const useTerminal = ({
     terminal.current = createTerminal();
     fitAddon.current = new FitAddon();
 
-    
     if (ref.current) {
       initializeTerminal();
       // Render all commands in array
@@ -148,92 +153,9 @@ export const useTerminal = ({
     }
   }, [commands, disabled]);
 
-  const clearTerminal = () => {
-    terminal.current?.clear();
-  };
-
-  
   React.useEffect(() => {
     let resizeObserver: ResizeObserver | null = null;
 
-      let commandBuffer = "";
-      const handleContextMenu = (e: MouseEvent) => {
-        e.preventDefault();
-        navigator.clipboard.readText().then((text) => {
-          terminal.current?.write(text);
-          commandBuffer += text;
-        });
-      };
-  
-      const handleEnter = (command: string) => {
-        terminal.current?.write("\r\n");
-        // replace ^c character when copied from terminal
-        // eslint-disable-next-line no-control-regex
-        const cleanedCommand = command.replace(/\u0003\b/, "");
-        if (cleanedCommand.trim() === "") return;
-        send(getTerminalCommand(cleanedCommand));
-        //  Update command history using previous state
-        commandHistory.current = [...commandHistory.current, cleanedCommand];
-        currentCommandIndex.current = -1;
-      };
-      const handleUpArrow = (e: KeyboardEvent) => {
-        e.preventDefault();
-        if (commandHistory.current.length === 0) return;
-        const newIndex = currentCommandIndex.current === -1 ? commandHistory.current.length - 1 : Math.max(currentCommandIndex.current - 1, 0);
-        const command = commandHistory.current[newIndex];
-        const to_be_written = `${'\b \b'.repeat(commandBuffer.length)}${command}`
-        terminal.current?.write(to_be_written);
-        commandBuffer = command;
-        currentCommandIndex.current = newIndex;
-      };
-      const handleDownArrow = (e: KeyboardEvent) => {
-        e.preventDefault();
-        if (commandHistory.current.length === 0) return;
-        const newIndex = currentCommandIndex.current === -1 ? commandHistory.current.length - 1 : Math.min(currentCommandIndex.current + 1, commandHistory.current.length - 1);
-        const command = commandHistory.current[newIndex];
-        const to_be_written = `${'\b \b'.repeat(commandBuffer.length)}${command}`
-        terminal.current?.write(to_be_written);
-        commandBuffer = command;
-        currentCommandIndex.current = newIndex;
-      };
-    const terminalElement = terminal.current?.element;
-
-      if (terminalElement) {
-        // right click to paste
-        terminalElement.addEventListener("contextmenu", handleContextMenu);
-      }
-      if (terminal.current) {
-        // Add new key event listener and store the disposable
-        keyEventDisposable.current = terminal.current.onKey(({ key, domEvent }) => {
-          if (domEvent.key === "Enter") {
-            lastCommand.current = commandBuffer;
-            handleEnter(commandBuffer);
-            commandBuffer = "";
-          } else if (domEvent.key === "Tab") {
-            // do nothing
-          } else if (domEvent.key === "Backspace") {
-            if (commandBuffer.length > 0) {
-              commandBuffer = handleBackspace(commandBuffer);
-            }
-          } else if (domEvent.key === "ArrowUp") {
-            handleUpArrow(domEvent);
-          } else if (domEvent.key === "ArrowDown") {
-            handleDownArrow(domEvent);
-          } else {
-            // Ignore paste event
-            if (key.charCodeAt(0) === 22) {
-              return;
-            }
-            commandBuffer += key;
-            terminal.current?.write(key);
-          }
-        });
-        terminal.current.attachCustomKeyEventHandler((event) =>
-          pasteHandler(event, (text) => {
-            commandBuffer += text;
-          }),
-        );
-      } 
     resizeObserver = new ResizeObserver(() => {
       fitAddon.current?.fit();
     });
@@ -258,7 +180,26 @@ export const useTerminal = ({
       let commandBuffer = "";
 
       if (!disabled) {
-       
+        // Add new key event listener and store the disposable
+        keyEventDisposable.current = terminal.current.onKey(
+          ({ key, domEvent }) => {
+            if (domEvent.key === "Enter") {
+              handleEnter(commandBuffer);
+              commandBuffer = "";
+            } else if (domEvent.key === "Backspace") {
+              if (commandBuffer.length > 0) {
+                commandBuffer = handleBackspace(commandBuffer);
+              }
+            } else {
+              // Ignore paste event
+              if (key.charCodeAt(0) === 22) {
+                return;
+              }
+              commandBuffer += key;
+              terminal.current?.write(key);
+            }
+          },
+        );
 
         // Add custom key handler and store the disposable
         terminal.current.attachCustomKeyEventHandler((event) =>

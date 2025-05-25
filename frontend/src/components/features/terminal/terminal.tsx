@@ -11,7 +11,7 @@ function Terminal() {
   const isRuntimeInactive = RUNTIME_INACTIVE_STATES.includes(curAgentState);
   const { t } = useTranslation();
 
-  const { ref } = useTerminal({
+  const ref = useTerminal({
     commands,
   });
 
