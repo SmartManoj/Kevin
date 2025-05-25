@@ -214,6 +214,9 @@ check-poetry:
 install-python-dependencies:
 	@export DEBIAN_FRONTEND=noninteractive
 	@echo "$(GREEN)Installing Python dependencies...$(RESET)"
+	@if command -v apt > /dev/null; then \
+		read -p "Do you want to install python$(PYTHON_VERSION)-dev? [y/n]:" consent; \
+	fi
 	@if [ -z "${TZ}" ]; then \
 		echo "Defaulting TZ (timezone) to UTC"; \
 		export TZ="UTC"; \
@@ -229,9 +232,8 @@ install-python-dependencies:
 	else \
 		poetry run pip install -r requirements-extra.txt --quiet; \
 	fi
-	@if command -v apt > /dev/null; then \
-		read -p "Do you want to install python$(PYTHON_VERSION)-dev? [y/n]:" consent; \
-	if [ "$$consent" = "y" ]; then \
+	
+	@if [ "$$consent" = "y" ]; then \
 			# https://github.com/kuangkzh/pylcs/issues/3 \
 			sudo add-apt-repository ppa:deadsnakes/ppa; \
 			sudo apt update; \
