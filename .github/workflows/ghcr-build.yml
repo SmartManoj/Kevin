@@ -167,6 +167,13 @@ jobs:
           echo "DOCKER_TAGS=$(echo "$DOCKER_BUILD_JSON" | jq -r '.tags | join(",")')" >> $GITHUB_ENV
           echo "DOCKER_PLATFORM=$(echo "$DOCKER_BUILD_JSON" | jq -r '.platform')" >> $GITHUB_ENV
           echo "DOCKER_BUILD_ARGS=$(echo "$DOCKER_BUILD_JSON" | jq -r '.build_args | join(",")')" >> $GITHUB_ENV
+      - name: Clean up
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          sudo docker builder prune -a
+          df -h
       - name: Build and push runtime image ${{ matrix.base_image.image }}
         if: github.event.pull_request.head.repo.fork != true
         uses: docker/build-push-action@v6
@@ -190,6 +197,8 @@ jobs:
         with:
           name: runtime-src-${{ matrix.base_image.tag }}
           path: containers/runtime
+      - name: Check disk space
+        run: df -h
 
   verify_hash_equivalence_in_runtime_and_app:
     name: Verify Hash Equivalence in Runtime and Docker images
