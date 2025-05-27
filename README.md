@@ -71,7 +71,7 @@ Gemini Models solves all 93 issues in this category. Checkout the results [here]
 
 
 <div align="center">
-  <a href="https://join.slack.com/t/openhands-ai/shared_invite/zt-2vbfigwev-G03twSpXaErwzYVD4CFiBg"><img src="https://img.shields.io/badge/Join_us-on_Telegram-blue" alt="Join our Telegram Group"></a>
+  <a href="https://t.me/Kevin_AI_Agent_Chat"><img src="https://img.shields.io/badge/Join_us-on_Telegram-blue" alt="Join our Telegram Group"></a>
   <a href="https://deepwiki.com/SmartManoj/Kevin"><img src="https://img.shields.io/badge/DeepWiki_-documentation-forestgreen" alt="Check out the documentation"></a>
   <hr>
 </div>
