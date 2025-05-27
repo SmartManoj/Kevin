@@ -71,9 +71,8 @@ Gemini Models solves all 93 issues in this category. Checkout the results [here]
 
 
 <div align="center">
-  <a href="https://join.slack.com/t/openhands-ai/shared_invite/zt-2vbfigwev-G03twSpXaErwzYVD4CFiBg"><img src="https://img.shields.io/badge/Slack-Join%20Us-red?logo=slack&logoColor=white&style=for-the-badge" alt="Join our Slack community"></a>
-  <a href="https://discord.gg/ESHStjSjD4"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord community"></a>
-  <a href="https://docs.all-hands.dev/modules/usage/getting-started"><img src="https://img.shields.io/badge/Documentation-000?logo=googledocs&logoColor=FFE165&style=for-the-badge" alt="Check out the documentation"></a>
+  <a href="https://join.slack.com/t/openhands-ai/shared_invite/zt-2vbfigwev-G03twSpXaErwzYVD4CFiBg"><img src="https://img.shields.io/badge/Join_us-on_Telegram-blue" alt="Join our Telegram Group"></a>
+  <a href="https://deepwiki.com/SmartManoj/Kevin"><img src="https://img.shields.io/badge/DeepWiki_-documentation-forestgreen" alt="Check out the documentation"></a>
   <hr>
 </div>
 
