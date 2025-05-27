@@ -31,6 +31,7 @@ class StuckDetector:
         self.llm = llm
 
     def generate_resolution(self, actions, observations):
+        return ''
         #
         struck_prompt = 'You analyze the history to find out why the agent is stuck and generate a resolution'
         # stuck input

@@ -834,9 +834,12 @@ class AgentController:
         # check if agent got stuck before taking any action
         is_stuck, resolution = self._is_stuck()
         if is_stuck:
+            error_msg = 'You are almost stuck in a loop. This is your last attempt.'
+            if resolution:
+                error_msg += f' Follow the following resolution: {resolution}'
             self.event_stream.add_event(
                 ErrorObservation(
-                    f'You are almost stuck in a loop. This is your last attempt. Follow the following resolution: {resolution}'
+                    error_msg
                 ),
                 EventSource.USER,
             )
