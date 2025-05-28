@@ -12,7 +12,7 @@ from openhands.core.config import LLMConfig
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import litellm
-    
+
     if os.getenv('DEBUG_LITTELM'):
         os.environ['LITELLM_LOG'] = 'DEBUG'
     else:
@@ -501,7 +501,9 @@ class LLM(RetryMixin, DebugMixin):
                 pass
         from openhands.io import json
 
-        # logger.debug(f'Model info: {json.dumps(self.model_info, indent=2)}')
+        # logger.debug(
+        #     f'Model info: {json.dumps({"model": self.config.model, "base_url": self.config.base_url}, indent=2)}'
+        # )
 
         if self.config.model.startswith('huggingface'):
             # HF doesn't support the OpenAI default value for top_p (1)

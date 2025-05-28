@@ -167,10 +167,15 @@ class Session:
                     ),
                 ]
             )
-
-            self.logger.info(f'Enabling default condenser: {default_condenser_config}')
+            
+            self.logger.info(
+                f'Enabling pipeline condenser with:'
+                f' browser_output_masking(attention_window=2), '
+                f' llm(model="{llm.config.model}", '
+                f' base_url="{llm.config.base_url}", '
+                f' keep_first=4, max_size=80)'
+            )
             agent_config.condenser = default_condenser_config
-
         agent = Agent.get_cls(agent_cls)(llm, agent_config)
         # store agent, language, model in environmnet for feeedback
         try:
