@@ -677,44 +677,47 @@ if __name__ == '__main__':
         await client.ainit()
         logger.info('ActionExecutor initialized.')
 
-        # Initialize and mount MCP Router
-        logger.info('Initializing MCP Router...')
-        mcp_router = MCPRouter(
-            profile_path=MCP_ROUTER_PROFILE_PATH,
-            router_config=RouterConfig(
-                api_key=SESSION_API_KEY,
-                auth_enabled=bool(SESSION_API_KEY),
-            ),
-        )
-        allowed_origins = ['*']
-        sse_app = await mcp_router.get_sse_server_app(
-            allow_origins=allowed_origins, include_lifespan=False
-        )
-
-        # Check for route conflicts before mounting
-        main_app_routes = {route.path for route in app.routes}
-        sse_app_routes = {route.path for route in sse_app.routes}
-        conflicting_routes = main_app_routes.intersection(sse_app_routes)
-
-        if conflicting_routes:
-            logger.error(f'Route conflicts detected: {conflicting_routes}')
-            raise RuntimeError(
-                f'Cannot mount SSE app - conflicting routes found: {conflicting_routes}'
+        use_mcp = os.environ.get('USE_MCP', 'false').lower() in ['true', '1']
+        mcp_router = None
+        if use_mcp:
+            # Initialize and mount MCP Router
+            logger.info('Initializing MCP Router...')
+            mcp_router = MCPRouter(
+                profile_path=MCP_ROUTER_PROFILE_PATH,
+                router_config=RouterConfig(
+                    api_key=SESSION_API_KEY,
+                    auth_enabled=bool(SESSION_API_KEY),
+                ),
+            )
+            allowed_origins = ['*']
+            sse_app = await mcp_router.get_sse_server_app(
+                allow_origins=allowed_origins, include_lifespan=False
             )
 
-        app.mount('/', sse_app)
-        logger.info(
-            f'Mounted MCP Router SSE app at root path with allowed origins: {allowed_origins}'
-        )
+            # Check for route conflicts before mounting
+            main_app_routes = {route.path for route in app.routes}
+            sse_app_routes = {route.path for route in sse_app.routes}
+            conflicting_routes = main_app_routes.intersection(sse_app_routes)
 
-        # Additional debug logging
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Main app routes:')
-            for route in main_app_routes:
-                logger.debug(f'  {route}')
-            logger.debug('MCP SSE server app routes:')
-            for route in sse_app_routes:
-                logger.debug(f'  {route}')
+            if conflicting_routes:
+                logger.error(f'Route conflicts detected: {conflicting_routes}')
+                raise RuntimeError(
+                    f'Cannot mount SSE app - conflicting routes found: {conflicting_routes}'
+                )
+
+            app.mount('/', sse_app)
+            logger.info(
+                f'Mounted MCP Router SSE app at root path with allowed origins: {allowed_origins}'
+            )
+
+            # Additional debug logging
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Main app routes:')
+                for route in main_app_routes:
+                    logger.debug(f'  {route}')
+                    logger.debug('MCP SSE server app routes:')
+                    for route in sse_app_routes:
+                        logger.debug(f'  {route}')
 
         yield
 
@@ -963,7 +966,7 @@ if __name__ == '__main__':
         try:
             short_sha = open('version.txt').read().strip()
         except Exception:
-            
+
             short_sha = "unknown"
         return {'version': short_sha}
     # ================================
