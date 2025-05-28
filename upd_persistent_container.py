@@ -1,3 +1,7 @@
+# python upd_persistent_container.py
+# After pulling the latest changes, run this script to update the persistent container with the latest changes.
+# This is useful when you want to test the latest changes in the persistent container without deleting the container.
+
 import os
 from datetime import datetime
 
