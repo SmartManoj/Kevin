@@ -231,7 +231,8 @@ class DockerRuntime(ActionExecutionClient):
             'debug',
             f'Container initialized with plugins: {[plugin.name for plugin in self.plugins]}. VSCode URL: {self.vscode_url}',
         )
-        if not self.attach_to_existing:
+        # TODO: refactor this for persistent sandboxes
+        if not self.attach_to_existing or 1:
             self.send_status_message(' ')
         self._runtime_initialized = True
 
