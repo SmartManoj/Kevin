@@ -414,12 +414,13 @@ class DockerRuntime(ActionExecutionClient):
             self.send_status_message('STATUS$CONTAINER_STARTED')
         except docker.errors.APIError as e:
             if '409' in str(e):
+                # TODO: check why this is happening
+                # https://github.com/SmartManoj/Kevin/pull/392
                 self.log(
                     'warning',
                     f'{e}; Container {self.container_name} already exists. Removing...',
                 )
-                stop_all_containers(self.container_name)
-                return self.init_container()
+                return self._attach_to_container()
 
             else:
                 self.log(
@@ -605,7 +606,7 @@ class DockerRuntime(ActionExecutionClient):
         if not self.container:
             return []
         return self.container.logs(tail=1000)
-    
+
     def restart(self):
         if not self.container:
             raise RuntimeError('Container not initialized')
