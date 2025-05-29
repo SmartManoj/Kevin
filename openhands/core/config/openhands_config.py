@@ -16,7 +16,7 @@ from openhands.core.config.sandbox_config import SandboxConfig
 from openhands.core.config.security_config import SecurityConfig
 
 
-class AppConfig(BaseModel):
+class OpenHandsConfig(BaseModel):
     """Configuration for the app.
 
     Attributes:
@@ -79,7 +79,10 @@ class AppConfig(BaseModel):
     save_trajectory_path: str | None = Field(default=None)
     save_screenshots_in_trajectory: bool = Field(default=False)
     replay_trajectory_path: str | None = Field(default=None)
-    search_api_key: SecretStr | None = Field(default=None, description="API key for Tavily search engine (https://tavily.com/). Required for search functionality.")
+    search_api_key: SecretStr | None = Field(
+        default=None,
+        description='API key for Tavily search engine (https://tavily.com/). Required for search functionality.',
+    )
 
     # Deprecated parameters - will be removed in a future version
     workspace_base: str | None = Field(default=None, deprecated=True)
@@ -87,7 +90,7 @@ class AppConfig(BaseModel):
     workspace_mount_path_in_sandbox: str = Field(default='/workspace', deprecated=True)
     workspace_mount_rewrite: str | None = Field(default=None, deprecated=True)
     # End of deprecated parameters
-    
+
     cache_dir: str = Field(default='/tmp/cache')
     max_iterations: int = Field(default=OH_MAX_ITERATIONS)
     max_budget_per_task: float | None = Field(default=None)
@@ -165,5 +168,5 @@ class AppConfig(BaseModel):
         """Post-initialization hook, called when the instance is created with only default values."""
         super().model_post_init(__context)
 
-        if not AppConfig.defaults_dict:  # Only set defaults_dict if it's empty
-            AppConfig.defaults_dict = model_defaults_to_dict(self)
+        if not OpenHandsConfig.defaults_dict:  # Only set defaults_dict if it's empty
+            OpenHandsConfig.defaults_dict = model_defaults_to_dict(self)

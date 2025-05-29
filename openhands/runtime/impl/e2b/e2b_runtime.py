@@ -1,7 +1,7 @@
 from typing import Callable
 
-from openhands.core.config import AppConfig
 from openhands.core.config.mcp_config import MCPConfig
+from openhands.core.config import OpenHandsConfig
 from openhands.events.action import (
     FileReadAction,
     FileWriteAction,
@@ -28,7 +28,7 @@ from openhands.runtime.utils.files import insert_lines, read_lines
 class E2BRuntime(Runtime):
     def __init__(
         self,
-        config: AppConfig,
+        config: OpenHandsConfig,
         event_stream: EventStream,
         sid: str = 'default',
         plugins: list[PluginRequirement] | None = None,
@@ -103,7 +103,7 @@ class E2BRuntime(Runtime):
 
     def list_files(self, path: str | None = None) -> list[str]:
         return self.file_store.list(path)
-    
+
     def run(self, action: CmdRunAction) -> CmdOutputObservation | ErrorObservation:
         exit_code, output = self.sandbox.execute(action.command)
         if exit_code == 0:
@@ -117,11 +117,11 @@ class E2BRuntime(Runtime):
     @property
     def vscode_url(self) -> str | None:
         return None
-    
+
     @property
     def web_hosts(self) -> dict[str, int]:
         return {}
-    
+
     def get_mcp_config(self, extra_stdio_servers = None) -> MCPConfig:
         pass
 

@@ -11,7 +11,7 @@ import socketio
 
 import openhands.core.config2 as config2
 from openhands.controller.agent import Agent
-from openhands.core.config import AppConfig
+from openhands.core.config import OpenHandsConfig
 from openhands.core.config.condenser_config import (
     BrowserOutputCondenserConfig,
     CondenserPipelineConfig,
@@ -54,7 +54,7 @@ class Session:
     is_alive: bool = True
     agent_session: AgentSession
     loop: asyncio.AbstractEventLoop
-    config: AppConfig
+    config: OpenHandsConfig
     file_store: FileStore
     user_id: str | None
     logger: LoggerAdapter
@@ -62,7 +62,7 @@ class Session:
     def __init__(
         self,
         sid: str,
-        config: AppConfig,
+        config: OpenHandsConfig,
         file_store: FileStore,
         sio: socketio.AsyncServer | None,
         user_id: str | None = None,
@@ -141,9 +141,15 @@ class Session:
         self.config.search_api_key = settings.search_api_key
 
         # NOTE: this need to happen AFTER the config is updated with the search_api_key
-        self.config.mcp = settings.mcp_config or MCPConfig(sse_servers=[], stdio_servers=[])
+        self.config.mcp = settings.mcp_config or MCPConfig(
+            sse_servers=[], stdio_servers=[]
+        )
         # Add OpenHands' MCP server by default
-        openhands_mcp_server, openhands_mcp_stdio_servers = OpenHandsMCPConfigImpl.create_default_mcp_server_config(self.config.mcp_host, self.config, self.user_id)
+        openhands_mcp_server, openhands_mcp_stdio_servers = (
+            OpenHandsMCPConfigImpl.create_default_mcp_server_config(
+                self.config.mcp_host, self.config, self.user_id
+            )
+        )
         if openhands_mcp_server:
             self.config.mcp.sse_servers.append(openhands_mcp_server)
         self.config.mcp.stdio_servers.extend(openhands_mcp_stdio_servers)
@@ -167,7 +173,7 @@ class Session:
                     ),
                 ]
             )
-            
+
             self.logger.info(
                 f'Enabling pipeline condenser with:'
                 f' browser_output_masking(attention_window=2), '
