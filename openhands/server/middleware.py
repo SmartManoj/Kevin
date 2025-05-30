@@ -1,7 +1,6 @@
 import asyncio
 import os
 from collections import defaultdict
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from types import MappingProxyType
 from typing import Callable

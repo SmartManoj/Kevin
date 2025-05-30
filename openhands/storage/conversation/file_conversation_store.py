@@ -105,7 +105,7 @@ class FileConversationStore(ConversationStore):
     async def get_instance(
         cls, config: OpenHandsConfig, user_id: str | None
     ) -> FileConversationStore:
-        file_store = get_file_store(config.file_store, f"{config.file_store_path}/{user_id}")
+        file_store = get_file_store(config.file_store, f"{config.file_store_path}/{user_id}", config.file_store_web_hook_url, config.file_store_web_hook_headers)
         return FileConversationStore(file_store)
 
 

@@ -93,6 +93,9 @@ async def connect(connection_id: str, environ: dict) -> None:
             )
             latest_event_id = -1
         conversation_id = query_params.get('conversation_id', [None])[0]
+        logger.info(
+            f'Socket request for conversation {conversation_id} with connection_id {connection_id}'
+        )
         raw_list = query_params.get('providers_set', [])
         providers_list = []
         for item in raw_list:

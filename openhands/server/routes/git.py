@@ -23,6 +23,7 @@ from openhands.integrations.service_types import (
     UnknownException,
     User,
 )
+from openhands.server.dependencies import get_dependencies
 from openhands.server.shared import server_config
 from openhands.server.user_auth import (
     get_access_token,
@@ -30,7 +31,7 @@ from openhands.server.user_auth import (
     get_user_id,
 )
 
-app = APIRouter(prefix='/api/user')
+app = APIRouter(prefix='/api/user', dependencies=get_dependencies())
 
 @app.get('/repositories', response_model=list[Repository])
 async def get_user_repositories(
