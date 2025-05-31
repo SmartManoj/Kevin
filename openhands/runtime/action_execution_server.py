@@ -677,10 +677,14 @@ if __name__ == '__main__':
         await client.ainit()
         logger.info('ActionExecutor initialized.')
 
-        use_mcp = os.environ.get('USE_MCP', 'false').lower() in ['true', '1']
-        mcp_router = None
-        if use_mcp:
-            # Initialize and mount MCP Router
+        # Check if we're on Windows
+        is_windows = sys.platform == 'win32'
+
+        # Initialize and mount MCP Router (skip on Windows)
+        if is_windows:
+            logger.info('Skipping MCP Router initialization on Windows')
+            mcp_router = None
+        else:
             logger.info('Initializing MCP Router...')
             mcp_router = MCPRouter(
                 profile_path=MCP_ROUTER_PROFILE_PATH,
@@ -694,6 +698,8 @@ if __name__ == '__main__':
                 allow_origins=allowed_origins, include_lifespan=False
             )
 
+        # Only mount SSE app if MCP Router is initialized (not on Windows)
+        if mcp_router is not None:
             # Check for route conflicts before mounting
             main_app_routes = {route.path for route in app.routes}
             sse_app_routes = {route.path for route in sse_app.routes}
@@ -715,9 +721,9 @@ if __name__ == '__main__':
                 logger.debug('Main app routes:')
                 for route in main_app_routes:
                     logger.debug(f'  {route}')
-                    logger.debug('MCP SSE server app routes:')
-                    for route in sse_app_routes:
-                        logger.debug(f'  {route}')
+                logger.debug('MCP SSE server app routes:')
+                for route in sse_app_routes:
+                    logger.debug(f'  {route}')
 
         yield
 
@@ -819,6 +825,23 @@ if __name__ == '__main__':
 
     @app.post('/update_mcp_server')
     async def update_mcp_server(request: Request):
+        # Check if we're on Windows
+        is_windows = sys.platform == 'win32'
+
+        if is_windows:
+            # On Windows, just return a success response without doing anything
+            logger.info(
+                'MCP server update request received on Windows - skipping as MCP is disabled'
+            )
+            return JSONResponse(
+                status_code=200,
+                content={
+                    'detail': 'MCP server update skipped (MCP is disabled on Windows)',
+                    'router_error_log': '',
+                },
+            )
+
+        # Non-Windows implementation
         assert mcp_router is not None
         assert os.path.exists(MCP_ROUTER_PROFILE_PATH)
 
