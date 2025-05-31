@@ -36,7 +36,7 @@ class VSCodePlugin(Plugin):
             )
             return
 
-        if os.environ.get('LOCAL_RUNTIME_MODE')::
+        if os.environ.get('LOCAL_RUNTIME_MODE'):
             self.vscode_port = None
             self.vscode_connection_token = None
             logger.warning(
