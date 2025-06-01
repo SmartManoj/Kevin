@@ -1,5 +1,6 @@
 import os
 from functools import lru_cache
+import os
 from typing import Callable
 from uuid import UUID
 
@@ -112,7 +113,18 @@ class DockerRuntime(ActionExecutionClient):
 
         self.base_container_image = self.config.sandbox.base_container_image
         self.runtime_container_image = self.config.sandbox.runtime_container_image
-        self.container_name = CONTAINER_NAME_PREFIX + sid
+        if os.environ.get('SANDBOX_PERSISTENCE') == 'true':
+            user = 'oh' if self.config.run_as_openhands else 'root'
+            path = config.workspace_mount_path or sid
+            path = ''.join(c if c.isalnum() else '_' for c in path)
+            self.container_name = f'{CONTAINER_NAME_PREFIX}-persisted-{user}-{path}'
+            try:
+                self.docker_client.containers.get(self.container_name)
+                attach_to_existing = True
+            except docker.errors.NotFound:
+                attach_to_existing = False
+        else:
+            self.container_name = CONTAINER_NAME_PREFIX + sid
         self.container: Container | None = None
         self.main_module = main_module
 
