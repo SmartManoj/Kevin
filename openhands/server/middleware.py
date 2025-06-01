@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 import os
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -221,7 +222,7 @@ class ProviderTokenMiddleware(SessionMiddlewareInterface):
             request.state.github_token = request.session.get("github_token")
             request.state.github_user_id = request.session.get("github_user_id")
             request.state.user_id = request.session.get("user_id")
-        
+
         # Now get user_id which will create and log the DefaultUserAuth instance
         user_id = await get_user_id(request)
         settings_store = await shared.SettingsStoreImpl.get_instance(
