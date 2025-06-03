@@ -7,7 +7,7 @@ from types import MappingProxyType
 from typing import Callable
 from urllib.parse import urlparse
 
-from fastapi import Request, status
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import SecretStr
@@ -15,12 +15,6 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import Response
 from starlette.types import ASGIApp
-
-from openhands.integrations.provider import ProviderToken
-from openhands.integrations.provider import ProviderType
-from openhands.server import shared
-from openhands.server.types import SessionMiddlewareInterface
-from openhands.server.user_auth import get_user_id
 
 
 class LocalhostCORSMiddleware(CORSMiddleware):
@@ -141,133 +135,3 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return False
         # Put Other non rate limited checks here
         return True
-
-
-class AttachConversationMiddleware(SessionMiddlewareInterface):
-    def __init__(self, app: ASGIApp) -> None:
-        self.app = app
-
-    def _should_attach(self, request: Request) -> bool:
-        """
-        Determine if the middleware should attach a session for the given request.
-        """
-        if request.method == 'OPTIONS':
-            return False
-
-        conversation_id = ''
-        if request.url.path.startswith('/api/conversation'):
-            # FIXME: we should be able to use path_params
-            path_parts = request.url.path.split('/')
-            if len(path_parts) > 4:
-                conversation_id = request.url.path.split('/')[3]
-        if not conversation_id:
-            return False
-
-        request.state.sid = conversation_id
-
-        return True
-
-    async def _attach_conversation(self, request: Request) -> JSONResponse | None:
-        """
-        Attach the user's session based on the provided authentication token.
-        """
-        user_id = await get_user_id(request)
-        request.state.conversation = (
-            await shared.conversation_manager.attach_to_conversation(
-                request.state.sid, user_id
-            )
-        )
-        if not request.state.conversation:
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={'error': 'Session not found'},
-            )
-        return None
-
-    async def _detach_session(self, request: Request) -> None:
-        """
-        Detach the user's session.
-        """
-        await shared.conversation_manager.detach_from_conversation(
-            request.state.conversation
-        )
-
-    async def __call__(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
-        if not self._should_attach(request):
-            return await call_next(request)
-
-        response = await self._attach_conversation(request)
-        if response:
-            return response
-
-        try:
-            # Continue processing the request
-            response = await call_next(request)
-        finally:
-            # Ensure the session is detached
-            await self._detach_session(request)
-
-        return response
-
-
-class ProviderTokenMiddleware(SessionMiddlewareInterface):
-    def __init__(self, app):
-        self.app = app
-
-    async def __call__(self, request: Request, call_next: Callable):
-        # Set user state from session first
-        if os.environ.get("APP_MODE") == "saas":
-            request.state.github_token = request.session.get("github_token")
-            request.state.github_user_id = request.session.get("github_user_id")
-            request.state.user_id = request.session.get("user_id")
-
-        # Now get user_id which will create and log the DefaultUserAuth instance
-        user_id = await get_user_id(request)
-        settings_store = await shared.SettingsStoreImpl.get_instance(
-            shared.config, user_id
-        )
-        settings = await settings_store.load()
-
-        # TODO: To avoid checks like this we should re-add the abilty to have completely different middleware in SAAS as in OSS
-        if getattr(request.state, 'provider_tokens', None) is None:
-            if os.environ.get("APP_MODE") == "saas":
-                token = request.state.github_token
-                user_id = request.state.github_user_id
-                if token and user_id:
-                    request.state.provider_tokens = MappingProxyType(
-                        {
-                            ProviderType.GITHUB: ProviderToken(
-                            token=SecretStr(request.state.github_token),
-                            user_id=request.state.github_user_id,
-                        )
-                    }
-                )
-            elif (
-                settings
-                and settings.secrets_store
-                and settings.secrets_store.provider_tokens
-            ):
-                request.state.provider_tokens = settings.secrets_store.provider_tokens
-            else:
-                request.state.provider_tokens = None
-
-        return await call_next(request)
-@dataclass
-class SessionApiKeyMiddleware:
-    """Middleware which ensures that all requests contain a header with the token given"""
-
-    session_api_key: str
-
-    async def __call__(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
-        if request.method != 'OPTIONS' and request.url.path.startswith('/api'):
-            if self.session_api_key != request.headers.get('X-Session-API-Key'):
-                return JSONResponse(
-                    {'code': 'invalid_session_api_key'},
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                )
-        response = await call_next(request)
-        return response
