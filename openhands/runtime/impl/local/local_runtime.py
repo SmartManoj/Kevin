@@ -12,6 +12,7 @@ from typing import Callable
 from urllib.parse import urlparse
 
 import httpx
+import requests
 import tenacity
 
 import openhands
