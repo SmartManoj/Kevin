@@ -29,4 +29,5 @@ def create_conversation(task, api_key):
     return reply
 
 if __name__ == '__main__':
-    print(create_conversation('print todays date', os.getenv('OPENHANDS_API_KEY')))
+    # print(create_conversation('print todays date', os.getenv('OPENHANDS_API_KEY')))
+    print(get_vscode_url('e50de0b48e37480d9fdcfbfc2f779a94', os.getenv('OPENHANDS_API_KEY')))
