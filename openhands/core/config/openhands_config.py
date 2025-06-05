@@ -66,7 +66,7 @@ class OpenHandsConfig(BaseModel):
     # custom configs
     workspace_base: str | None = './workspace'
     mount_docker_socket: bool = Field(default=True)
-    file_store_path: str = Field(default='/tmp/kevin_file_store')
+    file_store_path: str = Field(default='~/.kevin/file_store')
     run_as_openhands: bool = Field(default=False)
 
 
