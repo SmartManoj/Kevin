@@ -10,6 +10,7 @@ from daytona_sdk import (
     DaytonaConfig,
     SessionExecuteRequest,
     Sandbox,
+    SandboxResources,
 )
 
 from openhands.core.config.openhands_config import OpenHandsConfig
@@ -50,7 +51,7 @@ class DaytonaRuntime(ActionExecutionClient):
         self._vscode_url: str | None = None
 
         daytona_config = DaytonaConfig(
-            api_key=config.daytona_api_key,
+            api_key=config.daytona_api_key.get_secret_value(),
             api_url=config.daytona_api_url,
             target=config.daytona_target,
         )
@@ -67,11 +68,11 @@ class DaytonaRuntime(ActionExecutionClient):
             config,
             event_stream,
             sid,
-            [],
+            plugins,
             env_vars,
             status_callback,
             attach_to_existing,
-            headless_mode=True,
+            headless_mode,
         )
 
     def _get_sandbox(self) -> Sandbox | None:
@@ -107,6 +108,7 @@ class DaytonaRuntime(ActionExecutionClient):
             image=self.config.sandbox.runtime_container_image,
             public=True,
             env_vars=self._get_creation_env_vars(),
+            resources=SandboxResources(cpu=2, memory=4)
         )
         sandbox = self.daytona.create(sandbox_params)
         return sandbox
@@ -262,7 +264,7 @@ class DaytonaRuntime(ActionExecutionClient):
             return None
         self._vscode_url = (
             self._construct_api_url(self._vscode_port)
-            + f'/?tkn={token}&folder={self.config.sandbox_mount_path_in_sandbox}'
+            + f'/?tkn={token}&folder={self.config.workspace_mount_path_in_sandbox}'
         )
 
         self.log(
