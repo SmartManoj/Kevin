@@ -3,6 +3,7 @@ import sys
 import time
 from functools import lru_cache
 from typing import Callable
+import typing
 from uuid import UUID
 import uuid
 
@@ -213,7 +214,7 @@ class DockerRuntime(ActionExecutionClient):
                     )
                     raise e
             self.start_docker_container()
-        if DEBUG_RUNTIME:
+        if DEBUG_RUNTIME and self.container:
             self.log_streamer = LogStreamer(self.container, self.log)
         else:
             self.log_streamer = None
@@ -328,7 +329,7 @@ class DockerRuntime(ActionExecutionClient):
         ]
         self.api_url = f'{self.config.sandbox.local_runtime_url}:{self._container_port}'
         use_host_network = self.config.sandbox.use_host_network
-        network_mode: str | None = 'host' if use_host_network else None
+        network_mode: typing.Literal['host'] | None = 'host' if use_host_network else None
 
         # Initialize port mappings
         port_mapping: dict[str, list[dict[str, str]]] | None = None
@@ -400,6 +401,8 @@ class DockerRuntime(ActionExecutionClient):
         command = self.get_action_execution_server_startup_command()
 
         try:
+            if self.runtime_container_image is None:
+                raise ValueError("Runtime container image is not set")
             self.container = self.docker_client.containers.run(
                 self.runtime_container_image,
                 command=command,
@@ -411,7 +414,7 @@ class DockerRuntime(ActionExecutionClient):
                 name=self.container_name,
                 detach=True,
                 environment=environment,
-                volumes=volumes,
+                volumes=volumes,  # type: ignore
                 device_requests=(
                     [docker.types.DeviceRequest(capabilities=[['gpu']], count=-1)]
                     if self.config.sandbox.enable_gpu
