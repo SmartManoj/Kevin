@@ -27,6 +27,10 @@ class DefaultUserAuth(UserAuth):
         """The default implementation does not support multi tenancy, so user_id is always None"""
         return self.user_id
 
+    async def get_user_email(self) -> str | None:
+        """The default implementation does not support multi tenancy, so email is always None"""
+        return None
+
     async def get_access_token(self) -> SecretStr | None:
         """The default implementation does not support multi tenancy, so access_token is always None"""
         return self.access_token.get_secret_value() if self.access_token is not None else None

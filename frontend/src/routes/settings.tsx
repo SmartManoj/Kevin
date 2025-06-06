@@ -16,6 +16,7 @@ function SettingsScreen() {
 
   const saasNavItems = [
     { to: "/settings/", text: t("SETTINGS$NAV_LLM") },
+    { to: "/settings/user", text: t("SETTINGS$NAV_USER") },
     { to: "/settings/git", text: t("SETTINGS$NAV_GIT") },
     { to: "/settings/app", text: t("SETTINGS$NAV_APPLICATION") },
     { to: "/settings/billing", text: t("SETTINGS$NAV_CREDITS") },
@@ -39,6 +40,7 @@ function SettingsScreen() {
       }
     } else {
       const noEnteringPaths = [
+        "/settings/user",
         "/settings/billing",
         "/settings/credits",
         "/settings/api-keys",
