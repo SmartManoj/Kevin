@@ -21,5 +21,6 @@
 	"onCreateCommand": "sh ./.devcontainer/on_create.sh",
 	// "postCreateCommand": ".devcontainer/setup.sh",
 	"postCreateCommand": "yes | BUILD_ONLY=1 make build",
+	// "runArgs": ["--network=host"],
 	"postStartCommand": "nohup bash -c 'make run' &> output.log &"
 }
