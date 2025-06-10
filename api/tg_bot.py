@@ -15,6 +15,11 @@ user_api_keys = {}
 @bot.message_handler(commands=['start'])
 def start_command(message):
     user_id = message.from_user.id
+    bot.reply_to(message, '''Welcome to OpenHands Bot! 🤖
+
+Please send me your OpenHands API key to get started.
+
+You can get your API key from: https://app.all-hands.dev/settings/api-keys''')
 
 @bot.message_handler(func=lambda message: message.from_user.id not in user_api_keys and not message.text.startswith('/'))
 def get_api_key(message):
