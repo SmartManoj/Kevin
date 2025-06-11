@@ -1,17 +1,17 @@
 ARG OPENHANDS_BUILD_VERSION=dev
 ARG GIT_HASH=unknown
-FROM node:21.7.2-bookworm-slim AS frontend-builder
+FROM node:22.16.0-bookworm-slim AS frontend-builder
 
 WORKDIR /app
 
-COPY ./frontend/package.json frontend/package-lock.json ./
-RUN npm install -g npm@10.5.1
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
-COPY ./frontend ./
+COPY frontend ./
 RUN npm run build
 
-FROM python:3.12.3-slim AS backend-builder
+FROM python:3.12.10-slim AS base
+FROM base AS backend-builder
 
 WORKDIR /app
 ENV PYTHONPATH='/app'
@@ -23,19 +23,20 @@ ENV POETRY_NO_INTERACTION=1 \
 
 RUN apt-get update -y \
     && apt-get install -y curl make git build-essential \
-    && python3 -m pip install poetry==1.8.2  --break-system-packages
+    && python3 -m pip install poetry --break-system-packages
 
-COPY ./pyproject.toml ./poetry.lock ./requirements-extra.txt ./
+COPY pyproject.toml poetry.lock requirements-extra.txt ./
 RUN touch README.md
 RUN export POETRY_CACHE_DIR && poetry install --no-root && rm -rf $POETRY_CACHE_DIR
 RUN poetry run pip install -r requirements-extra.txt
 
-FROM python:3.12.3-slim AS openhands-app
+FROM base AS openhands-app
 
 WORKDIR /app
 
-ARG OPENHANDS_BUILD_VERSION #re-declare for this section
-ARG GIT_HASH #re-declare for this section
+# re-declare for this section
+ARG OPENHANDS_BUILD_VERSION
+ARG GIT_HASH
 
 ENV RUN_AS_OPENHANDS=true
 # A random number--we need this to be different from the user's UID on the host machine
@@ -78,13 +79,7 @@ COPY --chown=openhands:app --chmod=770 --from=backend-builder ${VIRTUAL_ENV} ${V
 COPY --chown=openhands:app --chmod=770 ./microagents ./microagents
 COPY --chown=openhands:app --chmod=770 ./openhands ./openhands
 COPY --chown=openhands:app --chmod=777 ./openhands/runtime/plugins ./openhands/runtime/plugins
-COPY --chown=openhands:app --chmod=770 ./openhands/agenthub ./openhands/agenthub
-COPY --chown=openhands:app ./pyproject.toml ./pyproject.toml
-COPY --chown=openhands:app ./poetry.lock ./poetry.lock
-COPY --chown=openhands:app ./requirements-extra.txt ./requirements-extra.txt
-COPY --chown=openhands:app ./README.md ./README.md
-COPY --chown=openhands:app ./MANIFEST.in ./MANIFEST.in
-COPY --chown=openhands:app ./LICENSE ./LICENSE
+COPY --chown=openhands:app pyproject.toml poetry.lock requirements-extra.txt README.md MANIFEST.in LICENSE ./
 
 # This is run as "openhands" user, and will create __pycache__ with openhands:openhands ownership
 RUN python openhands/core/download.py # No-op to download assets

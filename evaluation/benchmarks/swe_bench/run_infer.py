@@ -51,7 +51,7 @@ from openhands.core.config import (
     AgentConfig,
     OpenHandsConfig,
     get_llm_config_arg,
-    get_parser,
+    get_parser
 )
 from openhands.core.config.condenser_config import NoOpCondenserConfig
 from openhands.core.config.utils import get_condenser_config_arg
@@ -73,6 +73,7 @@ from openhands.utils.shutdown_listener import sleep_if_should_continue
 check_if_resolved()
 USE_HINT_TEXT = os.environ.get('USE_HINT_TEXT', 'false').lower() == 'true'
 RUN_WITH_BROWSING = os.environ.get('RUN_WITH_BROWSING', 'false').lower() == 'true'
+ENABLE_LLM_EDITOR = os.environ.get('ENABLE_LLM_EDITOR', 'false').lower() == 'true'
 BenchMode = Literal['swe', 'swt', 'swt-ci']
 
 
@@ -268,15 +269,19 @@ def get_config(
         workspace_mount_path=None,
         dont_restore_state=True,
     )
+
     config.set_llm_config(
         update_llm_config_for_completions_logging(
             metadata.llm_config, metadata.eval_output_dir, instance['instance_id']
         )
     )
+    # get 'draft_editor' config if exists
+    config.set_llm_config(get_llm_config_arg('draft_editor'), 'draft_editor')
+
     agent_config = AgentConfig(
         enable_jupyter=False,
         enable_browsing=RUN_WITH_BROWSING,
-        enable_llm_editor=False,
+        enable_llm_editor=ENABLE_LLM_EDITOR,
         enable_mcp=False,
         condenser=metadata.condenser_config,
         enable_prompt_extensions=False,
