@@ -125,7 +125,11 @@ def test_cmd_run_action_serialization_deserialization():
 def test_browse_url_action_serialization_deserialization():
     original_action_dict = {
         'action': 'browse',
-        'args': {'thought': '', 'url': 'https://www.example.com'},
+        'args': {
+            'thought': '',
+            'url': 'https://www.example.com',
+            'return_axtree': False,
+        },
     }
     serialization_deserialization(original_action_dict, BrowseURLAction)
 
@@ -137,6 +141,7 @@ def test_browse_interactive_action_serialization_deserialization():
             'thought': '',
             'browser_actions': 'goto("https://www.example.com")',
             'browsergym_send_msg_to_user': '',
+            'return_axtree': False,
         },
     }
     serialization_deserialization(original_action_dict, BrowseInteractiveAction)
