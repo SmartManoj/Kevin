@@ -7,6 +7,7 @@ import threading
 _port_lock = threading.Lock()
 from openhands.core.logger import openhands_logger as logger
 
+
 def check_port_available(port: int) -> bool:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:

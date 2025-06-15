@@ -11,16 +11,9 @@
 		"ghcr.io/devcontainers-extra/features/poetry:2": {},
 		"ghcr.io/devcontainers/features/node:1": {},
 	},
-	"customizations":{
-        "vscode":{
-            "extensions": [
-                "ms-python.python"
-            ]
-        }
-    },
-	"onCreateCommand": "sh ./.devcontainer/on_create.sh",
-	// "postCreateCommand": ".devcontainer/setup.sh",
-	"postCreateCommand": "yes | BUILD_ONLY=1 make build",
-	// "runArgs": ["--network=host"],
-	"postStartCommand": "nohup bash -c 'make run' &> output.log &"
+	"postCreateCommand": ".devcontainer/setup.sh",
+	"runArgs": ["--add-host=host.docker.internal:host-gateway"],
+	"containerEnv": {
+		"DOCKER_HOST_ADDR": "host.docker.internal"
+	}
 }

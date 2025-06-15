@@ -1,9 +1,9 @@
 import os
 import sys
 import time
+import typing
 from functools import lru_cache
 from typing import Callable
-import typing
 from uuid import UUID
 import uuid
 
@@ -330,7 +330,9 @@ class DockerRuntime(ActionExecutionClient):
         ]
         self.api_url = f'{self.config.sandbox.local_runtime_url}:{self._container_port}'
         use_host_network = self.config.sandbox.use_host_network
-        network_mode: typing.Literal['host'] | None = 'host' if use_host_network else None
+        network_mode: typing.Literal['host'] | None = (
+            'host' if use_host_network else None
+        )
 
         # Initialize port mappings
         port_mapping: dict[str, list[dict[str, str]]] | None = None
@@ -403,7 +405,7 @@ class DockerRuntime(ActionExecutionClient):
 
         try:
             if self.runtime_container_image is None:
-                raise ValueError("Runtime container image is not set")
+                raise ValueError('Runtime container image is not set')
             self.container = self.docker_client.containers.run(
                 self.runtime_container_image,
                 command=command,
