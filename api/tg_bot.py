@@ -3,6 +3,7 @@ import os
 import telebot
 from api import create_conversation
 import json
+from time import sleep
 
 load_dotenv()
 telegram_token = os.getenv('TELEGRAM_TOKEN')
@@ -74,4 +75,9 @@ Get your API key from: https://app.all-hands.dev/
 
 if __name__ == '__main__':
     print("🤖 OpenHands Telegram Bot started...")
-    bot.polling(none_stop=True)
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        except Exception as e:
+            print(e)
+            sleep(10)
