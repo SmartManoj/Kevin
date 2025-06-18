@@ -1,20 +1,18 @@
-import json
-import os
 from typing import Callable
 
 import httpx
 import tenacity
-from daytona_sdk import (
-    CreateSandboxParams,
+from daytona import (
+    CreateSandboxFromSnapshotParams,
     Daytona,
     DaytonaConfig,
-    SessionExecuteRequest,
     Sandbox,
-    SandboxResources,
+    SessionExecuteRequest,
 )
 
 from openhands.core.config.openhands_config import OpenHandsConfig
 from openhands.events.stream import EventStream
+from openhands.integrations.provider import PROVIDER_TOKEN_TYPE
 from openhands.runtime.impl.action_execution.action_execution_client import (
     ActionExecutionClient,
 )
@@ -25,9 +23,11 @@ from openhands.runtime.utils.request import RequestHTTPError
 from openhands.utils.async_utils import call_sync_from_async
 from openhands.utils.tenacity_stop import stop_if_should_exit
 
+OPENHANDS_SID_LABEL = 'OpenHands_SID'
+
 
 class DaytonaRuntime(ActionExecutionClient):
-    """The DaytonaRuntime class is a DockerRuntime that utilizes Daytona sandbox as a runtime environment."""
+    """The DaytonaRuntime class is a DockerRuntime that utilizes Daytona Sandboxes as runtime environments."""
 
     _sandbox_port: int = 4444
     _vscode_port: int = 4445
@@ -42,12 +42,13 @@ class DaytonaRuntime(ActionExecutionClient):
         status_callback: Callable | None = None,
         attach_to_existing: bool = False,
         headless_mode: bool = True,
+        user_id: str | None = None,
+        git_provider_tokens: PROVIDER_TOKEN_TYPE | None = None,
     ):
         assert config.daytona_api_key, 'Daytona API key is required'
 
         self.config = config
         self.sid = sid
-        self.sandbox_id = os.environ.get(f'DAYTONA_SANDBOX_ID_{sid}')
         self.sandbox: Sandbox | None = None
         self._vscode_url: str | None = None
 
@@ -74,18 +75,24 @@ class DaytonaRuntime(ActionExecutionClient):
             status_callback,
             attach_to_existing,
             headless_mode,
+            user_id,
+            git_provider_tokens,
         )
 
     def _get_sandbox(self) -> Sandbox | None:
         try:
-            sandbox = self.daytona.get_current_sandbox(self.sandbox_id)
-            self.log(
-                'info', f'Attached to existing sandbox with id: {self.sandbox_id}'
-            )
+            sandboxes = self.daytona.list({OPENHANDS_SID_LABEL: self.sid})
+            if len(sandboxes) == 0:
+                return None
+            assert len(sandboxes) == 1, 'Multiple sandboxes found for SID'
+
+            sandbox = sandboxes[0]
+
+            self.log('info', f'Attached to existing sandbox with id: {self.sid}')
         except Exception:
             self.log(
                 'warning',
-                f'Failed to attach to existing sandbox with id: {self.sandbox_id}',
+                f'Failed to attach to existing sandbox with id: {self.sid}',
             )
             sandbox = None
 
@@ -104,29 +111,20 @@ class DaytonaRuntime(ActionExecutionClient):
         return env_vars
 
     def _create_sandbox(self) -> Sandbox:
-        sandbox_params = CreateSandboxParams(
+        sandbox_params = CreateSandboxFromSnapshotParams(
             language='python',
-            image=self.config.sandbox.runtime_container_image,
+            snapshot=self.config.sandbox.runtime_container_image,
             public=True,
             env_vars=self._get_creation_env_vars(),
-            resources=SandboxResources(cpu=2, memory=4)
+            labels={OPENHANDS_SID_LABEL: self.sid},
         )
-        sandbox = self.daytona.create(sandbox_params)
-        return sandbox
+        return self.daytona.create(sandbox_params)
 
     def _construct_api_url(self, port: int) -> str:
         assert self.sandbox is not None, 'Sandbox is not initialized'
-        assert self.sandbox.instance.info is not None, (
-            'Sandbox info is not available'
-        )
-        assert self.sandbox.instance.info.provider_metadata is not None, (
-            'Provider metadata is not available'
-        )
+        assert self.sandbox.runner_domain is not None, 'Runner domain is not available'
 
-        node_domain = json.loads(self.sandbox.instance.info.provider_metadata)[
-            'nodeDomain'
-        ]
-        return f'https://{port}-{self.sandbox.id}.{node_domain}'
+        return f'https://{port}-{self.sandbox.id}.{self.sandbox.runner_domain}'
 
     @property
     def action_execution_server_url(self) -> str:
@@ -182,22 +180,19 @@ class DaytonaRuntime(ActionExecutionClient):
         if self.sandbox is None:
             self.set_runtime_status(RuntimeStatus.BUILDING_RUNTIME)
             self.sandbox = await call_sync_from_async(self._create_sandbox)
-            self.sandbox_id = self.sandbox.id
-            assert self.sandbox_id is not None, 'Sandbox ID is not available'
-            os.environ[f'DAYTONA_SANDBOX_ID_{self.sid}'] = self.sandbox_id
-            self.log('info', f'Created new sandbox with id: {self.sandbox_id}')
+            self.log('info', f'Created a new sandbox with id: {self.sid}')
 
         self.api_url = self._construct_api_url(self._sandbox_port)
 
-        state = self.sandbox.instance.state
+        state = self.sandbox.state
 
         if state == 'stopping':
-            self.log('info', 'Waiting for Daytona sandbox to stop...')
+            self.log('info', 'Waiting for the Daytona sandbox to stop...')
             await call_sync_from_async(self.sandbox.wait_for_sandbox_stop)
             state = 'stopped'
 
         if state == 'stopped':
-            self.log('info', 'Starting Daytona sandbox...')
+            self.log('info', 'Starting the Daytona sandbox...')
             await call_sync_from_async(self.sandbox.start)
             should_start_action_execution_server = True
 
@@ -246,7 +241,7 @@ class DaytonaRuntime(ActionExecutionClient):
             return
 
         if self.sandbox:
-            self.daytona.remove(self.sandbox)
+            self.sandbox.delete()
 
     @property
     def vscode_url(self) -> str | None:

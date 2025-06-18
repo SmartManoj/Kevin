@@ -18,37 +18,42 @@ from openhands.events.observation import (
 )
 from openhands.events.observation.commands import CmdOutputMetadata, CmdOutputObservation
 from openhands.events.stream import EventStream
-from openhands.runtime.base import Runtime
+from openhands.integrations.provider import PROVIDER_TOKEN_TYPE
+from openhands.runtime.impl.action_execution.action_execution_client import (
+    ActionExecutionClient,
+)
 from openhands.runtime.impl.e2b.filestore import E2BFileStore
 from openhands.runtime.impl.e2b.sandbox import E2BSandbox
 from openhands.runtime.plugins import PluginRequirement
 from openhands.runtime.utils.files import insert_lines, read_lines
 
 
-class E2BRuntime(Runtime):
+class E2BRuntime(ActionExecutionClient):
     def __init__(
         self,
         config: OpenHandsConfig,
         event_stream: EventStream,
         sid: str = 'default',
         plugins: list[PluginRequirement] | None = None,
-        sandbox: E2BSandbox | None = None,
-        status_callback: Callable | None = None,
-        headless_mode: bool = True,
-        attach_to_existing: bool = False,
         env_vars: dict[str, str] | None = None,
+        status_callback: Callable | None = None,
+        attach_to_existing: bool = False,
+        headless_mode: bool = True,
         user_id: str | None = None,
+        git_provider_tokens: PROVIDER_TOKEN_TYPE | None = None,
+        sandbox: E2BSandbox | None = None,
     ):
         super().__init__(
             config,
             event_stream,
             sid,
             plugins,
-            status_callback=status_callback,
-            headless_mode=headless_mode,
-            attach_to_existing=attach_to_existing,
-            env_vars=env_vars,
-            user_id=user_id,
+            env_vars,
+            status_callback,
+            attach_to_existing,
+            headless_mode,
+            user_id,
+            git_provider_tokens,
         )
         if sandbox is None:
             self.sandbox = E2BSandbox(config.sandbox, config.e2b_api_key)

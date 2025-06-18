@@ -17,7 +17,7 @@ function SettingsScreen() {
   const saasNavItems = [
     { to: "/settings/", text: t("SETTINGS$NAV_LLM") },
     { to: "/settings/user", text: t("SETTINGS$NAV_USER") },
-    { to: "/settings/git", text: t("SETTINGS$NAV_GIT") },
+    { to: "/settings/integrations", text: t("SETTINGS$NAV_INTEGRATIONS") },
     { to: "/settings/app", text: t("SETTINGS$NAV_APPLICATION") },
     { to: "/settings/billing", text: t("SETTINGS$NAV_CREDITS") },
     { to: "/settings/secrets", text: t("SETTINGS$NAV_SECRETS") },
@@ -27,7 +27,7 @@ function SettingsScreen() {
   const ossNavItems = [
     { to: "/settings", text: t("SETTINGS$NAV_LLM") },
     { to: "/settings/mcp", text: t("SETTINGS$NAV_MCP") },
-    { to: "/settings/git", text: t("SETTINGS$NAV_GIT") },
+    { to: "/settings/integrations", text: t("SETTINGS$NAV_INTEGRATIONS") },
     { to: "/settings/app", text: t("SETTINGS$NAV_APPLICATION") },
     { to: "/settings/api-keys", text: t("SETTINGS$NAV_API_KEYS") },
     { to: "/settings/secrets", text: t("SETTINGS$NAV_SECRETS") },
