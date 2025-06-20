@@ -116,6 +116,10 @@ class ProviderHandler:
             from openhands.integrations.gitlab.gitlab_service import GitLabServiceImpl
             self.service_class_map[ProviderType.GITLAB] = GitLabServiceImpl
 
+        if ProviderType.BITBUCKET in provider_tokens:
+            from openhands.integrations.bitbucket.bitbucket_service import BitbucketService
+            self.service_class_map[ProviderType.BITBUCKET] = BitbucketService
+
         self.external_auth_id = external_auth_id
         self.external_auth_token = external_auth_token
         self.external_token_manager = external_token_manager
