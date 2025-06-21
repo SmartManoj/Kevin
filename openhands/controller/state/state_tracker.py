@@ -14,7 +14,7 @@ from openhands.events.observation.delegate import AgentDelegateObservation
 from openhands.events.observation.empty import NullObservation
 from openhands.events.serialization.event import event_to_trajectory
 from openhands.events.stream import EventStream
-from openhands.llm.metrics import Metrics
+from openhands.core.metrics import Metrics
 from openhands.storage.files import FileStore
 
 
