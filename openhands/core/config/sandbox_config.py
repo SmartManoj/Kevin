@@ -96,6 +96,8 @@ class SandboxConfig(BaseModel):
     # custom configs
     persist_sandbox: bool = True
     port: int = 63710
+    cuda_visible_devices: str | None = Field(default=None)
+
     @classmethod
     def from_toml_section(cls, data: dict) -> dict[str, 'SandboxConfig']:
         """

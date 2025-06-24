@@ -107,19 +107,19 @@ class ProviderHandler:
 
         # Initialize with empty service class map
         self.service_class_map: dict[ProviderType, type[GitService]] = {}
-        
+
         # Dynamically import service classes to avoid circular imports
         if ProviderType.GITHUB in provider_tokens:
             from openhands.integrations.github.github_service import GithubServiceImpl
             self.service_class_map[ProviderType.GITHUB] = GithubServiceImpl
-            
+
         if ProviderType.GITLAB in provider_tokens:
             from openhands.integrations.gitlab.gitlab_service import GitLabServiceImpl
             self.service_class_map[ProviderType.GITLAB] = GitLabServiceImpl
 
         if ProviderType.BITBUCKET in provider_tokens:
-            from openhands.integrations.bitbucket.bitbucket_service import BitbucketService
-            self.service_class_map[ProviderType.BITBUCKET] = BitbucketService
+            from openhands.integrations.bitbucket.bitbucket_service import BitBucketServiceImpl
+            self.service_class_map[ProviderType.BITBUCKET] = BitBucketServiceImpl
 
         self.external_auth_id = external_auth_id
         self.external_auth_token = external_auth_token

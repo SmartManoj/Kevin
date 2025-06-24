@@ -7,6 +7,7 @@ import { ModalBody } from "#/components/shared/modals/modal-body";
 import { BrandButton } from "../settings/brand-button";
 import GitHubLogo from "#/assets/branding/github-logo.svg?react";
 import GitLabLogo from "#/assets/branding/gitlab-logo.svg?react";
+import BitbucketLogo from "#/assets/branding/bitbucket-logo.svg?react";
 import { useAuthUrl } from "#/hooks/use-auth-url";
 import { GetConfigResponse } from "#/api/open-hands.types";
 
@@ -23,6 +24,11 @@ export function AuthModal({ githubAuthUrl, appMode }: AuthModalProps) {
     identityProvider: "gitlab",
   });
 
+  const bitbucketAuthUrl = useAuthUrl({
+    appMode: appMode || null,
+    identityProvider: "bitbucket",
+  });
+
   const handleGitHubAuth = () => {
     if (githubAuthUrl) {
       // Always start the OIDC flow, let the backend handle TOS check
@@ -34,6 +40,13 @@ export function AuthModal({ githubAuthUrl, appMode }: AuthModalProps) {
     if (gitlabAuthUrl) {
       // Always start the OIDC flow, let the backend handle TOS check
       window.location.href = gitlabAuthUrl;
+    }
+  };
+
+  const handleBitbucketAuth = () => {
+    if (bitbucketAuthUrl) {
+      // Always start the OIDC flow, let the backend handle TOS check
+      window.location.href = bitbucketAuthUrl;
     }
   };
 
