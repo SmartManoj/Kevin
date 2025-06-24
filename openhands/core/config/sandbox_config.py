@@ -1,6 +1,6 @@
 import os
 
-from pydantic import BaseModel, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 
 class SandboxConfig(BaseModel):

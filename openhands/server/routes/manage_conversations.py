@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from jinja2 import Environment, FileSystemLoader
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from openhands.core.config.llm_config import LLMConfig
 from openhands.core.logger import openhands_logger as logger

@@ -146,6 +146,8 @@ class Session:
             default_llm_config.base_url = settings.llm_base_url
         config2.model = default_llm_config.model
         self.config.search_api_key = settings.search_api_key
+        if settings.sandbox_api_key:
+            self.config.sandbox.api_key = settings.sandbox_api_key.get_secret_value()
 
         # NOTE: this need to happen AFTER the config is updated with the search_api_key
         self.config.mcp = settings.mcp_config or MCPConfig(
