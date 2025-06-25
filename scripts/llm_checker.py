@@ -1,5 +1,7 @@
 import os
 import warnings
+# hide Pydantic serializer warnings:
+warnings.filterwarnings('ignore', category=UserWarning, module='pydantic')
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import litellm
@@ -40,7 +42,7 @@ if 0:
     else:
         print('Model does not support vision')
 
-stream = 1
+stream = 0
 response = litellm.completion(
     model=model,
     messages=[{'role': 'user', 'content': 'Tell a random number with 4 decimal places between 1 to 10.'}],
@@ -58,4 +60,7 @@ if stream:
             print(content, end='', flush=True)
 else:
     print(response.choices[0].message.content)
+    reasoning_content = response['choices'][0]['message'].get('reasoning_content')
+    if reasoning_content:
+        print('rc',reasoning_content)
     # print(response)
