@@ -23,6 +23,7 @@ from openhands.events.observation.agent import (
 )
 from openhands.events.serialization import event_to_dict
 from openhands.integrations.service_types import ProviderType
+from openhands.server.config.server_config import load_server_config
 from openhands.server.services.conversation_service import (
     setup_init_convo_settings,
 )
@@ -30,6 +31,7 @@ from openhands.server.shared import (
     conversation_manager,
     sio,
 )
+from openhands.server.types import AppMode
 from openhands.storage.conversation.conversation_validator import (
     create_conversation_validator,
 )
@@ -37,6 +39,7 @@ from openhands.storage.conversation.conversation_validator import (
 
 @sio.event
 async def connect(connection_id: str, environ: dict) -> None:
+    server_config = load_server_config()
     try:
         logger.info(f'sio:connect: {connection_id}')
         query_params = parse_qs(environ.get('QUERY_STRING', ''))

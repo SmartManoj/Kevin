@@ -1,4 +1,3 @@
-from openhands.server.middleware import ProviderTokenMiddleware
 import os
 import socketio
 
