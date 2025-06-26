@@ -110,14 +110,15 @@ def codeact_user_response(
 ) -> str:
     encaps_str = (
         (
-            'Please encapsulate your final answer (answer ONLY) within <solution> and </solution>.\n'
+            'Your final answer MUST be encapsulated within <solution> and </solution>.\n'
             'For example: The answer to the question is <solution> 42 </solution>.\n'
         )
         if encapsulate_solution
         else ''
     )
     msg = (
-        'Please continue working on the task on whatever approach you think is suitable. You have full access to the repository. Eg: You can run <execute_python> os.listdir() </execute_python> to list the files in the current directory.\n'
+        'Please continue working on the task on whatever approach you think is suitable.\n'
+        'When you think you have solved the question, please use the finish tool and include your final answer in the message parameter of the finish tool.\n'
         f'{encaps_str}'
         'IMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN HELP.\n'
     )
