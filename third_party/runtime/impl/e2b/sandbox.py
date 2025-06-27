@@ -10,7 +10,7 @@ from openhands.core.config import SandboxConfig
 from openhands.core.logger import openhands_logger as logger
 
 
-class E2BSandbox:
+class E2BBox:
     closed = False
     _cwd: str = '/home/user'
     _env: dict[str, str] = {}
