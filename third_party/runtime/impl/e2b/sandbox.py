@@ -19,12 +19,23 @@ class E2BSandbox:
     def __init__(
         self,
         config: SandboxConfig,
-        e2b_api_key: str,
+        template: str = 'openhands',
     ):
         self.config = copy.deepcopy(config)
         self.initialize_plugins: bool = config.initialize_plugins
-        self.sandbox = Sandbox(
-            api_key=e2b_api_key or self.config.api_key,
+
+        # Read API key from environment variable
+        e2b_api_key = os.getenv('E2B_API_KEY')
+        if not e2b_api_key:
+            raise ValueError('E2B_API_KEY environment variable is required for E2B runtime')
+
+        self.sandbox = E2BSandbox(
+            api_key=e2b_api_key,
+            template=template,
+            # It's possible to stream stdout and stderr from sandbox and from each process
+            on_stderr=lambda x: logger.debug(f'E2B sandbox stderr: {x}'),
+            on_stdout=lambda x: logger.debug(f'E2B sandbox stdout: {x}'),
+            cwd=self._cwd,  # Default workdir inside sandbox
         )
         logger.debug(f'Started E2B sandbox with ID "{self.sandbox.sandbox_id}"')
 
@@ -99,3 +110,7 @@ class E2BSandbox:
 
     def get_working_directory(self):
         return self.sandbox.cwd
+
+
+# Alias for backward compatibility
+E2BSandbox = E2BBox
