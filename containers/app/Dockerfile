@@ -1,6 +1,6 @@
-ARG OPENHANDS_BUILD_VERSION=dev
 ARG GIT_HASH=unknown
-FROM node:22.16.0-bookworm-slim AS frontend-builder
+ARG OPENHANDS_BUILD_VERSION=dev
+FROM node:24.3.0-bookworm-slim AS frontend-builder
 
 WORKDIR /app
 
