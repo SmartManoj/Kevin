@@ -65,9 +65,9 @@ async def load_settings(
         settings_with_token_data = GETSettingsModel(
             **settings.model_dump(exclude={'secrets_store'}),
             llm_api_key_set=settings.llm_api_key is not None
-            and bool(settings.llm_api_key),
+            and bool(settings.llm_api_key.get_secret_value()),
             search_api_key_set=settings.search_api_key is not None
-            and bool(settings.search_api_key),
+            and bool(settings.search_api_key.get_secret_value()),
             provider_tokens_set=provider_tokens_set,
         )
         settings_with_token_data.llm_api_key = None
