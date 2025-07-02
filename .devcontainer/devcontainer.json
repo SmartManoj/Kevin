@@ -10,6 +10,9 @@
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
 		"ghcr.io/devcontainers-extra/features/poetry:2": {},
 		"ghcr.io/devcontainers/features/node:1": {},
+		"ghcr.io/devcontainers/features/sshd:1": {
+			"version": "latest"
+		},
 	},
 	"postCreateCommand": ".devcontainer/setup.sh",
 	"runArgs": ["--add-host=host.docker.internal:host-gateway"],
