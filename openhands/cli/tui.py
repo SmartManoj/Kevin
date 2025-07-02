@@ -46,7 +46,7 @@ from openhands.events.observation import (
     FileEditObservation,
     FileReadObservation,
 )
-from openhands.llm.metrics import Metrics
+from openhands.core.metrics import Metrics
 
 ENABLE_STREAMING = False  # FIXME: this doesn't work
 
