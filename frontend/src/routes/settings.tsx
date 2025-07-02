@@ -43,7 +43,6 @@ function SettingsScreen() {
         "/settings/user",
         "/settings/billing",
         "/settings/credits",
-        "/settings/api-keys",
       ];
       if (noEnteringPaths.includes(pathname)) {
         navigate("/settings");
