@@ -9,13 +9,10 @@ MESSAGE_SEPARATOR = '\n\n----------\n\n'
 
 
 class DebugMixin:
-    logged_first_request = False
-    def log_first_request(self, *args, **kwargs):
-        if not self.logged_first_request:
-            data = [args, kwargs]
-            with open('logs/llm/request.json', 'w') as f:
-                json.dump(data, f)
-            # self.logged_first_request = True
+    def log_request(self, *args, **kwargs):
+        data = [args, kwargs]
+        with open('logs/llm/request.json', 'w') as f:
+            json.dump(data, f)
 
     def log_prompt(self, messages: list[dict[str, Any]] | dict[str, Any]) -> None:
         if not messages:

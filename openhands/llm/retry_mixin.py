@@ -79,8 +79,8 @@ class RetryMixin:
             err = json.loads(exception.message.split(' - ')[1]).get('error', {})
             if isinstance(err, dict):
                 err_code = err.get('code')
-                if err_code == 'rate_limit_exceeded':   
-                    err_msg = err.get('message')
+                if err_code == 'rate_limit_exceeded':
+                    err_msg = err.get('message', '')
                     wait_seconds = err_msg.split('Please try again in ')[1].split('s')[0]
                     logger.error(f'429 | Attempt #{retry_state.attempt_number} | Waiting {wait_seconds} seconds...')
                     sleep(float(wait_seconds))

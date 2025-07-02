@@ -353,6 +353,7 @@ class LLM(RetryMixin, DebugMixin):
                     message=r'.*content=.*upload.*',
                     category=DeprecationWarning,
                 )
+                self.log_request(*args, **kwargs)
                 resp: ModelResponse = self._completion_unwrapped(*args, **kwargs)
 
             # Calculate and record latency
