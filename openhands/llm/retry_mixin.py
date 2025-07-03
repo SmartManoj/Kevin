@@ -75,26 +75,30 @@ class RetryMixin:
     def log_retry_attempt(self, retry_state: Any) -> None:
         """Log retry attempts."""
         exception = retry_state.outcome.exception()
-        try:
-            err = json.loads(exception.message.split(' - ')[1]).get('error', {})
-            if isinstance(err, dict):
-                err_code = err.get('code')
-                if err_code == 'rate_limit_exceeded':
-                    err_msg = err.get('message', '')
-                    wait_seconds = err_msg.split('Please try again in ')[1].split('s')[0]
-                    logger.error(f'429 | Attempt #{retry_state.attempt_number} | Waiting {wait_seconds} seconds...')
-                    sleep(float(wait_seconds))
-                    return
-        except Exception as e:
-            print(exception.message)
-            logger.error(f'Error: {e}')
 
-        if 'RESOURCE_EXHAUSTED' in str(exception):
-            logger.error(f'429 | Attempt #{retry_state.attempt_number}')
-        else:
-            logger.error(
-                f'{exception}. Attempt #{retry_state.attempt_number} | You can customize retry values in the configuration.',
-            )
-        import os
+        # Add retry attempt and max retries to the exception for later use
+        if hasattr(retry_state, 'retry_object') and hasattr(
+            retry_state.retry_object, 'stop'
+        ):
+            # Get the max retries from the stop_after_attempt
+            stop_condition = retry_state.retry_object.stop
 
-        os.environ['attempt_number'] = str(retry_state.attempt_number)
+            # Handle both single stop conditions and stop_any (combined conditions)
+            stop_funcs = []
+            if hasattr(stop_condition, 'stops'):
+                # This is a stop_any object with multiple stop conditions
+                stop_funcs = stop_condition.stops
+            else:
+                # This is a single stop condition
+                stop_funcs = [stop_condition]
+
+            for stop_func in stop_funcs:
+                if hasattr(stop_func, 'max_attempts'):
+                    # Add retry information to the exception
+                    exception.retry_attempt = retry_state.attempt_number
+                    exception.max_retries = stop_func.max_attempts
+                    break
+
+        logger.error(
+            f'{exception}. Attempt #{retry_state.attempt_number} | You can customize retry values in the configuration.',
+        )
