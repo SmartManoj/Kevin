@@ -91,8 +91,7 @@ def check_dependencies(code_repo_path: str, poetry_venvs_path: str) -> None:
     poetry_alias = os.environ.get('POETRY_ALIAS', 'poetry')
     jupyter_prefix = f'{poetry_alias} run ' if os.environ.get('SKIP_POETRY') != '1' else ''
     output = subprocess.check_output(
-        f'{jupyter_prefix}jupyter --version',
-        shell=True,
+        ['poetry', 'run', 'jupyter', '--version'],
         text=True,
         cwd=code_repo_path,
     )

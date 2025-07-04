@@ -38,6 +38,7 @@ import { ErrorMessageBanner } from "./error-message-banner";
 import { shouldRenderEvent } from "./event-content-helpers/should-render-event";
 import { useUploadFiles } from "#/hooks/mutation/use-upload-files";
 import { useConfig } from "#/hooks/query/use-config";
+import { validateFiles } from "#/utils/file-validation";
 
 function getEntryPoint(
   hasRepository: boolean | null,
@@ -100,9 +101,12 @@ export function ChatInterface() {
 
   const handleSendMessage = async (
     content: string,
-    images: File[],
-    files: File[],
+    originalImages: File[],
+    originalFiles: File[],
   ) => {
+    // Create mutable copies of the arrays
+    const images = [...originalImages];
+    const files = [...originalFiles];
     if (events.length === 0) {
       posthog.capture("initial_query_submitted", {
         entry_point: getEntryPoint(
@@ -118,6 +122,16 @@ export function ChatInterface() {
         current_message_length: content.length,
       });
     }
+
+    // Validate file sizes before any processing
+    const allFiles = [...images, ...files];
+    const validation = validateFiles(allFiles);
+
+    if (!validation.isValid) {
+      displayErrorToast(`Error: ${validation.errorMessage}`);
+      return; // Stop processing if validation fails
+    }
+
     const promises = images.map((image) => convertImageToBase64(image));
     const imageUrls = await Promise.all(promises);
 
