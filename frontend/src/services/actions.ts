@@ -13,6 +13,7 @@ import { handleObservationMessage } from "./observations";
 import { appendInput } from "#/state/command-slice";
 import { generateAudio } from "#/utils/play-audio";
 import { speakText } from "#/utils/play-audio";
+import { appendJupyterInput } from "#/state/jupyter-slice";
 import { queryClient } from "#/query-client-config";
 
 export function handleActionMessage(message: ActionMessage) {
@@ -34,6 +35,10 @@ export function handleActionMessage(message: ActionMessage) {
     if (message.source === "agent") {
       store.dispatch(appendInput(message.args.command));
     }
+  }
+
+  if (message.action === ActionType.RUN_IPYTHON) {
+    store.dispatch(appendJupyterInput(message.args.code));
   }
 
   if ("args" in message && "security_risk" in message.args) {
