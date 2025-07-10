@@ -45,20 +45,10 @@ export function JupyterEditor({ maxWidth }: JupyterEditorProps) {
     }
   };
   let jupyterEditor = (
-    <div className="flex-1 h-full flex flex-col" style={{ maxWidth, height: "85%" }}>
-      <div
-        data-testid="jupyter-container"
-        className="flex-1 overflow-y-auto max-h-[85%] fast-smooth-scroll"
-        ref={jupyterRef}
-        onScroll={(e) => onChatBodyScroll(e.currentTarget)}
-      >
-        {cells.map((cell, index) => (
-          <JupyterCell key={index} cell={cell} />
-        ))}
-      </div>
-      {!hitBottom && (
-        <div className="sticky bottom-2 flex items-center justify-center">
-          <ScrollToBottomButton onClick={scrollDomToBottom} />
+    <>
+      {isRuntimeInactive && (
+        <div className="w-full h-full flex items-center text-center justify-center text-2xl text-tertiary-light">
+          {t("DIFF_VIEWER$WAITING_FOR_RUNTIME")}
         </div>
       )}
       {!isRuntimeInactive && (
