@@ -81,7 +81,7 @@ from openhands.events.observation import (
 from openhands.events.serialization.event import truncate_content
 from openhands.llm.llm import LLM
 from openhands.core.metrics import Metrics
-from openhands.memory.view import View
+from openhands.runtime.runtime_status import RuntimeStatus
 from openhands.storage.files import FileStore
 
 # note: RESUME is only available on web GUI
@@ -254,10 +254,10 @@ class AgentController:
         await self.set_agent_state_to(AgentState.ERROR)
         err = f'{e.__class__.__name__}: {e}'
         if self.status_callback is not None:
-            err_id = ''
+            runtime_status = RuntimeStatus.ERROR
             if isinstance(e, AuthenticationError):
-                err_id = 'STATUS$ERROR_LLM_AUTHENTICATION'
-                self.state.last_error = err_id
+                runtime_status = RuntimeStatus.ERROR_LLM_AUTHENTICATION
+                self.state.last_error = runtime_status.value
             elif isinstance(
                 e,
                 (
@@ -266,20 +266,20 @@ class AgentController:
                     APIError,
                 ),
             ):
-                err_id = 'STATUS$ERROR_LLM_SERVICE_UNAVAILABLE'
-                self.state.last_error = err_id
+                runtime_status = RuntimeStatus.ERROR_LLM_SERVICE_UNAVAILABLE
+                self.state.last_error = runtime_status.value
             elif isinstance(e, InternalServerError):
-                err_id = 'STATUS$ERROR_LLM_INTERNAL_SERVER_ERROR'
-                self.state.last_error = err_id
+                runtime_status = RuntimeStatus.ERROR_LLM_INTERNAL_SERVER_ERROR
+                self.state.last_error = runtime_status.value
             elif isinstance(e, BadRequestError) and 'ExceededBudget' in str(e):
-                err_id = 'STATUS$ERROR_LLM_OUT_OF_CREDITS'
-                self.state.last_error = err_id
+                runtime_status = RuntimeStatus.ERROR_LLM_OUT_OF_CREDITS
+                self.state.last_error = runtime_status.value
             elif isinstance(e, ContentPolicyViolationError) or (
                 isinstance(e, BadRequestError)
                 and 'ContentPolicyViolationError' in str(e)
             ):
-                err_id = 'STATUS$ERROR_LLM_CONTENT_POLICY_VIOLATION'
-                self.state.last_error = err_id
+                runtime_status = RuntimeStatus.ERROR_LLM_CONTENT_POLICY_VIOLATION
+                self.state.last_error = runtime_status.value
             elif isinstance(e, RateLimitError):
                 # Check if this is the final retry attempt
                 if (
@@ -289,7 +289,7 @@ class AgentController:
                 ):
                     # All retries exhausted, set to ERROR state with a special message
                     self.state.last_error = (
-                        'CHAT_INTERFACE$AGENT_RATE_LIMITED_STOPPED_MESSAGE'
+                        RuntimeStatus.AGENT_RATE_LIMITED_STOPPED_MESSAGE.value
                     )
                     await self.set_agent_state_to(AgentState.ERROR)
                 else:
@@ -298,6 +298,8 @@ class AgentController:
                 return
             # self.status_callback('error', err_id, type(e).__name__ + ': ' + str(e))
         self.event_stream.add_event(ErrorObservation(err), EventSource.ENVIRONMENT)
+        # Set the agent state to ERROR after storing the reason
+        await self.set_agent_state_to(AgentState.ERROR)
 
     def step(self) -> None:
         asyncio.create_task(self._step_with_exception_handling())
