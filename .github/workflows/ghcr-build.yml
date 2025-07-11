@@ -84,7 +84,7 @@ jobs:
       - name: Build and push app image
         if: "!github.event.pull_request.head.repo.fork"
         run: |
-          ./containers/build.sh -i openhands -o ${{ env.REPO_OWNER }} --push
+          ./containers/build.sh -i kevin -o ${{ env.REPO_OWNER }} --push
 
   # Builds the runtime Docker images
   ghcr_build_runtime:
