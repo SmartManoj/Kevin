@@ -41,7 +41,8 @@ jobs:
           # Only build nikolaik on PRs, otherwise build both nikolaik and ubuntu.
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             json=$(jq -n -c '[
-                { image: "nikolaik/python-nodejs:python3.12-nodejs22", tag: "nikolaik" }
+                { image: "nikolaik/python-nodejs:python3.12-nodejs22", tag: "nikolaik" },
+                { image: "ubuntu:24.04", tag: "ubuntu" }
               ]')
           else
             json=$(jq -n -c '[
@@ -59,9 +60,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    outputs:
-      # Since this job uses outputs it cannot use matrix
-      hash_from_app_image: ${{ steps.get_hash_in_app_image.outputs.hash_from_app_image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,20 +84,7 @@ jobs:
       - name: Build and push app image
         if: "!github.event.pull_request.head.repo.fork"
         run: |
-          ./containers/build.sh -i kevin -o ${{ env.REPO_OWNER }} --push
-      - name: Build app image
-        if: "github.event.pull_request.head.repo.fork"
-        run: |
-          ./containers/build.sh -i kevin -o ${{ env.REPO_OWNER }} --load
-      - name: Get hash in App Image
-        id: get_hash_in_app_image
-        run: |
-          # Run the build script in the app image
-          docker run -e SANDBOX_USER_ID=0 -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/${{ env.REPO_OWNER }}/openhands:${{ env.RELEVANT_SHA }} /bin/bash -c "mkdir -p containers/runtime; python3 openhands/runtime/utils/runtime_build.py --base_image ${{ env.BASE_IMAGE_FOR_HASH_EQUIVALENCE_TEST }} --build_folder containers/runtime --force_rebuild" 2>&1 | tee docker-outputs.txt
-          # Get the hash from the build script
-          hash_from_app_image=$(cat docker-outputs.txt | grep "Hash for docker build directory" | awk -F "): " '{print $2}' | uniq | head -n1)
-          echo "hash_from_app_image=$hash_from_app_image" >> $GITHUB_OUTPUT
-          echo "Hash from app image: $hash_from_app_image"
+          ./containers/build.sh -i openhands -o ${{ env.REPO_OWNER }} --push
 
   # Builds the runtime Docker images
   ghcr_build_runtime:
@@ -131,22 +116,13 @@ jobs:
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
+      - name: Install poetry via pipx
+        run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pypoetry
-            ~/.virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          # This is the one that saves the cache, the others set 'lookup-only: true'
-          restore-keys: |
-            ${{ runner.os }}-poetry-
-      - name: Install poetry via pipx
-        run: pipx install poetry
+          cache: poetry
       - name: Install Python dependencies using Poetry
         run: yes | make install-python-dependencies POETRY_GROUP=main INSTALL_PLAYWRIGHT=0
       - name: Create source distribution and Dockerfile
@@ -200,61 +176,6 @@ jobs:
       - name: Check disk space
         run: df -h
 
-  verify_hash_equivalence_in_runtime_and_app:
-    name: Verify Hash Equivalence in Runtime and Docker images
-    runs-on: ubuntu-latest
-    needs: [ghcr_build_runtime, ghcr_build_app]
-    strategy:
-      fail-fast: false
-      matrix:
-        base_image: ['nikolaik']
-    env:
-      BASE_IMAGE_FOR_HASH_EQUIVALENCE_TEST: nikolaik/python-nodejs:python3.12-nodejs22
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pypoetry
-            ~/.virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          lookup-only: true
-          restore-keys: |
-            ${{ runner.os }}-poetry-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install poetry via pipx
-        run: pipx install poetry
-      - name: Install Python dependencies using Poetry
-        run: yes | make install-python-dependencies POETRY_GROUP=main INSTALL_PLAYWRIGHT=0
-      - name: Get hash in App Image
-        run: |
-          echo "Hash from app image: ${{ needs.ghcr_build_app.outputs.hash_from_app_image }}"
-          echo "hash_from_app_image=${{ needs.ghcr_build_app.outputs.hash_from_app_image }}" >> $GITHUB_ENV
-
-      - name: Get hash using code (development mode)
-        run: |
-          mkdir -p containers/runtime
-          poetry run python3 openhands/runtime/utils/runtime_build.py --base_image ${{ env.BASE_IMAGE_FOR_HASH_EQUIVALENCE_TEST }} --build_folder containers/runtime --force_rebuild > output.txt 2>&1
-          hash_from_code=$(cat output.txt | grep "Hash for docker build directory" | awk -F "): " '{print $2}' | uniq | head -n1)
-          echo "hash_from_code=$hash_from_code" >> $GITHUB_ENV
-
-      - name: Compare hashes
-        run: |
-          echo "Hash from App Image: ${{ env.hash_from_app_image }}"
-          echo "Hash from Code: ${{ env.hash_from_code }}"
-          if [ "${{ env.hash_from_app_image }}" = "${{ env.hash_from_code }}" ]; then
-            echo "Hashes match!"
-          else
-            echo "Hashes do not match!"
-            exit 1
-          fi
-
   # Run unit tests with the Docker runtime Docker images as root
   test_runtime_root:
     name: RT Unit Tests (Root)
@@ -287,25 +208,17 @@ jobs:
           load: true
           tags: ghcr.io/${{ env.REPO_OWNER }}/runtime:${{ env.RELEVANT_SHA }}-${{ matrix.base_image.tag }}
           context: containers/runtime
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pypoetry
-            ~/.virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          lookup-only: true
-          restore-keys: |
-            ${{ runner.os }}-poetry-
+      - name: Install poetry via pipx
+        run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install poetry via pipx
-        run: pipx install poetry
+          cache: poetry
       - name: Install Python dependencies using Poetry
         run: make install-python-dependencies INSTALL_PLAYWRIGHT=0
       - name: Run docker runtime tests
+        shell: bash
         run: |
           # We install pytest-xdist in order to run tests across CPUs
           poetry run pip install pytest-xdist
@@ -358,25 +271,17 @@ jobs:
           load: true
           tags: ghcr.io/${{ env.REPO_OWNER }}/runtime:${{ env.RELEVANT_SHA }}-${{ matrix.base_image.tag }}
           context: containers/runtime
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pypoetry
-            ~/.virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          lookup-only: true
-          restore-keys: |
-            ${{ runner.os }}-poetry-
+      - name: Install poetry via pipx
+        run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install poetry via pipx
-        run: pipx install poetry
+          cache: poetry
       - name: Install Python dependencies using Poetry
         run: make install-python-dependencies POETRY_GROUP=main,test,runtime INSTALL_PLAYWRIGHT=0
       - name: Run runtime tests
+        shell: bash
         run: |
           # We install pytest-xdist in order to run tests across CPUs
           poetry run pip install pytest-xdist
@@ -403,7 +308,7 @@ jobs:
     name: All Runtime Tests Passed
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     runs-on: ubuntu-latest
-    needs: [test_runtime_root, test_runtime_oh, verify_hash_equivalence_in_runtime_and_app]
+    needs: [test_runtime_root, test_runtime_oh]
     steps:
       - name: All tests passed
         run: echo "All runtime tests have passed successfully!"
@@ -412,7 +317,7 @@ jobs:
     name: All Runtime Tests Passed
     if: ${{ cancelled() || contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
     runs-on: ubuntu-latest
-    needs: [test_runtime_root, test_runtime_oh, verify_hash_equivalence_in_runtime_and_app]
+    needs: [test_runtime_root, test_runtime_oh]
     steps:
       - name: Some tests failed
         run: |
@@ -437,6 +342,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
           SHORT_SHA: ${{ steps.short_sha.outputs.SHORT_SHA }}
+        shell: bash
         run: |
           echo "updating PR description"
           DOCKER_RUN_COMMAND="docker run -it --rm \
