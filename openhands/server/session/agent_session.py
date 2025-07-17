@@ -157,6 +157,7 @@ class AgentSession:
                 repo_directory=repo_directory,
                 conversation_instructions=conversation_instructions,
                 custom_secrets_descriptions=custom_secrets_handler.get_custom_secrets_descriptions(),
+                working_dir=config.workspace_mount_path_in_sandbox,
             )
 
             # NOTE: this needs to happen before controller is created
@@ -474,6 +475,7 @@ class AgentSession:
         repo_directory: str | None,
         conversation_instructions: str | None,
         custom_secrets_descriptions: dict[str, str],
+        working_dir: str,
     ) -> Memory:
         memory = Memory(
             event_stream=self.event_stream,
@@ -483,7 +485,9 @@ class AgentSession:
 
         if self.runtime:
             # sets available hosts and other runtime info
-            memory.set_runtime_info(self.runtime, custom_secrets_descriptions)
+            memory.set_runtime_info(
+                self.runtime, custom_secrets_descriptions, working_dir
+            )
             memory.set_conversation_instructions(conversation_instructions)
 
             # loads microagents from repo/.openhands/microagents
