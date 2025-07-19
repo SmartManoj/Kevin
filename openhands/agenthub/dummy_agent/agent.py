@@ -186,22 +186,3 @@ class DummyAgent(Agent):
                         )
 
         return action
-
-    def simulate_browser_action(
-        self, action: Union[BrowseURLAction, BrowseInteractiveAction]
-    ) -> Action:
-        # Instead of simulating, we'll reject the browser action
-        return self.handle_browser_unavailable(action)
-
-    def handle_browser_unavailable(
-        self, action: Union[BrowseURLAction, BrowseInteractiveAction]
-    ) -> Action:
-        # Create a message action to inform that browsing is not available
-        message = 'Browser actions are not available in the DummyAgent environment.'
-        if isinstance(action, BrowseURLAction):
-            message += f' Unable to browse URL: {action.url}'
-        elif isinstance(action, BrowseInteractiveAction):
-            message += (
-                f' Unable to perform interactive browsing: {action.browser_actions}'
-            )
-        return MessageAction(content=message)
