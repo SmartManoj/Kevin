@@ -311,6 +311,7 @@ class MicroagentResponse(BaseModel):
     tools: list[str] = []
     created_at: datetime
     git_provider: ProviderType
+    path: str  # Path to the microagent in the Git provider (e.g., ".openhands/microagents/tell-me-a-joke")
 
 
 def _get_file_creation_time(repo_dir: Path, file_path: Path) -> datetime:
@@ -510,6 +511,7 @@ def _process_microagents(
                 ),
                 created_at=created_at,
                 git_provider=git_provider,
+                path=str(agent_file_path.relative_to(repo_dir)),
             )
         )
 
@@ -533,6 +535,7 @@ def _process_microagents(
                 ),
                 created_at=created_at,
                 git_provider=git_provider,
+                path=str(agent_file_path.relative_to(repo_dir)),
             )
         )
 
