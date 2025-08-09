@@ -10,17 +10,18 @@ from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel, ConfigDict, Field
 
 from openhands.core.config.llm_config import LLMConfig
+from openhands.core.config.mcp_config import MCPConfig
 from openhands.core.logger import openhands_logger as logger
 from openhands.events.action import (
     ChangeAgentStateAction,
     NullAction,
 )
 from openhands.events.event_filter import EventFilter
+from openhands.events.event_store import EventStore
 from openhands.events.observation import (
     AgentStateChangedObservation,
     NullObservation,
 )
-from openhands.events.stream import EventStream
 from openhands.integrations.provider import (
     PROVIDER_TOKEN_TYPE,
     ProviderHandler,
@@ -44,11 +45,11 @@ from openhands.server.services.conversation_service import (
     create_new_conversation,
     setup_init_convo_settings,
 )
-from openhands.server.session.conversation import ServerConversation
 from openhands.server.shared import (
     ConversationStoreImpl,
     config,
     conversation_manager,
+    file_store,
 )
 from openhands.server.types import LLMAuthenticationError, MissingSettingsError
 from openhands.server.user_auth import (
@@ -60,7 +61,7 @@ from openhands.server.user_auth import (
     get_user_settings_store,
 )
 from openhands.server.user_auth.user_auth import AuthType
-from openhands.server.utils import get_conversation as get_conversation_object
+from openhands.server.utils import get_conversation as get_conversation_metadata
 from openhands.server.utils import get_conversation_store
 from openhands.storage.conversation.conversation_store import ConversationStore
 from openhands.storage.data_models.conversation_metadata import (
@@ -87,6 +88,7 @@ class InitSessionRequest(BaseModel):
     suggested_task: SuggestedTask | None = None
     create_microagent: CreateMicroagent | None = None
     conversation_instructions: str | None = None
+    mcp_config: MCPConfig | None = None
     # Only nested runtimes require the ability to specify a conversation id, and it could be a security risk
     if os.getenv('ALLOW_SET_CONVERSATION_ID', '0') == '1':
         conversation_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
@@ -177,6 +179,7 @@ async def new_conversation(
             conversation_instructions=conversation_instructions,
             git_provider=git_provider,
             conversation_id=conversation_id,
+            mcp_config=data.mcp_config,
         )
 
         return ConversationResponse(
@@ -330,75 +333,20 @@ async def delete_conversation(
     return True
 
 
-class UpdateConversationRequest(BaseModel):
-    """Request model for updating a conversation."""
-    title: str
-
-
-@app.patch('/conversations/{conversation_id}')
-async def update_conversation(
-    conversation_id: str,
-    data: UpdateConversationRequest,
-    user_id: str | None = Depends(get_user_id),
-) -> JSONResponse:
-    """Update a conversation.
-
-    Currently supports updating the title of a conversation.
-
-    Args:
-        conversation_id: The ID of the conversation to update
-        data: The data to update the conversation with
-        user_id: The ID of the user making the request
-
-    Returns:
-        JSONResponse: A JSON response indicating the success of the operation
-    """
-    conversation_store = await ConversationStoreImpl.get_instance(config, user_id)
-    try:
-        metadata = await conversation_store.get_metadata(conversation_id)
-
-        # Update the title
-        metadata.title = data.title
-
-        # Save the updated metadata
-        await conversation_store.save_metadata(metadata)
-
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content=None,
-        )
-    except FileNotFoundError:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={'error': 'Conversation not found'},
-        )
-    except Exception as e:
-        logger.error(
-            f'Error updating conversation {conversation_id}: {str(e)}',
-            extra={'session_id': conversation_id},
-        )
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'error': f'Error updating conversation: {str(e)}'},
-        )
-
-@app.get('/conversations/{conversation_id}/remember_prompt')
+@app.get('/conversations/{conversation_id}/remember-prompt')
 async def get_prompt(
+    conversation_id: str,
     event_id: int,
     user_settings: SettingsStore = Depends(get_user_settings_store),
-    conversation: ServerConversation | None = Depends(get_conversation_object),
+    metadata: ConversationMetadata = Depends(get_conversation_metadata),
 ):
-    if conversation is None:
-        return JSONResponse(
-            status_code=404,
-            content={'error': 'Conversation not found.'},
-        )
-
-    # get event stream for the conversation
-    event_stream = conversation.event_stream
+    # get event store for the conversation
+    event_store = EventStore(
+        sid=conversation_id, file_store=file_store, user_id=metadata.user_id
+    )
 
     # retrieve the relevant events
-    stringified_events = _get_contextual_events(event_stream, event_id)
+    stringified_events = _get_contextual_events(event_store, event_id)
 
     # generate a prompt
     settings = await user_settings.load()
@@ -602,7 +550,7 @@ async def stop_conversation(
         )
 
 
-def _get_contextual_events(event_stream: EventStream, event_id: int) -> str:
+def _get_contextual_events(event_store: EventStore, event_id: int) -> str:
     # find the specified events to learn from
     # Get X events around the target event
     context_size = 4
@@ -618,7 +566,7 @@ def _get_contextual_events(event_stream: EventStream, event_id: int) -> str:
     )  # the types of events that can be in an agent's history
 
     # from event_id - context_size to event_id..
-    context_before = event_stream.search_events(
+    context_before = event_store.search_events(
         start_id=event_id,
         filter=agent_event_filter,
         reverse=True,
@@ -626,7 +574,7 @@ def _get_contextual_events(event_stream: EventStream, event_id: int) -> str:
     )
 
     # from event_id to event_id + context_size + 1
-    context_after = event_stream.search_events(
+    context_after = event_store.search_events(
         start_id=event_id + 1,
         filter=agent_event_filter,
         limit=context_size + 1,

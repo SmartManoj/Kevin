@@ -6,7 +6,7 @@ BACKEND_HOST ?= "127.0.0.1"
 BACKEND_PORT ?= 8000
 BACKEND_HOST_PORT = "$(BACKEND_HOST):$(BACKEND_PORT)"
 FRONTEND_HOST ?= "127.0.0.1"
-FRONTEND_PORT = 3001
+FRONTEND_PORT ?= 3001
 DEFAULT_WORKSPACE_DIR = "./workspace"
 DEFAULT_MODEL = "gpt-4o"
 CONFIG_FILE = config.toml
@@ -233,7 +233,7 @@ install-python-dependencies:
 	else \
 		poetry run pip install -r requirements-extra.txt --quiet; \
 	fi
-	
+
 	@if [ "$$consent" = "y" ]; then \
 		# https://github.com/kuangkzh/pylcs/issues/3 \
 		sudo add-apt-repository ppa:deadsnakes/ppa; \

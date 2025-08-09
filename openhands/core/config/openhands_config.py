@@ -65,6 +65,8 @@ class OpenHandsConfig(BaseModel):
             input is read line by line. When enabled, input continues until /exit command.
         mcp_host: Host for OpenHands' default MCP server
         mcp: MCP configuration settings.
+        git_user_name: Git user name for commits made by the agent.
+        git_user_email: Git user email for commits made by the agent.
     """
     # custom configs
     workspace_base: str | None = './workspace'
@@ -124,6 +126,13 @@ class OpenHandsConfig(BaseModel):
     mcp: MCPConfig = Field(default_factory=MCPConfig)
     kubernetes: KubernetesConfig = Field(default_factory=KubernetesConfig)
     cli: CLIConfig = Field(default_factory=CLIConfig)
+    git_user_name: str = Field(
+        default='openhands', description='Git user name for commits made by the agent'
+    )
+    git_user_email: str = Field(
+        default='openhands@all-hands.dev',
+        description='Git user email for commits made by the agent',
+    )
 
     show_workspace_contents: bool = True
     override_UI_settings: bool = False
