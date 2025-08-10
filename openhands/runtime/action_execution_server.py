@@ -446,7 +446,7 @@ class ActionExecutor:
             obs: IPythonRunCellObservation = await _jupyter_plugin.run(action)
             obs.content = obs.content.rstrip()
 
-            if action.include_extra:
+            if action.include_extra and 0:
                 obs.content += (
                     f'\n[Jupyter current working directory: {self.bash_session.cwd}]'
                 )
