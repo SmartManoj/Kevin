@@ -197,6 +197,12 @@ def get_cli_parser() -> argparse.ArgumentParser:
         type=bool,
         default=False,
     )
+    cli_parser.add_argument(
+        '--attach',
+        help='Attach to an existing local runtime server at http://localhost:31234/',
+        action='store_true',
+        default=False,
+    )
     parser.add_argument(
         '--conversation',
         help='The conversation id to continue',

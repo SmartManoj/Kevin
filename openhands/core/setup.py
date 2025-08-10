@@ -38,6 +38,7 @@ def create_runtime(
     headless_mode: bool = True,
     agent: Agent | None = None,
     git_provider_tokens: PROVIDER_TOKEN_TYPE | None = None,
+    attach_to_existing: bool = False,
 ) -> Runtime:
     """Create a runtime for the agent to run on.
 
@@ -83,6 +84,7 @@ def create_runtime(
         plugins=agent_cls.sandbox_plugins,
         headless_mode=headless_mode,
         git_provider_tokens=git_provider_tokens,
+        attach_to_existing=attach_to_existing,
     )
 
     # Log the plugins that have been registered with the runtime for debugging purposes

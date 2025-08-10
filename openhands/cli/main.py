@@ -129,6 +129,7 @@ async def run_session(
     session_name: str | None = None,
     skip_banner: bool = False,
     conversation_id: str | None = None,
+    attach_to_existing: bool = False,
 ) -> bool:
     reload_microagents = False
     new_session_requested = False
@@ -153,6 +154,7 @@ async def run_session(
         sid=sid,
         headless_mode=True,
         agent=agent,
+        attach_to_existing=attach_to_existing,
     )
 
     def stream_to_console(output: str) -> None:
@@ -700,12 +702,13 @@ After reviewing the file, please ask the user what they would like to do with it
         session_name=args.name,
         skip_banner=banner_shown,
         conversation_id=args.conversation,
+        attach_to_existing=getattr(args, 'attach', False),
     )
 
     # If a new session was requested, run it
     while new_session_requested:
         new_session_requested = await run_session(
-            loop, config, settings_store, current_dir, None
+            loop, config, settings_store, current_dir, None, attach_to_existing=False
         )
 
     # Teardown the runtime

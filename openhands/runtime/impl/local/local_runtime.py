@@ -230,11 +230,30 @@ class LocalRuntime(ActionExecutionClient):
                 f'{self.config.sandbox.local_runtime_url}:{self._execution_server_port}'
             )
         elif self.attach_to_existing:
-            # If we're supposed to attach to an existing server but none exists, raise an error
-            self.log('error', f'No existing server found for session {self.sid}')
-            raise AgentRuntimeDisconnectedError(
-                f'No existing server found for session {self.sid}'
-            )
+            # Try to attach to a server running on port 31234
+            self.log('info', 'Attempting to attach to existing server on port 31234')
+            self._execution_server_port = 31234
+            self.api_url = f'{self.config.sandbox.local_runtime_url}:{self._execution_server_port}'
+
+            # Test if the server is accessible
+            try:
+                response = self.session.get(f'{self.api_url}/alive', timeout=5)
+                response.raise_for_status()
+                self.log('info', f'Successfully attached to existing server at {self.api_url}')
+
+                # Set default values for other ports (we won't use them when attaching)
+                self._vscode_port = -1
+                self._app_ports = []
+                self._temp_workspace = None
+                self.server_process = None
+                self._log_thread = None
+                self._log_thread_exit_event = threading.Event()
+
+            except Exception as e:
+                self.log('error', f'Failed to connect to server on port 31234: {e}')
+                raise AgentRuntimeDisconnectedError(
+                    f'No server found on port 31234. Make sure the local runtime is running on http://localhost:31234/'
+                )
         else:
             # Set up workspace directory
             if self.config.workspace_base is not None:
