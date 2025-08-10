@@ -229,7 +229,7 @@ class LocalRuntime(ActionExecutionClient):
             self.api_url = (
                 f'{self.config.sandbox.local_runtime_url}:{self._execution_server_port}'
             )
-        elif self.attach_to_existing:
+        elif self.attach_to_existing or 1:
             # Try to attach to a server running on port 31234
             self.log('info', 'Attempting to attach to existing server on port 31234')
             self._execution_server_port = 31234
