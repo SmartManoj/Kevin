@@ -458,6 +458,10 @@ class ActionExecutor:
             )
 
     def _resolve_path(self, path: str, working_dir: str) -> str:
+        # Check for malformed paths containing error messages
+        if '[ERROR STREAM]' in path or '\n' in path:
+            raise ValueError(f"Invalid file path containing error message: {repr(path)}")
+
         filepath = Path(path)
         if not filepath.is_absolute():
             return str(Path(working_dir) / filepath)
@@ -487,7 +491,10 @@ class ActionExecutor:
         # NOTE: the client code is running inside the sandbox,
         # so there's no need to check permission
         working_dir = self.bash_session.cwd
-        filepath = self._resolve_path(action.path, working_dir)
+        try:
+            filepath = self._resolve_path(action.path, working_dir)
+        except ValueError as e:
+            return ErrorObservation(f"Invalid file path: {str(e)}")
         try:
             if filepath.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
                 with open(filepath, 'rb') as file:
@@ -535,7 +542,10 @@ class ActionExecutor:
     async def write(self, action: FileWriteAction) -> Observation:
         assert self.bash_session is not None
         working_dir = self.bash_session.cwd
-        filepath = self._resolve_path(action.path, working_dir)
+        try:
+            filepath = self._resolve_path(action.path, working_dir)
+        except ValueError as e:
+            return ErrorObservation(f"Invalid file path: {str(e)}")
 
         insert = action.content.split('\n')
         if not os.path.exists(os.path.dirname(filepath)):
