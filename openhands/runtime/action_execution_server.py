@@ -471,10 +471,10 @@ class ActionExecutor:
         assert self.bash_session is not None
 
         # Cannot read binary files
-        if is_binary(action.path):
+        if is_binary(action.path) and 0: # for img files
             return ErrorObservation('ERROR_BINARY_FILE')
 
-        if action.impl_source == FileReadSource.OH_ACI:
+        if action.impl_source == FileReadSource.OH_ACI and 0:
             result_str, _ = _execute_file_editor(
                 self.file_editor,
                 command='view',
