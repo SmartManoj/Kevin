@@ -496,6 +496,10 @@ class ActionExecutor:
         except ValueError as e:
             return ErrorObservation(f"Invalid file path: {str(e)}")
         try:
+            if os.path.isdir(filepath):
+                # for windows, we need to raise an error
+                raise IsADirectoryError(f"'{filepath}' is a directory, not a file.")
+
             if filepath.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
                 with open(filepath, 'rb') as file:
                     image_data = file.read()
