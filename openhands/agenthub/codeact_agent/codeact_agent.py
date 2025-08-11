@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from collections import deque
 from typing import TYPE_CHECKING
 
@@ -210,6 +211,8 @@ class CodeActAgent(Agent):
                 model_name=self.llm.config.model, agent_name=self.name
             )
         }
+        with open('params.json', 'w') as f:
+            json.dump(params, f)
         response = self.llm.completion(**params)
         logger.debug(f'Response from LLM: {response}')
         actions = self.response_to_actions(response)
