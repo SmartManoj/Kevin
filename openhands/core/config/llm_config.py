@@ -86,7 +86,7 @@ class LLMConfig(BaseModel):
     custom_tokenizer: str | None = Field(default=None)
     native_tool_calling: bool | None = Field(default=None)
     reasoning_effort: str | None = Field(default=None)
-    seed: int | None = Field(default=None)
+    seed: int | None = Field(default=42)
     safety_settings: list[dict[str, str]] | None = Field(
         default=None,
         description='Safety settings for models that support them (like Mistral AI and Gemini)',
