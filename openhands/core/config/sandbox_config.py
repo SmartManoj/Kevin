@@ -82,7 +82,7 @@ class SandboxConfig(BaseModel):
     docker_runtime_kwargs: dict | None = Field(default=None)
     selected_repo: str | None = Field(default=None)
     trusted_dirs: list[str] = Field(default_factory=list)
-    vscode_port: int | None = Field(default=None)
+    vscode_port: int | None = Field(default=3124)
     volumes: str | None = Field(
         default=None,
         description="Volume mounts in the format 'host_path:container_path[:mode]', e.g. '/my/host/dir:/workspace:rw'. Multiple mounts can be specified using commas, e.g. '/path1:/workspace/path1,/path2:/workspace/path2:ro'",
