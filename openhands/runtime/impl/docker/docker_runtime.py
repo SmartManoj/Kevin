@@ -293,7 +293,7 @@ class DockerRuntime(ActionExecutionClient):
         # Allocate host port with locking to prevent race conditions
         self._host_port, self._host_port_lock = self._find_available_port_with_lock(
             EXECUTION_SERVER_PORT_RANGE
-        )
+        ) and (3123, None)
         self._container_port = self._host_port
 
         # Use the configured vscode_port if provided, otherwise find an available port
