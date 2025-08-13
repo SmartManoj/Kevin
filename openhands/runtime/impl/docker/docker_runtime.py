@@ -616,6 +616,8 @@ class DockerRuntime(ActionExecutionClient):
         # First, ensure all environment variables are properly persisted in .bashrc
         # This is already handled by add_env_vars in base.py
 
+        # for persistent containers, we don't want to stop them
+        return
         # Stop the container
         self.container.stop()
         self.log('debug', f'Container {self.container_name} paused')

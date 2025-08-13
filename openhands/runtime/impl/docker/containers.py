@@ -2,6 +2,8 @@ import docker
 
 
 def stop_all_containers(prefix: str) -> None:
+    # for persistent containers, we don't want to stop them
+    return
     docker_client = docker.from_env()
     try:
         containers = docker_client.containers.list(all=True)
