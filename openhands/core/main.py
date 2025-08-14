@@ -298,6 +298,10 @@ if __name__ == '__main__':
         if not task_str:
             raise ValueError('No task provided. Please specify a task through -t, -f.')
 
+        if os.path.exists('prompt.txt'):
+            with open('prompt.txt', 'r') as f:
+                task_str = f.read()
+
         # Create actual initial user action
         initial_user_action = MessageAction(content=task_str)
 
