@@ -443,7 +443,7 @@ class LlmFileHandler(logging.FileHandler):
                     openhands_logger.error(
                         'Failed to delete %s. Reason: %s', file_path, e
                     )
-        filename = f'{self.filename}_{self.message_counter:03}.log'
+        filename = f'{self.message_counter:03}_{self.filename}.log'
         self.baseFilename = os.path.join(self.log_directory, filename)
         super().__init__(self.baseFilename, mode, encoding, delay)
 
@@ -453,7 +453,7 @@ class LlmFileHandler(logging.FileHandler):
         Args:
             record (logging.LogRecord): The log record to emit.
         """
-        filename = f'{self.filename}_{self.message_counter:03}.log'
+        filename = f'{self.message_counter:03}_{self.filename}.log'
         self.baseFilename = os.path.join(self.log_directory, filename)
         self.stream = self._open()
         super().emit(record)
